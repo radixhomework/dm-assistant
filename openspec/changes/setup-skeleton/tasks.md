@@ -32,7 +32,7 @@
 
 - [x] 6.1 Add `.github/workflows/ci.yml` (push + pull request): Node 26 LTS (setup-node), latest stable majors for all frameworks, `npm ci`, build, lint, typecheck, test (includes catalog parity); verify the workflow passes on the skeleton commit
 - [x] 6.2 Verify the gate blocks: open a commit with a failing unit test and observe the workflow fail
-- [ ] 6.3 Add the Sonar quality pass to CI: `sonar-project.properties` (project key `radixhomework_dm-assistant`, lcov coverage paths), vitest coverage in `app-web` and `packages/schemas`, scan + quality-gate steps in `ci.yml`; verify coverage locally — the scan runs on GitHub once the `GH_SONAR_TOKEN` organization secret applies to the repository
+- [x] 6.3 Add the Sonar quality pass to CI: `sonar-project.properties` (project key `radixhomework_dm-assistant`, lcov coverage paths), vitest coverage in `app-web` and `packages/schemas`, scan + quality-gate steps in `ci.yml`; verify coverage locally — the scan runs on GitHub once the `GH_SONAR_TOKEN` organization secret applies to the repository
 
 ## 7. Wrap-up
 
