@@ -30,10 +30,10 @@
 
 ## 6. CI
 
-- [ ] 6.1 Add `.github/workflows/ci.yml` (push + pull request): Node 26 LTS (setup-node), latest stable majors for all frameworks, `npm ci`, build, lint, typecheck, test (includes catalog parity); verify the workflow passes on the skeleton commit
-- [ ] 6.2 Verify the gate blocks: open a commit with a failing unit test and observe the workflow fail
+- [x] 6.1 Add `.github/workflows/ci.yml` (push + pull request): Node 26 LTS (setup-node), latest stable majors for all frameworks, `npm ci`, build, lint, typecheck, test (includes catalog parity); verify the workflow passes on the skeleton commit
+- [x] 6.2 Verify the gate blocks: open a commit with a failing unit test and observe the workflow fail
 
 ## 7. Wrap-up
 
 - [x] 7.1 Add a short README section (local dev without Docker, `docker compose up` path, `db:migrate` command); verify a new contributor can follow it from a clean clone
-- [ ] 7.2 Confirm `ROADMAP.md` P0 exit criteria are met and mark the phase done in the change summary
+- [x] 7.2 Confirm `ROADMAP.md` P0 exit criteria are met and mark the phase done in the change summary
