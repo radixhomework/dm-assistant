@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* RadixHomeWork theme — ARCHITECTURE.md §3 */
+@theme {
+  --color-background: #fcfcfa;
+  --color-surface: #d8d0bd;
+  --color-ink: #1e211c;
+  --color-muted: #76604e;
+  --color-primary: #4d5947;
+  --color-accent: #9a7656;
+  --color-radish: #8a5e61;
+  --color-border: rgba(30, 33, 28, 0.2);
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+html {
+  font-size: 18px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-ink);
+  line-height: 1.7;
+}
+
+@media (max-width: 700px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+/* Browser surfaces carry the theme too (craft floor) */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

@@ -1,0 +1,15 @@
+{
+  "app": {
+    "title": "DM Assistant",
+    "tagline": "Votre monde et vos campagnes, au même endroit"
+  },
+  "home": {
+    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui demande attention."
+  },
+  "health": {
+    "title": "État de l'API",
+    "loading": "Vérification…",
+    "ok": "En ligne",
+    "error": "Hors ligne — vérifiez que le serveur de l'application tourne"
+  }
+}
