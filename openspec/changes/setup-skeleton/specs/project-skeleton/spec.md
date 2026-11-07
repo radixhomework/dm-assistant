@@ -56,12 +56,16 @@ The repository SHALL provide Drizzle-based migration tooling with a repeatable `
 - **THEN** the `settings` table exists and the command completes successfully
 
 ### Requirement: CI quality gate
-The repository SHALL provide a GitHub Actions workflow that runs on every push and pull request: lint, typecheck, unit tests, the i18n catalog-parity check, and a build of the whole workspace. The workflow SHALL fail when any step fails.
+The repository SHALL provide a GitHub Actions workflow that runs on every push and pull request: lint, typecheck, unit tests with coverage, the i18n catalog-parity check, and a build of the whole workspace. The workflow SHALL then run a SonarQube analysis and fail when the Sonar quality gate is not passed. The workflow SHALL fail when any step fails.
 
 #### Scenario: Green pipeline on the skeleton
 - **WHEN** the workflow runs on the skeleton commit
-- **THEN** all steps pass
+- **THEN** all steps pass, including the Sonar analysis
 
 #### Scenario: Failing test blocks merge
 - **WHEN** a commit contains a failing unit test
+- **THEN** the workflow fails
+
+#### Scenario: Failing quality gate blocks merge
+- **WHEN** the Sonar quality gate is not passed
 - **THEN** the workflow fails
