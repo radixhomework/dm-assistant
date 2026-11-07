@@ -39,6 +39,9 @@ Rules 3–5 apply to conversational assistance (chat with a harness). The applic
 
 - **OpenSpec, spec-driven.** New work starts as a change proposal under `openspec/changes/`, with specs accumulated under `openspec/specs/`. Use the openspec skills available in `.agents/skills/` (`openspec-propose`, `openspec-apply-change`, `openspec-update-change`, `openspec-sync-specs`, `openspec-archive-change`, `openspec-explore`).
 - **Structuring decisions are recorded first.** A change that touches a choice listed in `ARCHITECTURE.md` §2 updates that document as part of the change.
+- **UI work goes through the impeccable skills** (`.agents/skills/impeccable/`): any frontend/IHM change — design, build, polish, review — uses them.
+- **Visual theme is inherited**: colors and fonts come from the RadixHomeWork theme (`github.com/radixhomework/radixhomework.github.io`); tokens are recorded in `ARCHITECTURE.md` §3 — do not invent a divergent palette or typography.
+- **Latest stable runtimes and frameworks**: implementation uses the current stable majors at build time — Node.js LTS (26 as of this writing), latest pnpm, NestJS, React, Vite, Tailwind, Drizzle, Zod — pinned by the lockfile once chosen.
 
 ## 6. Non-negotiable constraints (see `ARCHITECTURE.md`)
 

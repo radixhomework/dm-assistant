@@ -39,6 +39,7 @@ Principle: **a single door**. The reverse proxy only sees the app container; Pos
 - **Editor (TipTap)**: suggestion-plugin `@` mentions (word-start rule, slug charset, live-styled; title resolved dynamically at render time; deleted entity → dead-link mark), round-trip acceptance test from day 1 — an empty diff on a real template is the bar. Plan B: CodeMirror 6 (raw markdown + custom completion, perfect round-trip by construction).
 - **Forms** generated from `packages/schemas` (Zod) — the templates and catalogs in `templates/` define fields, order, predefined value lists (enums).
 - **i18n**: `react-i18next`, catalogs `fr` + `en` committed together — every UI label exists in both languages; API errors return stable codes, translated client-side; template-derived labels (Lore data) stay outside the catalogs.
+- **Visual theme — RadixHomeWork inheritance** (from `radixhomework.github.io`): fonts **Cormorant Garamond** (display, serif) and **Source Sans 3** (body) via Google Fonts; palette background `#FCFCFA`, surface `#D8D0BD` (parchment), text `#1E211C`, muted `#76604E`, primary `#4D5947` (moss green), accent `#9A7656` (patinated copper), radish accent `#8A5E61`, border `rgba(30, 33, 28, 0.20)`; flat style — no shadows, `translateY` hovers, `0.2s ease` transitions, 18px base / 1.7 line-height. UI work runs through the impeccable skills.
 - External references: distinct channel ("Reference" button / command), catalogue grouped by source, badge at render time.
 
 ## 4. Backend — NestJS modules
