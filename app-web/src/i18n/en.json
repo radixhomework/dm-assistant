@@ -1,0 +1,15 @@
+{
+  "app": {
+    "title": "DM Assistant",
+    "tagline": "Your world and campaigns, in one place"
+  },
+  "home": {
+    "intro": "Structured records for your lore, a coherence audit, and an assistant that creates nothing but flags what needs attention."
+  },
+  "health": {
+    "title": "API status",
+    "loading": "Checking…",
+    "ok": "Online",
+    "error": "Offline — check that the app server is running"
+  }
+}
