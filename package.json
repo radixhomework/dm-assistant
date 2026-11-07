@@ -1,0 +1,19 @@
+{
+  "name": "dm-assistant",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=26"
+  },
+  "workspaces": [
+    "app",
+    "app-web",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run build -w @dm/schemas && npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build -w @dm/schemas && npm run build -w app-web && npm run build -w app"
+  }
+}
