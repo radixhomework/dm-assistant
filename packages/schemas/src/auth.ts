@@ -26,3 +26,24 @@ export const wizardSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type WizardInput = z.infer<typeof wizardSchema>;
+
+export const updateProfileSchema = z
+  .object({
+    email: z.email(),
+    displayName: z.string().min(1).max(80),
+    uiLocale: z.enum(locales),
+  })
+  .partial();
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: passwordSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  newPassword: passwordSchema,
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

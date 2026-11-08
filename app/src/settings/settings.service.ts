@@ -1,6 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { sql } from "drizzle-orm";
-import type { UpdateSettingsInput } from "@dm/schemas";
+import {
+  distanceUnits,
+  volumeUnits,
+  weightUnits,
+  type UpdateSettingsInput,
+} from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { settings } from "../database/schema.js";
@@ -8,9 +13,20 @@ import { settings } from "../database/schema.js";
 export type InstanceSettings = {
   worldName: string | null;
   contentLanguage: "en" | "fr" | null;
-  distanceUnit: string | null;
-  weightUnit: string | null;
+  distanceUnit: "m" | "ft";
+  weightUnit: "kg" | "lb";
+  volumeUnit: "L" | "gal";
 };
+
+/** Closed-list read: an invalid stored value falls back to the first entry. */
+function unitSetting(
+  map: Map<string, unknown>,
+  key: string,
+  values: readonly string[],
+): string {
+  const stored = map.get(key);
+  return values.includes(stored as string) ? (stored as string) : values[0];
+}
 
 @Injectable()
 export class SettingsService {
@@ -23,8 +39,11 @@ export class SettingsService {
       worldName: (map.get("world_name") as string | undefined) ?? null,
       contentLanguage:
         (map.get("content_language") as "en" | "fr" | undefined) ?? null,
-      distanceUnit: (map.get("distance_unit") as string | undefined) ?? null,
-      weightUnit: (map.get("weight_unit") as string | undefined) ?? null,
+      distanceUnit: unitSetting(map, "distance_unit", distanceUnits) as
+        | "m"
+        | "ft",
+      weightUnit: unitSetting(map, "weight_unit", weightUnits) as "kg" | "lb",
+      volumeUnit: unitSetting(map, "volume_unit", volumeUnits) as "L" | "gal",
     };
   }
 

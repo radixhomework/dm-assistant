@@ -51,4 +51,5 @@ export type SafeUserLike = {
   displayName: string;
   role: "admin" | "dm";
   status: "active" | "blocked";
+  uiLocale?: "en" | "fr" | null;
 };

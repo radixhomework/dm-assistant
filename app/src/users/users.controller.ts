@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { createUserSchema } from "@dm/schemas";
+import { createUserSchema, resetPasswordSchema } from "@dm/schemas";
 import { AdminGuard } from "../auth/admin.guard.js";
 import { UsersService } from "./users.service.js";
 
@@ -31,5 +31,11 @@ export class UsersController {
   setStatus(@Param("id") id: string, @Body() body: { status?: string }) {
     const status = body?.status === "blocked" ? "blocked" : "active";
     return this.usersService.setStatus(id, status);
+  }
+
+  @Post(":id/password")
+  resetPassword(@Param("id") id: string, @Body() body: unknown) {
+    const { newPassword } = resetPasswordSchema.parse(body);
+    return this.usersService.setPassword(id, newPassword);
   }
 }

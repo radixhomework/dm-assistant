@@ -15,5 +15,10 @@
     "typecheck": "npm run build -w @dm/schemas && npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build -w @dm/schemas && npm run build -w app-web && npm run build -w app"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.18.20": true
   }
 }

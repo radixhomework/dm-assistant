@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { fetchBootstrapState } from "../api/auth.js";
+import { queryClient } from "../query-client.js";
 
 export function SetupPage() {
   const { t } = useTranslation();
@@ -23,7 +24,7 @@ export function SetupPage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
-      await fetch("/api/bootstrap", {
+      const res = await fetch("/api/bootstrap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -34,6 +35,13 @@ export function SetupPage() {
           contentLanguage: formString(form, "contentLanguage"),
         }),
       });
+      if (!res.ok) {
+        setError(res.statusText);
+        return;
+      }
+      // The router guard caches the bootstrap state: update it before
+      // navigating, or the fresh instance would bounce back to /setup.
+      queryClient.setQueryData(["bootstrap"], { adminExists: true });
       void navigate({ to: "/login" });
     } catch (submitError) {
       setError(String(submitError));

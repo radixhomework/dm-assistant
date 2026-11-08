@@ -1,8 +1,9 @@
-import { Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchMe } from "../api/auth.js";
-import { api } from "../api/client.js";
+import { fetchMe, logout, updateProfile } from "../api/auth.js";
+import { queryClient } from "../query-client.js";
 
 const navItemClass = (active: boolean) =>
   `font-display text-xl px-3 py-1 rounded-md transition-colors duration-200 ${
@@ -11,13 +12,45 @@ const navItemClass = (active: boolean) =>
       : "text-ink hover:text-accent"
   }`;
 
+const languageClass = (active: boolean) =>
+  `rounded-md px-2 py-0.5 text-sm transition-colors duration-200 ${
+    active
+      ? "bg-primary text-background"
+      : "text-muted hover:text-accent"
+  }`;
+
 export function RootLayout() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSetupOrLogin = pathname === "/setup" || pathname === "/login";
 
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe, retry: false });
   const user = me.data;
+
+  // Apply the account's UI language at load (null = instance default).
+  useEffect(() => {
+    const locale = me.data?.uiLocale;
+    if (locale && i18n.language !== locale) {
+      void i18n.changeLanguage(locale);
+    }
+  }, [me.data?.uiLocale, i18n]);
+
+  async function onLogout() {
+    await logout();
+    void navigate({ to: "/login" });
+  }
+
+  function onSwitchLanguage(next: "en" | "fr") {
+    if (i18n.language === next) return;
+    void i18n.changeLanguage(next);
+    if (user) {
+      // Persist on the account; keep the session local if it fails.
+      void updateProfile({ uiLocale: next })
+        .then((updated) => queryClient.setQueryData(["me"], updated))
+        .catch(() => undefined);
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -50,13 +83,37 @@ export function RootLayout() {
                 )}
               </nav>
               {user && (
-                <button
-                  type="button"
-                  onClick={() => void api("/api/auth/logout", { method: "POST" })}
-                  className="ml-auto text-sm text-muted hover:text-accent"
-                >
-                  {t("nav.logout")}
-                </button>
+                <div className="ml-auto flex items-center gap-3">
+                  <div className="flex items-center gap-1" role="group" aria-label="UI language">
+                    <button
+                      type="button"
+                      onClick={() => onSwitchLanguage("en")}
+                      className={languageClass(i18n.language === "en")}
+                    >
+                      EN
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSwitchLanguage("fr")}
+                      className={languageClass(i18n.language === "fr")}
+                    >
+                      FR
+                    </button>
+                  </div>
+                  <Link
+                    to="/account"
+                    className="text-sm text-muted hover:text-accent"
+                  >
+                    {user.displayName}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => void onLogout()}
+                    className="text-sm text-muted hover:text-accent"
+                  >
+                    {t("nav.logout")}
+                  </button>
+                </div>
               )}
             </div>
           </header>

@@ -12,6 +12,7 @@ export type SafeUser = {
   displayName: string;
   role: "admin" | "dm";
   status: "active" | "blocked";
+  uiLocale: "en" | "fr" | null;
 };
 
 @Injectable()
@@ -65,6 +66,17 @@ export class UsersService {
     return row ? this.toSafe(row) : null;
   }
 
+  /** Admin password reset: replaces the hash, touches nothing else. */
+  async setPassword(id: string, newPassword: string): Promise<SafeUser | null> {
+    const passwordHash = await hash(newPassword);
+    const [row] = await this.db
+      .update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, id))
+      .returning();
+    return row ? this.toSafe(row) : null;
+  }
+
   /** Public projection — never expose the password hash. */
   safeOf(row: {
     id: string;
@@ -72,6 +84,7 @@ export class UsersService {
     displayName: string;
     role: string;
     status: string;
+    uiLocale?: string | null;
   }): SafeUser {
     return this.toSafe(row);
   }
@@ -89,6 +102,7 @@ export class UsersService {
     displayName: string;
     role: string;
     status: string;
+    uiLocale?: string | null;
   }): SafeUser {
     return {
       id: row.id,
@@ -96,6 +110,8 @@ export class UsersService {
       displayName: row.displayName,
       role: row.role as SafeUser["role"],
       status: row.status as SafeUser["status"],
+      uiLocale:
+        row.uiLocale === "fr" ? "fr" : row.uiLocale === "en" ? "en" : null,
     };
   }
 }

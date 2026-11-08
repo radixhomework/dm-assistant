@@ -2,6 +2,7 @@ import { useState } from "react";
 import { formString } from "../forms.js";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { queryClient } from "../query-client.js";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -22,6 +23,9 @@ export function LoginPage() {
       }),
     });
     if (res.ok) {
+      // Refresh the cached auth state before navigating, so protected
+      // pages see the session instead of bouncing back to /login.
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
       void navigate({ to: "/" });
       return;
     }

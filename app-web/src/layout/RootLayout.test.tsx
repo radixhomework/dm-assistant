@@ -5,6 +5,7 @@ import { renderWithProviders } from "../testing/render.js";
 
 vi.mock("@tanstack/react-router", () => ({
   Outlet: () => <p>page content</p>,
+  useNavigate: () => vi.fn(),
   Link: (props: { children?: React.ReactNode; to?: string }) => (
     <a>{props.children}</a>
   ),

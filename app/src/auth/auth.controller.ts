@@ -3,13 +3,19 @@ import {
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Req,
   Res,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
-import { loginSchema, wizardSchema } from "@dm/schemas";
+import {
+  changePasswordSchema,
+  loginSchema,
+  updateProfileSchema,
+  wizardSchema,
+} from "@dm/schemas";
 import { AuthService } from "./auth.service.js";
 import { Public } from "./public.decorator.js";
 import type { AuthedRequest } from "./auth.guard.js";
@@ -43,6 +49,23 @@ export class AuthController {
   @Get("me")
   me(@Req() req: AuthedRequest) {
     return req.user;
+  }
+
+  @Patch("me")
+  updateProfile(@Req() req: AuthedRequest, @Body() body: unknown) {
+    const input = updateProfileSchema.parse(body);
+    return this.authService.updateProfile(req.user!.id, input);
+  }
+
+  @HttpCode(204)
+  @Post("me/password")
+  async changePassword(@Req() req: AuthedRequest, @Body() body: unknown) {
+    const { currentPassword, newPassword } = changePasswordSchema.parse(body);
+    await this.authService.changePassword(
+      req.user!.id,
+      currentPassword,
+      newPassword,
+    );
   }
 }
 

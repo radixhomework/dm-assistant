@@ -12,6 +12,15 @@
     "admin": "Admin",
     "logout": "Log out"
   },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "cancel": "Cancel",
+    "fields": {
+      "title": "Title",
+      "slug": "Slug"
+    }
+  },
   "setup": {
     "title": "Welcome to your instance",
     "intro": "Create the administrator account and name your world.",
@@ -33,8 +42,6 @@
     "intro": "World records, grouped by template type.",
     "newRecord": "New record",
     "type": "Type",
-    "slug": "Slug",
-    "title": "Title",
     "create": "Create",
     "open": "Open",
     "delete": "Delete",
@@ -47,8 +54,6 @@
   "campaigns": {
     "title": "Campaigns",
     "newCampaign": "New campaign",
-    "title": "Title",
-    "slug": "Slug",
     "create": "Create",
     "open": "Open",
     "chapters": "Chapters",
@@ -62,6 +67,20 @@
     },
     "setStatus": "Set status",
     "empty": "No campaigns yet."
+  },
+  "account": {
+    "title": "My account",
+    "profileSection": "Profile",
+    "passwordSection": "Password",
+    "email": "Email",
+    "displayName": "Display name",
+    "uiLanguage": "UI language",
+    "currentPassword": "Current password",
+    "newPassword": "New password (12+ characters)",
+    "saveProfile": "Save profile",
+    "changePassword": "Change password",
+    "saved": "Saved.",
+    "passwordChanged": "Password changed."
   },
   "admin": {
     "title": "Admin",
@@ -79,13 +98,12 @@
     "contentLanguage": "Content language",
     "distanceUnit": "Distance unit",
     "weightUnit": "Weight unit",
+    "volumeUnit": "Volume unit",
+    "newPassword": "New password (12+ characters)",
+    "resetPassword": "Set a new password",
+    "passwordReset": "Password updated.",
     "save": "Save",
     "saved": "Saved."
-  },
-  "common": {
-    "loading": "Loading…",
-    "error": "Something went wrong",
-    "cancel": "Cancel"
   },
   "health": {
     "title": "API status",

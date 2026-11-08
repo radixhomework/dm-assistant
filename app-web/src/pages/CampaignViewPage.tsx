@@ -4,6 +4,7 @@ import { useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { useSlugAutoFill } from "../slug.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -23,6 +24,7 @@ export function CampaignViewPage() {
   const { t } = useTranslation();
   const { slug } = useParams({ from: "/campaigns/$slug" });
   const { ready } = useRequireAuth();
+  const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState<"chapter" | "scene" | null>(null);
   const [parentForNew, setParentForNew] = useState<string | null>(null);
@@ -201,12 +203,16 @@ export function CampaignViewPage() {
             {creating} → {parentForNew}
           </p>
           <label className="flex flex-col gap-1 text-sm">
-            {t("campaigns.title")}
-            <input name="title" required className="rounded-md border border-border bg-background px-3 py-2" />
+            {t("common.fields.title")}
+            <input name="title" required value={slugFields.title}
+              onChange={(event) => slugFields.onTitleChange(event.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2" />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            {t("campaigns.slug")}
-            <input name="slug" required pattern="[a-z0-9-]+" className="rounded-md border border-border bg-background px-3 py-2" />
+            {t("common.fields.slug")}
+            <input name="slug" required pattern="[a-z0-9-]+" value={slugFields.slug}
+              onChange={(event) => slugFields.onSlugChange(event.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2" />
           </label>
           <div className="flex gap-2">
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">

@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { useSlugAutoFill } from "../slug.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -14,6 +15,7 @@ type CampaignWithTracking = Omit<Entity, "tracking"> & {
 export function CampaignsPage() {
   const { t } = useTranslation();
   const { ready } = useRequireAuth();
+  const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
   const campaigns = useQuery({
     queryKey: ["campaigns"],
@@ -80,12 +82,25 @@ export function CampaignsPage() {
           className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
         >
           <label className="flex flex-col gap-1 text-sm">
-            {t("campaigns.title")}
-            <input name="title" required className="rounded-md border border-border bg-background px-3 py-2" />
+            {t("common.fields.title")}
+            <input
+              name="title"
+              required
+              value={slugFields.title}
+              onChange={(event) => slugFields.onTitleChange(event.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2"
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            {t("campaigns.slug")}
-            <input name="slug" required pattern="[a-z0-9-]+" className="rounded-md border border-border bg-background px-3 py-2" />
+            {t("common.fields.slug")}
+            <input
+              name="slug"
+              required
+              pattern="[a-z0-9-]+"
+              value={slugFields.slug}
+              onChange={(event) => slugFields.onSlugChange(event.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2"
+            />
           </label>
           {error !== null && error !== "form" && (
             <p className="text-sm text-radish">{error}</p>

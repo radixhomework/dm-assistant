@@ -3,6 +3,7 @@ import { formString } from "../forms.js";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { adminResetPassword } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { SafeUserLike } from "../types.js";
 
@@ -12,6 +13,8 @@ export function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [resetFor, setResetFor] = useState<string | null>(null);
+  const [resetSaved, setResetSaved] = useState(false);
 
   const users = useQuery({
     queryKey: ["admin-users"],
@@ -27,6 +30,7 @@ export function AdminPage() {
         contentLanguage: string | null;
         distanceUnit: string | null;
         weightUnit: string | null;
+        volumeUnit: string | null;
       }>("/api/admin/settings"),
     enabled: ready,
     retry: false,
@@ -58,6 +62,21 @@ export function AdminPage() {
     }
   }
 
+  async function onResetPassword(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setResetSaved(false);
+    const form = new FormData(event.currentTarget);
+    const id = String(form.get("id") ?? "");
+    try {
+      await adminResetPassword(id, String(form.get("newPassword") ?? ""));
+      setResetFor(null);
+      setResetSaved(true);
+    } catch (submitError) {
+      setError(String(submitError));
+    }
+  }
+
   async function onSetStatus(id: string, status: "active" | "blocked") {
     setError(null);
     try {
@@ -82,6 +101,7 @@ export function AdminPage() {
           contentLanguage: formString(form, "contentLanguage"),
           distanceUnit: formString(form, "distanceUnit"),
           weightUnit: formString(form, "weightUnit"),
+          volumeUnit: formString(form, "volumeUnit"),
         },
       });
       setSaved(true);
@@ -171,6 +191,26 @@ export function AdminPage() {
                   {t("admin.unblock")}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => { setResetFor(resetFor === account.id ? null : account.id); setResetSaved(false); }}
+                className="rounded-md border border-border px-3 py-1 text-sm text-muted hover:bg-background"
+              >
+                {t("admin.resetPassword")}
+              </button>
+              {resetFor === account.id && (
+                <form onSubmit={onResetPassword} className="mt-2 flex flex-col gap-2">
+                  <input type="hidden" name="id" value={account.id} />
+                  <label className="flex flex-col gap-1 text-sm">
+                    {t("admin.newPassword")}
+                    <input name="newPassword" type="password" required minLength={12} className="rounded-md border border-border bg-background px-3 py-2" />
+                  </label>
+                  <button type="submit" className="self-start rounded-md bg-primary px-3 py-1 text-sm text-background hover:bg-accent">
+                    {t("admin.resetPassword")}
+                  </button>
+                  {resetSaved && <p className="text-sm text-primary">{t("admin.passwordReset")}</p>}
+                </form>
+              )}
             </li>
           ))}
         </ul>
@@ -190,11 +230,24 @@ export function AdminPage() {
           </label>
           <label className="flex flex-col gap-1 text-sm">
             {t("admin.distanceUnit")}
-            <input name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className="rounded-md border border-border bg-background px-3 py-2" />
+            <select name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className="rounded-md border border-border bg-background px-3 py-2">
+              <option value="m">m</option>
+              <option value="ft">ft</option>
+            </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             {t("admin.weightUnit")}
-            <input name="weightUnit" defaultValue={settings.data?.weightUnit ?? "kg"} className="rounded-md border border-border bg-background px-3 py-2" />
+            <select name="weightUnit" defaultValue={settings.data?.weightUnit ?? "kg"} className="rounded-md border border-border bg-background px-3 py-2">
+              <option value="kg">kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t("admin.volumeUnit")}
+            <select name="volumeUnit" defaultValue={settings.data?.volumeUnit ?? "L"} className="rounded-md border border-border bg-background px-3 py-2">
+              <option value="L">L</option>
+              <option value="gal">gal</option>
+            </select>
           </label>
           <button type="submit" className="self-start rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
             {t("admin.save")}
