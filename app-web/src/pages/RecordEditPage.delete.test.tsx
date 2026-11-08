@@ -13,7 +13,7 @@ describe("RecordEditPage delete", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (_input: string) => {
-        if (input === "/api/auth/me") {
+        if (_input === "/api/auth/me") {
           return {
             ok: true,
             json: async () => ({
