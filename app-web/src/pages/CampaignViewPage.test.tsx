@@ -103,7 +103,7 @@ describe("CampaignViewPage scene creation", () => {
   });
 
   it("creates a scene and attaches it to its chapter", async () => {
-    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: string, _init?: RequestInit) => {
       if (input === "/api/auth/me") {
         return {
           ok: true,

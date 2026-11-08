@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { CreateUserInput } from "@dm/schemas";
 import { resetTables, testDb } from "../testing/test-db.js";

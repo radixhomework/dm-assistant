@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { resetTables, testDb } from "../testing/test-db.js";
 import { EntitiesService, foldStatuses } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import { resetTables, testDb } from "../testing/test-db.js";
 import { RelationshipsService } from "./relationships.service.js";

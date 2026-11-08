@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { resetTables, testDb } from "../testing/test-db.js";
 import { sessions, users } from "../database/schema.js";
