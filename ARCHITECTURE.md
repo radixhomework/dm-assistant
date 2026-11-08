@@ -25,7 +25,7 @@ Principle: **a single door**. The reverse proxy only sees the app container; Pos
 | Editor | **TipTap** + official `@tiptap/markdown` | WYSIWYG suited to the virtual keyboard, live-styled mentions | Raw markdown editing |
 | UI i18n | **react-i18next**, fr + en catalogs, no hard-coded label | Ecosystem standard for React/Vite; every label exists in both languages from day 1 | Hard-coded strings, FormatJS, lingui, next-intl (Next.js-only) |
 | Backend | **NestJS**, **Drizzle**, **Zod** as pivot, `@nestjs/schedule` | Bounded modules, SQL-first, one schema = API validation + forms + types | Prisma, bare Fastify, Redis/BullMQ |
-| Tenancy | **One world per instance** (set up at the wizard); records carry the hierarchy (Campaign → Chapter → Scene, child→parent links); accounts `admin` / `dm` with blockable status | A personal tool: no multi-tenancy machinery; access model being finalized | Multi-world instances, full RBAC/ACL engine, public share links |
+| Tenancy | **One world per instance** (set up at the wizard); records carry the hierarchy (Campaign → Chapter → Scene, child→parent links); accounts `admin` / `dm` with blockable status, created by an administrator only | A personal tool: no multi-tenancy machinery; full access for authenticated accounts in P1 | Multi-world instances, full RBAC/ACL engine, public share links |
 | Data | **Postgres**: typed columns + JSONB, `tsvector` (config from the content language) + `unaccent`, `pg_trgm` | Native hybrid model, search language follows the content language, service already in place | SQLite (weak French FTS, service already there), pure document (typed relationships lost), CouchDB (offline not required) |
 | Assets | **Internal S3 + backend gateway** (streaming), **sharp** thumbnails | S3 not exposed; ETag/immutable cache absorbs re-consultations | Presigned URLs (would require a reachable S3), map tiles (in-game presentation out of scope) |
 | PWA auth | **Session cookie `httpOnly` `SameSite=Strict`** stored in Postgres | Instantly revocable, zero rotation to code, same origin | JWT (revocation is complicated, no gain in a single service) |
@@ -101,7 +101,7 @@ settings         (key UNIQUE, value JSONB, updated_at)
 ## 8. Auth and security
 
 - argon2id; rate limit on login and `/mcp`; sessions `connect-pg-simple` (Postgres).
-- First-startup wizard creates the administrator account **and the world** (name, content language); open registration afterwards, blockable/unblockable by an admin, rate-limited; admins create DM accounts and block/unblock accounts in the admin panel. Roles `admin` / `dm`, status `active` / `blocked`. Every data path is access-filtered in the repositories (access model being finalized) — no unfiltered query.
+- First-startup wizard creates the administrator account **and the world** (name, content language); **accounts are created by an administrator only** (admin panel — no self-service registration), login rate-limited; admins block/unblock accounts in the admin panel. Roles `admin` / `dm`, status `active` / `blocked`. Every data path is access-filtered in the repositories — no unfiltered query.
 - Same origin (app + API served by the same container) → `SameSite=Strict` covers CSRF, no open CORS.
 - Nothing sensitive in the PWA build (static public shell, data behind auth).
 - Security headers at the reverse proxy: HSTS, tight CSP, `X-Content-Type-Options`.

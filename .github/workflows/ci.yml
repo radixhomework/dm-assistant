@@ -8,6 +8,22 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dm
+          POSTGRES_PASSWORD: dm
+          POSTGRES_DB: dm_assistant
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dm -d dm_assistant"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://dm:dm@localhost:5432/dm_assistant
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -16,6 +32,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run db:migrate -w app
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test

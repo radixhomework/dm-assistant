@@ -31,7 +31,7 @@ Existing tools are compromises: hosted wikis (data out of your control, generic 
 12. **MCP server** for the AI harness: search, read, coherence **annotations** (flagging) and modification **proposals** — never direct writes.
 13. **Installable PWA**: offline reading (shell + cache), editing online only.
 14. **Settings screen**: UI language (French / English, instance default configurable in `.env`), Wizards of the Coast attribution (credits page, see `GOVERNANCE.md`).
-15. **Accounts & admin**: first-start wizard (administrator + world), open registration blockable/unblockable by an administrator, user creation and account blocking in the admin panel.
+15. **Accounts & admin**: first-start wizard (administrator + world), user creation by an administrator only (admin panel), account blocking.
 
 ## 4. Out of scope for v1
 

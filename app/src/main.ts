@@ -4,9 +4,11 @@ import { NestFactory } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
+import session from "express-session";
 import * as path from "node:path";
 import { envSchema, type Env } from "@dm/schemas";
 import { AppModule } from "./app.module.js";
+import { SessionStore } from "./auth/session.store.js";
 
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
@@ -29,11 +31,28 @@ async function bootstrap(): Promise<void> {
     { logger: ["log", "warn", "error"] },
   );
 
-  // Static shell + SPA fallback registered BEFORE init: Nest mounts its
-  // routes (and its 404 handler) after, so /api and /mcp always win via
+  // Static shell + session middleware registered BEFORE init: Nest mounts
+  // its routes (and its 404 handler) after, so /api and /mcp always win via
   // the guards below. Single door — ARCHITECTURE.md §1.
   const dist = path.resolve(__dirname, "../../app-web/dist");
   app.use(express.static(dist, { index: false }));
+  app.use(
+    session({
+      name: "dm.sid",
+      secret: env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      store: app.get(SessionStore, { strict: false }),
+      cookie: {
+        httpOnly: true,
+        sameSite: "strict",
+        // TLS termination happens at the reverse proxy (P6) — flip
+        // COOKIE_SECURE then (Sonar S2092: conditional, not literal false).
+        secure: env.COOKIE_SECURE === "true",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      },
+    }),
+  );
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (
       req.method !== "GET" ||

@@ -14,7 +14,7 @@ Detailed, verifiable behavior that will feed the OpenSpec changes (`openspec/`).
 ## 2. Configuration, content language and full-text search
 
 - **One world per instance**: the world is the instance — no worlds table, no world-level settings layer.
-- `settings(key UNIQUE, value)` at instance scope. v1 keys: `ui_locale`, `registration_open`, `content_language`, `distance_unit`, `weight_unit`, `calendar`.
+- `settings(key UNIQUE, value)` at instance scope. v1 keys: `ui_locale`, `content_language`, `distance_unit`, `weight_unit`, `calendar`.
 - `AUTHORING_LOCALE` in `.env` (default `en`, alternative `fr`): content language set at the first-startup wizard, stored in `settings`.
 - Full-text search: `search_vector tsvector` on `entities`, trigger-maintained from `title` + `body` with the config derived from the content language (`en` → `english`, `fr` → `french`); `unaccent` always applied; GIN-indexed. One world = one config — no per-scope merge. Changing the content language reindexes all records (background job). Queries parse with the same config.
 - Acceptance: searching ignores accents in both languages (e.g. `ecole` finds `École` in fr; same behavior in en).
@@ -25,16 +25,15 @@ Detailed, verifiable behavior that will feed the OpenSpec changes (`openspec/`).
 Settled:
 
 - **First-startup wizard**: creates the administrator account **and the world** (name, content language).
-- **Open registration** after the wizard: an administrator can block/unblock it at any time (persisted in `settings`); rate-limited like login; self-registered accounts land active.
-- **Admin panel** (admin only): create accounts, block/unblock accounts, toggle registration, edit instance settings (content language, units, calendar).
+- **No self-service registration**: accounts are created exclusively by an administrator from the admin panel (explicit action — user decision).
+- **Admin panel** (admin only): create accounts, block/unblock accounts, edit instance settings (content language, units; calendar editor lands with the calendar feature).
 - Roles `admin` / `dm`; account status `active` / `blocked` (blocked = cannot log in; content and grants stay intact).
-- Every data path is access-filtered in the repositories — no unfiltered query path, whatever the pending model settles to.
+- **P1 access rule**: every authenticated account has full read/write access to the one world (personal-tool stance); fine-grained sharing deferred — introducing `shares` later is additive.
+- Every data path is access-filtered in the repositories — no unfiltered query path, whatever evolves from this model.
 
-Pending (blocks the sharing design, not the rest):
+Parked:
 
-1. Multi-DM usage: several DM accounts on the one world, or the admin only?
-2. A reader role (read-only accounts)?
-3. Public lore: read access without account (opt-in), or internal-only?
+- Public lore: read access without account (opt-in) — parked, not planned for P1.
 
 ## 4. Calendar
 
