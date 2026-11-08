@@ -48,7 +48,7 @@ export function AdminPage() {
           email: formString(form, "email"),
           password: formString(form, "password"),
           displayName: formString(form, "displayName"),
-          role: String(form.get("role") || "dm"),
+          role: String(formString(form, "role") || "dm"),
         },
       });
       setCreating(false);
