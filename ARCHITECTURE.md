@@ -116,7 +116,7 @@ settings         (key UNIQUE, value JSONB, updated_at)
 
 ## 10. Known risks and mitigations
 
-1. **TipTap markdown round-trip** (known bugs: hard breaks, tables, fences) → empty-diff acceptance test from day 1 on real templates; plan B CodeMirror 6.
+1. **TipTap markdown round-trip** (known bugs: hard breaks, tables, fences) → empty-diff acceptance test from day 1 on real templates; plan B CodeMirror 6. **Retired 2026-11-08** by the round-trip-spike change: corpus + custom-node probe pass byte-for-byte under `@tiptap/markdown` 3.33 (stable); non-canonical input normalizes once on first save (hard-break spelling, autolinks, table padding, blank-line runs — evidence in the change's design.md Verdict). The round-trip harness in `app-web/src/editor/round-trip/` gates the build from now on.
 2. **MCP behind the reverse proxy** (proxy buffering) → buffering disabled on `/mcp` validated during the first week.
 3. ~~Offline editing~~ — ruled out by decision (see `PRODUCT.md` §4).
 

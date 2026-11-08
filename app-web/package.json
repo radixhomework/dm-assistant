@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "round-trip": "vitest run --config vitest.round-trip.config.ts src/editor/round-trip/adhoc.spec.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.107.1",
@@ -23,6 +24,13 @@
     "@tailwindcss/vite": "^4.3.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
+    "@tiptap/core": "^3.33.0",
+    "@tiptap/extension-image": "^3.33.0",
+    "@tiptap/extension-table": "^3.33.0",
+    "@tiptap/markdown": "^3.33.0",
+    "@tiptap/pm": "^3.33.0",
+    "@tiptap/starter-kit": "^3.33.0",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.2.1",
