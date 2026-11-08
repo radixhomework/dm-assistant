@@ -102,31 +102,19 @@ export class EntitiesService {
     }
     seen.add(slug);
     const record = await this.getBySlug(slug);
-    const childKind =
-      record.type === "campaign"
-        ? "chapter"
-        : record.type === "chapter"
-          ? "scene"
-          : null;
-
+    const childKind = childKindOf(record.type);
     if (!childKind) {
       return { slug, status: this.statusOf(record.fields), children: [] };
     }
 
     const children = await this.relationships.listChildren(slug, childKind);
-    const childViews: Array<{
-      slug: string;
-      title: string;
-      status: PlayStatus;
-    }> = [];
-    for (const child of children) {
-      const childTracking = await this.tracking(child.slug, seen);
-      childViews.push({
+    const childViews = await Promise.all(
+      children.map(async (child) => ({
         slug: child.slug,
         title: child.title,
-        status: childTracking.status,
-      });
-    }
+        status: (await this.tracking(child.slug, seen)).status,
+      })),
+    );
     return {
       slug,
       status: foldStatuses(childViews.map((c) => c.status)),
@@ -148,9 +136,15 @@ export class EntitiesService {
  */
 export function foldStatuses(statuses: PlayStatus[]): PlayStatus {
   if (statuses.length === 0) return "not_played";
-  if (statuses.some((status) => status === "in_progress")) return "in_progress";
+  if (statuses.includes("in_progress")) return "in_progress";
   if (statuses.every((status) => status === "played")) return "played";
   return "not_played";
+}
+
+function childKindOf(type: string): "chapter" | "scene" | null {
+  if (type === "campaign") return "chapter";
+  if (type === "chapter") return "scene";
+  return null;
 }
 
 function isUniqueViolation(error: unknown): boolean {

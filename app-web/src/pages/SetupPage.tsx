@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formString } from "../forms.js";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -17,7 +18,7 @@ export function SetupPage() {
     void navigate({ to: "/login" });
   }
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const form = new FormData(event.currentTarget);
@@ -26,11 +27,11 @@ export function SetupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: String(form.get("email")),
-          password: String(form.get("password")),
-          displayName: String(form.get("displayName")),
-          worldName: String(form.get("worldName")),
-          contentLanguage: String(form.get("contentLanguage")),
+          email: formString(form, "email"),
+          password: formString(form, "password"),
+          displayName: formString(form, "displayName"),
+          worldName: formString(form, "worldName"),
+          contentLanguage: formString(form, "contentLanguage"),
         }),
       });
       void navigate({ to: "/login" });

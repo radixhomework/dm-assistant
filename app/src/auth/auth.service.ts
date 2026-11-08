@@ -1,6 +1,6 @@
 import { ConflictException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { hash } from "@node-rs/argon2";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { WizardInput } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -69,19 +69,16 @@ export class AuthService {
         })
         .returning();
 
-      const settingRows = [
-        { key: "world_name", value: input.worldName },
-        { key: "content_language", value: input.contentLanguage },
-      ];
-      for (const row of settingRows) {
-        await tx
-          .insert(settings)
-          .values(row)
-          .onConflictDoUpdate({
-            target: settings.key,
-            set: { value: row.value, updatedAt: new Date() },
-          });
-      }
+      await tx
+        .insert(settings)
+        .values([
+          { key: "world_name", value: input.worldName },
+          { key: "content_language", value: input.contentLanguage },
+        ])
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value: sql`excluded.value`, updatedAt: new Date() },
+        });
       return admin;
     });
     return { email: input.email.toLowerCase() };

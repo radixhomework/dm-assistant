@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { formString } from "../forms.js";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -36,7 +37,7 @@ export function AdminPage() {
     return <p className="text-radish">{t("admin.title")}</p>;
   }
 
-  async function onCreateUser(event: React.FormEvent<HTMLFormElement>) {
+  async function onCreateUser(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const form = new FormData(event.currentTarget);
@@ -44,9 +45,9 @@ export function AdminPage() {
       await api("/api/admin/users", {
         method: "POST",
         body: {
-          email: String(form.get("email")),
-          password: String(form.get("password")),
-          displayName: String(form.get("displayName")),
+          email: formString(form, "email"),
+          password: formString(form, "password"),
+          displayName: formString(form, "displayName"),
           role: String(form.get("role") || "dm"),
         },
       });
@@ -70,7 +71,7 @@ export function AdminPage() {
     }
   }
 
-  async function onSaveSettings(event: React.FormEvent<HTMLFormElement>) {
+  async function onSaveSettings(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const form = new FormData(event.currentTarget);
@@ -78,9 +79,9 @@ export function AdminPage() {
       await api("/api/admin/settings", {
         method: "PATCH",
         body: {
-          contentLanguage: String(form.get("contentLanguage")),
-          distanceUnit: String(form.get("distanceUnit")),
-          weightUnit: String(form.get("weightUnit")),
+          contentLanguage: formString(form, "contentLanguage"),
+          distanceUnit: formString(form, "distanceUnit"),
+          weightUnit: formString(form, "weightUnit"),
         },
       });
       setSaved(true);

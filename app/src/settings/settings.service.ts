@@ -1,4 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { sql } from "drizzle-orm";
 import type { UpdateSettingsInput } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -32,13 +33,13 @@ export class SettingsService {
       key: key.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase()),
       value,
     }));
-    for (const row of rows) {
+    if (rows.length > 0) {
       await this.db
         .insert(settings)
-        .values(row)
+        .values(rows)
         .onConflictDoUpdate({
           target: settings.key,
-          set: { value: row.value, updatedAt: new Date() },
+          set: { value: sql`excluded.value`, updatedAt: new Date() },
         });
     }
     return this.getAll();

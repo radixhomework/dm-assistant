@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { formString } from "../forms.js";
 import { useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,12 +13,11 @@ type Tracking = {
   children: Array<{ slug: string; title: string; status: string }>;
 };
 
-const statusBadgeClass = (status: string) =>
-  status === "played"
-    ? "bg-primary text-background"
-    : status === "in_progress"
-      ? "bg-accent text-background"
-      : "border border-border text-muted";
+const statusBadgeClass = (status: string) => {
+  if (status === "played") return "bg-primary text-background";
+  if (status === "in_progress") return "bg-accent text-background";
+  return "border border-border text-muted";
+};
 
 export function CampaignViewPage() {
   const { t } = useTranslation();
@@ -59,7 +59,7 @@ export function CampaignViewPage() {
 
   const data = campaign.data;
 
-  async function createChild(event: React.FormEvent<HTMLFormElement>) {
+  async function createChild(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!creating || !parentForNew) return;
     setError(null);
@@ -69,13 +69,13 @@ export function CampaignViewPage() {
       await api("/api/records", {
         method: "POST",
         body: {
-          slug: String(form.get("slug")),
+          slug: formString(form, "slug"),
           type: childType,
           perimeter: "campaign",
-          title: String(form.get("title")),
+          title: formString(form, "title"),
         },
       });
-      await api(`/api/records/${String(form.get("slug"))}/parent`, {
+      await api(`/api/records/${formString(form, "slug")}/parent`, {
         method: "POST",
         body: { parentSlug: parentForNew, kind: childType },
       });

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { formString } from "../forms.js";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +28,7 @@ export function LorePage() {
     byType.set(record.type, [...(byType.get(record.type) ?? []), record]);
   }
 
-  async function onCreate(event: React.FormEvent<HTMLFormElement>) {
+  async function onCreate(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const form = new FormData(event.currentTarget);
@@ -35,10 +36,10 @@ export function LorePage() {
       await api("/api/records", {
         method: "POST",
         body: {
-          slug: String(form.get("slug")),
-          type: String(form.get("type")),
+          slug: formString(form, "slug"),
+          type: formString(form, "type"),
           perimeter: "world",
-          title: String(form.get("title")),
+          title: formString(form, "title"),
         },
       });
       setCreating(false);

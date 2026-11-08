@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { formString } from "../forms.js";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,13 +29,13 @@ export function RecordEditPage() {
   const data = record.data;
   const fieldsJson = JSON.stringify(data.fields, null, 2);
 
-  async function onSave(event: React.FormEvent<HTMLFormElement>) {
+  async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const form = new FormData(event.currentTarget);
     let fields: unknown;
     try {
-      fields = JSON.parse(String(form.get("fields")) || "{}");
+      fields = JSON.parse(formString(form, "fields") || "{}");
     } catch {
       setError("Invalid JSON");
       return;
@@ -43,13 +44,13 @@ export function RecordEditPage() {
       await api(`/api/records/${slug}`, {
         method: "PATCH",
         body: {
-          title: String(form.get("title")),
-          tags: String(form.get("tags"))
+          title: formString(form, "title"),
+          tags: formString(form, "tags")
             .split(",")
             .map((tag) => tag.trim())
             .filter(Boolean),
           fields,
-          body: String(form.get("body")),
+          body: formString(form, "body"),
         },
       });
     } catch (saveError) {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formString } from "../forms.js";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -7,7 +8,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const form = new FormData(event.currentTarget);
@@ -16,8 +17,8 @@ export function LoginPage() {
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify({
-        email: String(form.get("email")),
-        password: String(form.get("password")),
+        email: formString(form, "email"),
+        password: formString(form, "password"),
       }),
     });
     if (res.ok) {
