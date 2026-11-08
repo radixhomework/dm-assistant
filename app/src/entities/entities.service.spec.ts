@@ -1,9 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import {
-  closeTestClient,
-  resetTables,
-  testDb,
-} from "../testing/test-db.js";
+import { resetTables, testDb } from "../testing/test-db.js";
 import { EntitiesService, foldStatuses } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
@@ -28,7 +24,7 @@ describe("EntitiesService", () => {
 
   beforeAll(resetTables);
   beforeEach(resetTables);
-  afterAll(closeTestClient);
+
 
   const campaign = {
     slug: "north-realm",
@@ -132,5 +128,47 @@ describe("EntitiesService", () => {
     expect(after.status).toBe("played");
     const campaignAfter = await service.tracking("north-realm");
     expect(campaignAfter.status).toBe("played");
+  });
+});
+
+describe("EntitiesService edge cases", () => {
+  const service = new EntitiesService(
+    testDb,
+    new RelationshipsService(testDb),
+  );
+
+  beforeEach(resetTables);
+
+
+  it("rejects reading an unknown slug", async () => {
+    await expect(service.getBySlug("does-not-exist")).rejects.toThrow(
+      /not found/,
+    );
+  });
+
+  it("rejects updating an unknown slug", async () => {
+    await expect(
+      service.update("does-not-exist", { title: "X" }),
+    ).rejects.toThrow(/not found/);
+  });
+
+  it("filters the list by perimeter and type", async () => {
+    await service.create({
+      slug: "a-campaign",
+      type: "campaign",
+      perimeter: "campaign",
+      title: "A",
+    });
+    await service.create({
+      slug: "a-place",
+      type: "places",
+      perimeter: "world",
+      title: "B",
+    });
+    const campaigns = await service.list({
+      perimeter: "campaign",
+      type: "campaign",
+    });
+    expect(campaigns.map((row) => row.slug)).toEqual(["a-campaign"]);
   });
 });

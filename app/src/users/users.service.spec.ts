@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { CreateUserInput } from "@dm/schemas";
-import { closeTestClient, resetTables, testDb } from "../testing/test-db.js";
+import { resetTables, testDb } from "../testing/test-db.js";
 import { UsersService } from "./users.service.js";
 
 describe("UsersService", () => {
@@ -9,7 +9,7 @@ describe("UsersService", () => {
   const emails: string[] = [];
 
   beforeAll(resetTables);
-  afterAll(closeTestClient);
+
 
   function input(): CreateUserInput {
     const email = `${randomUUID()}@example.com`;

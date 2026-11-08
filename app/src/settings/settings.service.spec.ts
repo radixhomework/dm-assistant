@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closeTestClient, resetTables, testDb } from "../testing/test-db.js";
+import { resetTables, testDb } from "../testing/test-db.js";
 import { SettingsService } from "./settings.service.js";
 
 describe("SettingsService", () => {
   const service = new SettingsService(testDb);
 
   beforeAll(resetTables);
-  afterAll(closeTestClient);
+
 
   it("returns null-valued settings on a fresh instance", async () => {
     const all = await service.getAll();

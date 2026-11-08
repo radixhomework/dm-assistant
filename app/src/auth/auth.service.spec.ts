@@ -2,11 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { WizardInput } from "@dm/schemas";
-import {
-  closeTestClient,
-  resetTables,
-  testDb,
-} from "../testing/test-db.js";
+import { resetTables, testDb } from "../testing/test-db.js";
 import { settings, users } from "../database/schema.js";
 import { SessionStore } from "./session.store.js";
 import { AuthService } from "./auth.service.js";
@@ -15,7 +11,7 @@ describe("AuthService", () => {
   const service = new AuthService(testDb, new SessionStore(testDb));
 
   beforeAll(resetTables);
-  afterAll(closeTestClient);
+
 
   function wizardInput(): WizardInput {
     return {

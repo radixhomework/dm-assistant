@@ -1,11 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import {
-  closeTestClient,
-  resetTables,
-  testDb,
-} from "../testing/test-db.js";
+import { resetTables, testDb } from "../testing/test-db.js";
 import { sessions, users } from "../database/schema.js";
 import { SessionStore } from "./session.store.js";
 
@@ -26,7 +22,7 @@ describe("SessionStore", () => {
       .returning();
     userId = row.id;
   });
-  afterAll(closeTestClient);
+
 
   it("round-trips a session through set and get", async () => {
     const sid = randomUUID();

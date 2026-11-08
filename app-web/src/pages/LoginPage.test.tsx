@@ -39,3 +39,22 @@ describe("LoginPage", () => {
     );
   });
 });
+
+describe("LoginPage errors", () => {
+  it("shows the API error message on failed login", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        json: async () => ({ message: "This account is blocked" }),
+      })),
+    );
+    renderWithProviders(<LoginPage />, "/login");
+    const form = document.querySelector("form");
+    if (!form) throw new Error("form missing");
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(screen.getByText(/This account is blocked/)).toBeDefined(),
+    );
+  });
+});
