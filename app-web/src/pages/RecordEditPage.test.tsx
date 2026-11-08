@@ -43,7 +43,7 @@ describe("RecordEditPage", () => {
   });
 
   it("renders the edit form pre-filled and saves via PATCH", async () => {
-    const fetchMock = vi.fn(async (input: string) => ({
+    const fetchMock = vi.fn(async (_input: string) => ({
       ok: true,
       json: async () => ({
         id: "1",

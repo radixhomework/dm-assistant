@@ -12,7 +12,7 @@ describe("RecordEditPage delete", () => {
     document.documentElement.lang = "en";
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: string) => {
+      vi.fn(async (_input: string) => {
         if (input === "/api/auth/me") {
           return {
             ok: true,
@@ -42,7 +42,7 @@ describe("RecordEditPage delete", () => {
   });
 
   it("sends DELETE when the delete button is clicked", async () => {
-    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: string, _init?: RequestInit) => {
       if (input === "/api/auth/me") {
         return {
           ok: true,

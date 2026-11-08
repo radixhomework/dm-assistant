@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { RootLayout } from "./RootLayout";
 import { renderWithProviders } from "../testing/render.js";
 
