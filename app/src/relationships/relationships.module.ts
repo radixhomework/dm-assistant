@@ -1,5 +1,8 @@
 import { Module } from "@nestjs/common";
+import { RelationshipsService } from "./relationships.service.js";
 
-/** Domain module skeleton — behavior lands with its phase (ROADMAP.md). */
-@Module({})
+@Module({
+  providers: [RelationshipsService],
+  exports: [RelationshipsService],
+})
 export class RelationshipsModule {}

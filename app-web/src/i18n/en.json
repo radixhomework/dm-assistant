@@ -6,6 +6,87 @@
   "home": {
     "intro": "Structured records for your lore, a coherence audit, and an assistant that creates nothing but flags what needs attention."
   },
+  "nav": {
+    "lore": "Lore",
+    "campaigns": "Campaigns",
+    "admin": "Admin",
+    "logout": "Log out"
+  },
+  "setup": {
+    "title": "Welcome to your instance",
+    "intro": "Create the administrator account and name your world.",
+    "email": "Email",
+    "password": "Password (12+ characters)",
+    "displayName": "Display name",
+    "worldName": "World name",
+    "contentLanguage": "Content language",
+    "submit": "Create the administrator"
+  },
+  "login": {
+    "title": "Log in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Log in"
+  },
+  "lore": {
+    "title": "Lore",
+    "intro": "World records, grouped by template type.",
+    "newRecord": "New record",
+    "type": "Type",
+    "slug": "Slug",
+    "title": "Title",
+    "create": "Create",
+    "open": "Open",
+    "delete": "Delete",
+    "body": "Body (markdown)",
+    "tags": "Tags (comma-separated)",
+    "fields": "Fields (JSON)",
+    "save": "Save",
+    "empty": "No records yet."
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "newCampaign": "New campaign",
+    "title": "Title",
+    "slug": "Slug",
+    "create": "Create",
+    "open": "Open",
+    "chapters": "Chapters",
+    "newChapter": "New chapter",
+    "scenes": "Scenes",
+    "newScene": "New scene",
+    "status": {
+      "not_played": "Not played",
+      "in_progress": "In progress",
+      "played": "Played"
+    },
+    "setStatus": "Set status",
+    "empty": "No campaigns yet."
+  },
+  "admin": {
+    "title": "Admin",
+    "users": "Users",
+    "createUser": "Create user",
+    "email": "Email",
+    "password": "Password (12+ characters)",
+    "displayName": "Display name",
+    "role": "Role",
+    "status": "Status",
+    "block": "Block",
+    "unblock": "Unblock",
+    "create": "Create",
+    "settings": "Instance settings",
+    "contentLanguage": "Content language",
+    "distanceUnit": "Distance unit",
+    "weightUnit": "Weight unit",
+    "save": "Save",
+    "saved": "Saved."
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "cancel": "Cancel"
+  },
   "health": {
     "title": "API status",
     "loading": "Checking…",

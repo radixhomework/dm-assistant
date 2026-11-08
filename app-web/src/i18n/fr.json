@@ -6,6 +6,87 @@
   "home": {
     "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui demande attention."
   },
+  "nav": {
+    "lore": "Lore",
+    "campaigns": "Campagnes",
+    "admin": "Admin",
+    "logout": "Déconnexion"
+  },
+  "setup": {
+    "title": "Bienvenue sur votre instance",
+    "intro": "Créez le compte administrateur et nommez votre monde.",
+    "email": "Email",
+    "password": "Mot de passe (12+ caractères)",
+    "displayName": "Nom affiché",
+    "worldName": "Nom du monde",
+    "contentLanguage": "Langue du contenu",
+    "submit": "Créer l'administrateur"
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "submit": "Se connecter"
+  },
+  "lore": {
+    "title": "Lore",
+    "intro": "Les fiches du monde, groupées par type de template.",
+    "newRecord": "Nouvelle fiche",
+    "type": "Type",
+    "slug": "Slug",
+    "title": "Titre",
+    "create": "Créer",
+    "open": "Ouvrir",
+    "delete": "Supprimer",
+    "body": "Corps (markdown)",
+    "tags": "Tags (séparés par des virgules)",
+    "fields": "Champs (JSON)",
+    "save": "Enregistrer",
+    "empty": "Aucune fiche pour l'instant."
+  },
+  "campaigns": {
+    "title": "Campagnes",
+    "newCampaign": "Nouvelle campagne",
+    "title": "Titre",
+    "slug": "Slug",
+    "create": "Créer",
+    "open": "Ouvrir",
+    "chapters": "Chapitres",
+    "newChapter": "Nouveau chapitre",
+    "scenes": "Scènes",
+    "newScene": "Nouvelle scène",
+    "status": {
+      "not_played": "Non joué",
+      "in_progress": "En cours",
+      "played": "Joué"
+    },
+    "setStatus": "Définir le statut",
+    "empty": "Aucune campagne pour l'instant."
+  },
+  "admin": {
+    "title": "Admin",
+    "users": "Utilisateurs",
+    "createUser": "Créer un utilisateur",
+    "email": "Email",
+    "password": "Mot de passe (12+ caractères)",
+    "displayName": "Nom affiché",
+    "role": "Rôle",
+    "status": "Statut",
+    "block": "Bloquer",
+    "unblock": "Débloquer",
+    "create": "Créer",
+    "settings": "Réglages de l'instance",
+    "contentLanguage": "Langue du contenu",
+    "distanceUnit": "Unité de distance",
+    "weightUnit": "Unité de poids",
+    "save": "Enregistrer",
+    "saved": "Enregistré."
+  },
+  "common": {
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue",
+    "cancel": "Annuler"
+  },
   "health": {
     "title": "État de l'API",
     "loading": "Vérification…",
