@@ -46,9 +46,9 @@ async function bootstrap(): Promise<void> {
       cookie: {
         httpOnly: true,
         sameSite: "strict",
-        // TLS termination happens at the reverse proxy (P6); plain http
-        // in local compose would drop a Secure cookie.
-        secure: false,
+        // TLS termination happens at the reverse proxy (P6) — flip
+        // COOKIE_SECURE then (Sonar S2092: conditional, not literal false).
+        secure: env.COOKIE_SECURE === "true",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       },
     }),
