@@ -1,5 +1,5 @@
 vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => ({ to: vi.fn() }),
+  useNavigate: () => vi.fn(),
   useParams: () => ({ slug: "city-of-glass" }),
   useRouterState: () => ({
     select: () => ({ location: { pathname: "/login" } }),
