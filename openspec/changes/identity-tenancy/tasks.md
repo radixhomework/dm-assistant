@@ -28,5 +28,5 @@
 ## 5. Quality gate
 
 - [x] 5.1 Run the impeccable design pass over the new pages (wizard, login, dashboard, campaign view, admin) and apply material fixes; verify the theme holds in both languages
-- [ ] 5.2 Verify the P1 exit criterion end to end: from a clean compose stack, the wizard bootstraps, the admin logs in, creates a campaign with chapters and scenes, sets scene statuses and the tracking aggregates upward
-- [ ] 5.3 Confirm CI + Sonar gate pass on the pull request (coverage ≥ 80% on new code) and mark the phase done
+- [x] 5.2 Verify the P1 exit criterion end to end: from a clean compose stack, the wizard bootstraps, the admin logs in, creates a campaign with chapters and scenes, sets scene statuses and the tracking aggregates upward
+- [x] 5.3 Confirm CI + Sonar gate pass on the pull request (coverage ≥ 80% on new code) and mark the phase done

@@ -65,6 +65,17 @@ export class UsersService {
     return row ? this.toSafe(row) : null;
   }
 
+  /** Public projection — never expose the password hash. */
+  safeOf(row: {
+    id: string;
+    email: string;
+    displayName: string;
+    role: string;
+    status: string;
+  }): SafeUser {
+    return this.toSafe(row);
+  }
+
   async verifyPassword(
     passwordHash: string,
     password: string,

@@ -36,11 +36,11 @@ export class AuthGuard implements CanActivate {
     if (typeof userId !== "string") {
       throw new UnauthorizedException();
     }
-    const user = await this.usersService.findById(userId);
-    if (!user || user.status === "blocked") {
+    const row = await this.usersService.findById(userId);
+    if (!row || row.status === "blocked") {
       throw new UnauthorizedException();
     }
-    request.user = user;
+    request.user = this.usersService.safeOf(row);
     return true;
   }
 }
