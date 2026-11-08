@@ -22,6 +22,7 @@ describe("AuthGuard", () => {
 
   beforeEach(() => {
     usersService = {
+      safeOf: vi.fn((row: SafeUser) => row),
       findById: vi.fn(async (id: string) => {
         if (id === "admin-id") return admin;
         return null;
