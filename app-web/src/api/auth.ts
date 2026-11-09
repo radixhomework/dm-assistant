@@ -46,6 +46,10 @@ export async function changeMyPassword(
   });
 }
 
+export function adminDeleteUser(userId: string): Promise<void> {
+  return api<void>(`/api/admin/users/${userId}`, { method: "DELETE" });
+}
+
 export function adminResetPassword(
   userId: string,
   newPassword: string,

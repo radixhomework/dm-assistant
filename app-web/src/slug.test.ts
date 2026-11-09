@@ -31,6 +31,14 @@ describe("useSlugAutoFill", () => {
     expect(result.current.slug).toBe("ma-tour");
   });
 
+  it("clears both fields on reset", () => {
+    const { result } = renderHook(() => useSlugAutoFill());
+    act(() => result.current.onTitleChange("Tour de Garde"));
+    act(() => result.current.reset());
+    expect(result.current.title).toBe("");
+    expect(result.current.slug).toBe("");
+  });
+
   it("resumes auto-fill when the slug is edited back to the derived form", () => {
     const { result } = renderHook(() => useSlugAutoFill());
     act(() => result.current.onTitleChange("Tour de Garde"));

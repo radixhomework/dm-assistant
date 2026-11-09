@@ -27,6 +27,11 @@ export function useSlugAutoFill() {
   return {
     title,
     slug,
+    reset: () => {
+      setTitle("");
+      setSlug("");
+      setSlugEdited(false);
+    },
     onTitleChange: (value: string) => {
       setTitle(value);
       if (!slugEdited) setSlug(slugify(value));

@@ -102,6 +102,22 @@ describe("AdminPage actions", () => {
     });
   });
 
+  it("deletes a user via the delete button after confirmation", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    mockInstance(captured);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<AdminPage />, "/admin");
+    await vi.waitFor(() => expect(screen.getByText("Delete")).toBeDefined());
+    screen.getByText("Delete").click();
+    await vi.waitFor(() => {
+      const removed = captured.find(
+        ([path, init]) => path === "/api/admin/users/u1" && init?.method === "DELETE",
+      );
+      expect(removed).toBeDefined();
+    });
+    expect(confirmSpy).toHaveBeenCalled();
+  });
+
   it("saves instance settings via the settings form", async () => {
     const captured: Array<[string, RequestInit]> = [];
     mockInstance(captured);

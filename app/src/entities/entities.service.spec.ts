@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { resetTables, testDb } from "../testing/test-db.js";
+import { users } from "../database/schema.js";
 import { EntitiesService, foldStatuses } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
@@ -51,6 +52,21 @@ describe("EntitiesService", () => {
     expect(created.tags).toEqual([]);
     const read = await service.getBySlug("north-realm");
     expect(read.title).toBe("The North Realm");
+  });
+
+  it("stamps the author on creation", async () => {
+    const authorId = "11111111-1111-4111-8111-111111111111";
+    await testDb
+      .insert(users)
+      .values({ id: authorId, email: "author@example.com", displayName: "Author", passwordHash: "x" })
+      .onConflictDoNothing();
+    const created = await service.create({ ...scene, slug: "scene-authored" }, authorId);
+    expect(created.createdBy).toBe(authorId);
+  });
+
+  it("leaves the author null when creation is not attributed", async () => {
+    const created = await service.create({ ...scene, slug: "scene-anonymous" });
+    expect(created.createdBy).toBeNull();
   });
 
   it("refuses a duplicate slug", async () => {

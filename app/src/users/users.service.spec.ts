@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { CreateUserInput } from "@dm/schemas";
 import { resetTables, testDb } from "../testing/test-db.js";
+import { entities } from "../database/schema.js";
 import { UsersService } from "./users.service.js";
 
 describe("UsersService", () => {
@@ -54,5 +55,28 @@ describe("UsersService", () => {
     await service.create(input());
     const list = await service.list();
     expect(list.length).toBeGreaterThan(0);
+  });
+
+  it("deletes a user without campaigns", async () => {
+    const created = await service.create(input());
+    await service.deleteUser(created.id, randomUUID());
+    expect(await service.findById(created.id)).toBeNull();
+  });
+
+  it("refuses deleting a user who created a campaign", async () => {
+    const creator = await service.create(input());
+    await testDb.insert(entities).values({
+      slug: `campagne-${randomUUID()}`,
+      type: "campaign",
+      perimeter: "campaign",
+      title: "Campagne de test",
+      createdBy: creator.id,
+    });
+    await expect(service.deleteUser(creator.id, randomUUID())).rejects.toThrow(/campaigns/);
+  });
+
+  it("refuses self-deletion", async () => {
+    const acting = await service.create(input());
+    await expect(service.deleteUser(acting.id, acting.id)).rejects.toThrow(/own account/);
   });
 });

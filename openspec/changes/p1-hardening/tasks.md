@@ -21,3 +21,12 @@
 - [x] 3.1 `npm test -w app` and `npm test -w app-web` green; `npm run typecheck` and `npm run lint` clean
 - [x] 3.2 Rebuild the compose image, restart the stack, apply migrations, and browser-smoke: fresh-instance redirect (only on a wiped volume), login/logout navigation, language switch persistence, slug auto-fill, unit selects, profile password change, admin reset
 - [x] 3.3 `openspec validate p1-hardening --strict` green
+
+## 6. Second feedback batch (2026-11-09)
+
+- [x] 6.1 Reset create-form title/slug state on open (Lore, Campaigns, CampaignView); hook test for reset()
+- [x] 6.2 Delete actions for campaign/chapter/scene with confirmation, parent-with-children refusal surfaced; verified end to end
+- [x] 6.3 Record save shows a success confirmation (lore.saved, fr+en); RecordEditPage test asserts it
+- [x] 6.4 Admin settings form renders only once settings are loaded (no stale defaults on refresh); persistence re-verified on a fresh instance
+- [x] 6.5 User deletion: migration `entities.created_by`, service refusal (campaigns, self), admin DELETE endpoint + UI with confirm; service + component tests
+- [x] 6.6 Suites green (app, app-web), typecheck + lint clean, stack rebuilt and smoked; `openspec validate p1-hardening --strict`

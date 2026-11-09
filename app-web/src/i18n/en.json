@@ -49,6 +49,7 @@
     "tags": "Tags (comma-separated)",
     "fields": "Fields (JSON)",
     "save": "Save",
+    "saved": "Saved.",
     "empty": "No records yet."
   },
   "campaigns": {
@@ -65,6 +66,10 @@
       "in_progress": "In progress",
       "played": "Played"
     },
+    "delete": "Delete",
+    "deleteCampaign": "Delete campaign",
+    "deleteCampaignConfirm": "Delete this campaign? Chapters must be deleted first.",
+    "deleteConfirm": "Delete this item?",
     "setStatus": "Set status",
     "empty": "No campaigns yet."
   },
@@ -101,6 +106,10 @@
     "volumeUnit": "Volume unit",
     "newPassword": "New password (12+ characters)",
     "resetPassword": "Set a new password",
+    "deleteUser": "Delete",
+    "deleteUserConfirm": "Delete this user? This cannot be undone.",
+    "userHasCampaigns": "This user still has campaigns — deletion refused.",
+    "selfDelete": "You cannot delete your own account.",
     "passwordReset": "Password updated.",
     "save": "Save",
     "saved": "Saved."

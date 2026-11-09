@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { formString } from "../forms.js";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -23,6 +23,7 @@ const statusBadgeClass = (status: string) => {
 export function CampaignViewPage() {
   const { t } = useTranslation();
   const { slug } = useParams({ from: "/campaigns/$slug" });
+  const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
@@ -105,9 +106,35 @@ export function CampaignViewPage() {
     }
   }
 
+  async function onDeleteRecord(targetSlug: string) {
+    setError(null);
+    try {
+      await api(`/api/records/${targetSlug}`, { method: "DELETE" });
+      if (targetSlug === slug) {
+        void navigate({ to: "/campaigns" });
+        return;
+      }
+      await campaign.refetch();
+      await chapterTrackings.refetch();
+    } catch (deleteError) {
+      setError(String(deleteError));
+    }
+  }
+
   return (
     <div>
-      <h1 className="font-display text-4xl font-semibold text-ink">{data.title}</h1>
+      <div className="flex items-baseline justify-between">
+        <h1 className="font-display text-4xl font-semibold text-ink">{data.title}</h1>
+        <button
+          type="button"
+          onClick={() => {
+            if (confirm(t("campaigns.deleteCampaignConfirm"))) void onDeleteRecord(slug);
+          }}
+          className="rounded-md border border-border px-3 py-1 text-sm text-radish hover:bg-background"
+        >
+          {t("campaigns.deleteCampaign")}
+        </button>
+      </div>
       <p className="mt-1 text-sm text-muted">
         {t(`campaigns.status.${data.tracking.status}`)}
       </p>
@@ -124,6 +151,7 @@ export function CampaignViewPage() {
           <button
             type="button"
             onClick={() => {
+              slugFields.reset();
               setCreating("chapter");
               setParentForNew(slug);
             }}
@@ -144,8 +172,19 @@ export function CampaignViewPage() {
               <li key={chapter.slug} className="rounded-lg border border-border bg-surface p-4">
                 <div className="flex items-baseline justify-between">
                   <span className="font-display text-xl text-ink">{chapter.title}</span>
-                  <span className={`rounded-md px-2 py-0.5 text-sm ${statusBadgeClass(chapter.status)}`}>
-                    {t(`campaigns.status.${chapter.status}`)}
+                  <span className="flex items-baseline gap-2">
+                    <span className={`rounded-md px-2 py-0.5 text-sm ${statusBadgeClass(chapter.status)}`}>
+                      {t(`campaigns.status.${chapter.status}`)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(t("campaigns.deleteConfirm"))) void onDeleteRecord(chapter.slug);
+                      }}
+                      className="text-sm text-radish hover:underline"
+                    >
+                      {t("campaigns.delete")}
+                    </button>
                   </span>
                 </div>
                 <div className="mt-3">
@@ -173,6 +212,15 @@ export function CampaignViewPage() {
                               </button>
                             ),
                           )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(t("campaigns.deleteConfirm"))) void onDeleteRecord(scene.slug);
+                            }}
+                            className="text-xs text-radish hover:underline"
+                          >
+                            {t("campaigns.delete")}
+                          </button>
                         </span>
                       </li>
                     ))}
@@ -180,6 +228,7 @@ export function CampaignViewPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      slugFields.reset();
                       setCreating("scene");
                       setParentForNew(chapter.slug);
                     }}

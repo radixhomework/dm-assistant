@@ -14,6 +14,7 @@ The DM's first walkthrough of the running stack surfaced P1 bugs and gaps that b
 - **Units as closed enums**: distance (`m`/`ft`), weight (`kg`/`lb`) and volume (`L`/`gal` — new `volume_unit` setting) validated by Zod enums, edited through selects in the admin panel; invalid stored values fall back to defaults at read time (no destructive migration).
 - **Profile self-service**: every authenticated user edits their own email, display name and UI language, and changes their own password (current password required).
 - **Admin password reset**: administrators set a new password for any account from the admin panel (no email flow — self-hosted instance without SMTP).
+- **Second feedback batch (2026-11-09)**: create-form title/slug state resets between successive creations; campaign/chapter/scene deletion in the campaign view (parent-with-children refusal surfaced); record save shows a success confirmation; the admin settings form renders only once loaded (stale-defaults race on refresh); user deletion from the admin panel, refused while the user created campaigns (`entities.created_by` ownership column) or when targeting oneself.
 
 ## Capabilities
 
@@ -28,7 +29,7 @@ The DM's first walkthrough of the running stack surfaced P1 bugs and gaps that b
 
 ## Impact
 
-- **Data model**: one migration adding `users.ui_locale` (`en`/`fr`, default from `UI_LOCALE`); `volume_unit` is a runtime `settings` key, not a schema change.
+- **Data model**: one migration adding `users.ui_locale` (`en`/`fr`, default from `UI_LOCALE`); a second migration adding `entities.created_by` (nullable, author reference — carries the user-deletion campaign constraint); `volume_unit` is a runtime `settings` key, not a schema change.
 - **Backend**: `auth` gains `PATCH /api/auth/me` (profile) and `POST /api/auth/me/password`; `users` gains an admin-only password reset; `settings` validation moves to Zod enums. All access-filtered per the P1 rule.
 - **Frontend**: root route guard (bootstrap-driven), login/logout cache invalidation, header language switcher + account panel, slugified create forms (Lore, Campaigns, CampaignView), admin unit selects, i18n catalogs fr+en.
 - **Tests**: unit tests per the org Sonar gate; i18n parity test extends automatically.

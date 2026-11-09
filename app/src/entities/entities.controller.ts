@@ -1,6 +1,7 @@
 import {
   Body,
   HttpCode,
+  Req,
   Controller,
   Delete,
   Get,
@@ -15,6 +16,7 @@ import {
   updateEntitySchema,
 } from "@dm/schemas";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import type { AuthedRequest } from "../auth/auth.guard.js";
 import { EntitiesService } from "./entities.service.js";
 
 @Controller("api/records")
@@ -45,9 +47,9 @@ export class EntitiesController {
   }
 
   @Post()
-  create(@Body() body: unknown) {
+  create(@Req() req: AuthedRequest, @Body() body: unknown) {
     const input = createEntitySchema.parse(body);
-    return this.entitiesService.create(input);
+    return this.entitiesService.create(input, req.user!.id);
   }
 
   @Patch(":slug")

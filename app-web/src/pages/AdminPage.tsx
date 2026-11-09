@@ -3,7 +3,7 @@ import { formString } from "../forms.js";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
-import { adminResetPassword } from "../api/auth.js";
+import { adminDeleteUser, adminResetPassword } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { SafeUserLike } from "../types.js";
 
@@ -74,6 +74,19 @@ export function AdminPage() {
       setResetSaved(true);
     } catch (submitError) {
       setError(String(submitError));
+    }
+  }
+
+  async function onDeleteUser(id: string) {
+    setError(null);
+    try {
+      await adminDeleteUser(id);
+      await users.refetch();
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : String(deleteError);
+      if (message.includes("still has campaigns")) setError(t("admin.userHasCampaigns"));
+      else if (message.includes("your own account")) setError(t("admin.selfDelete"));
+      else setError(message);
     }
   }
 
@@ -197,6 +210,14 @@ export function AdminPage() {
                 className="rounded-md border border-border px-3 py-1 text-sm text-muted hover:bg-background"
               >
                 {t("admin.resetPassword")}
+              </button>              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(t("admin.deleteUserConfirm"))) void onDeleteUser(account.id);
+                }}
+                className="rounded-md border border-border px-3 py-1 text-sm text-radish hover:bg-background"
+              >
+                {t("admin.deleteUser")}
               </button>
               {resetFor === account.id && (
                 <form onSubmit={onResetPassword} className="mt-2 flex flex-col gap-2">
@@ -220,6 +241,9 @@ export function AdminPage() {
         <h2 className="font-display text-2xl font-semibold text-ink">
           {t("admin.settings")}
         </h2>
+        {settings.data === undefined ? (
+          <p className="mt-4 text-sm text-muted">{t("common.loading")}</p>
+        ) : (
         <form onSubmit={onSaveSettings} className="mt-4 flex max-w-md flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
             {t("admin.contentLanguage")}
@@ -254,6 +278,7 @@ export function AdminPage() {
           </button>
           {saved && <p className="text-sm text-primary">{t("admin.saved")}</p>}
         </form>
+        )}
       </section>
     </div>
   );

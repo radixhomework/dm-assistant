@@ -69,7 +69,7 @@ export function CampaignsPage() {
         </h1>
         <button
           type="button"
-          onClick={() => setError((value) => (value === "form" ? null : "form"))}
+          onClick={() => { setError((value) => (value === "form" ? null : "form")); if (error !== "form") slugFields.reset(); }}
           className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
           {t("campaigns.newCampaign")}

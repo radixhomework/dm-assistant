@@ -71,3 +71,18 @@ An administrator SHALL set a new password for any account from the admin panel. 
 #### Scenario: Admin resets a password
 - **WHEN** an administrator sets a new password for an account
 - **THEN** the account can log in with the new password and its status and role are unchanged
+
+### Requirement: User deletion
+An administrator SHALL delete an account from the admin panel. The deletion SHALL be refused while the user created at least one campaign record, with an explicit error. An administrator SHALL NOT delete their own account. Records authored by the user that are not campaigns SHALL keep existing (their author reference is cleared).
+
+#### Scenario: Delete a user without campaigns
+- **WHEN** an administrator deletes a user who created no campaign record
+- **THEN** the account and its sessions are removed and the account can no longer log in
+
+#### Scenario: Delete refused while campaigns exist
+- **WHEN** an administrator attempts to delete a user who created at least one campaign
+- **THEN** the deletion is refused with an explicit error
+
+#### Scenario: Self-deletion refused
+- **WHEN** an administrator attempts to delete their own account
+- **THEN** the deletion is refused

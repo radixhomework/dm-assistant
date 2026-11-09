@@ -60,6 +60,10 @@ export const entities = pgTable("entities", {
     .default([]),
   fields: jsonb("fields").notNull().default({}),
   body: text("body").notNull().default(""),
+  /** Authoring reference — carries the user-deletion campaign constraint. */
+  createdBy: uuid("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

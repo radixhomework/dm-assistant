@@ -48,9 +48,10 @@ describe("EntitiesController", () => {
       perimeter: "world" as const,
       title: "City of Glass",
     };
-    await controller.create(input);
+    await controller.create({ user: { id: "user-1" } } as never, input);
     expect(service.create).toHaveBeenCalledWith(
       expect.objectContaining({ slug: "city-of-glass", tags: [] }),
+      "user-1",
     );
   });
 

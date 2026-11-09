@@ -49,6 +49,7 @@
     "tags": "Tags (séparés par des virgules)",
     "fields": "Champs (JSON)",
     "save": "Enregistrer",
+    "saved": "Enregistré.",
     "empty": "Aucune fiche pour l'instant."
   },
   "campaigns": {
@@ -65,6 +66,10 @@
       "in_progress": "En cours",
       "played": "Jouée"
     },
+    "delete": "Supprimer",
+    "deleteCampaign": "Supprimer la campagne",
+    "deleteCampaignConfirm": "Supprimer cette campagne ? Les chapitres doivent être supprimés d’abord.",
+    "deleteConfirm": "Supprimer cet élément ?",
     "setStatus": "Définir le statut",
     "empty": "Aucune campagne pour l'instant."
   },
@@ -101,6 +106,10 @@
     "volumeUnit": "Unité de volume",
     "newPassword": "Nouveau mot de passe (12+ caractères)",
     "resetPassword": "Définir un nouveau mot de passe",
+    "deleteUser": "Supprimer",
+    "deleteUserConfirm": "Supprimer cet utilisateur ? Action irréversible.",
+    "userHasCampaigns": "Cet utilisateur a encore des campagnes — suppression refusée.",
+    "selfDelete": "Vous ne pouvez pas supprimer votre propre compte.",
     "passwordReset": "Mot de passe mis à jour.",
     "save": "Enregistrer",
     "saved": "Enregistré."

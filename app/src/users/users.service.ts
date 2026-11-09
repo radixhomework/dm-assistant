@@ -1,10 +1,10 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { desc, eq } from "drizzle-orm";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
+import { and, desc, eq } from "drizzle-orm";
 import { hash, verify } from "@node-rs/argon2";
 import type { CreateUserInput } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
-import { users } from "../database/schema.js";
+import { entities, users } from "../database/schema.js";
 
 export type SafeUser = {
   id: string;
@@ -64,6 +64,27 @@ export class UsersService {
       .where(eq(users.id, id))
       .returning();
     return row ? this.toSafe(row) : null;
+  }
+
+  /**
+   * Admin user deletion. Refused while the user created any campaign
+   * record (their content must not orphan) and for the acting admin
+   * themselves. Non-campaign authorships keep their records; the author
+   * reference is cleared by the FK on-delete rule.
+   */
+  async deleteUser(id: string, actingUserId: string): Promise<void> {
+    if (id === actingUserId) {
+      throw new ConflictException("You cannot delete your own account");
+    }
+    const [campaign] = await this.db
+      .select({ id: entities.id })
+      .from(entities)
+      .where(and(eq(entities.createdBy, id), eq(entities.perimeter, "campaign")))
+      .limit(1);
+    if (campaign) {
+      throw new ConflictException("This user still has campaigns");
+    }
+    await this.db.delete(users).where(eq(users.id, id));
   }
 
   /** Admin password reset: replaces the hash, touches nothing else. */

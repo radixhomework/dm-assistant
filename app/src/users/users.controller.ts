@@ -1,14 +1,18 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import { createUserSchema, resetPasswordSchema } from "@dm/schemas";
 import { AdminGuard } from "../auth/admin.guard.js";
+import type { AuthedRequest } from "../auth/auth.guard.js";
 import { UsersService } from "./users.service.js";
 
 @Controller("api/admin/users")
@@ -37,5 +41,11 @@ export class UsersController {
   resetPassword(@Param("id") id: string, @Body() body: unknown) {
     const { newPassword } = resetPasswordSchema.parse(body);
     return this.usersService.setPassword(id, newPassword);
+  }
+
+  @HttpCode(204)
+  @Delete(":id")
+  delete(@Param("id") id: string, @Req() req: AuthedRequest) {
+    return this.usersService.deleteUser(id, req.user!.id);
   }
 }

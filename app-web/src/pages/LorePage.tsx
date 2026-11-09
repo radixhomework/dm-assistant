@@ -59,7 +59,7 @@ export function LorePage() {
         </h1>
         <button
           type="button"
-          onClick={() => setCreating((value) => !value)}
+          onClick={() => { if (!creating) slugFields.reset(); setCreating((value) => !value); }}
           className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
           {t("lore.newRecord")}
