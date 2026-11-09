@@ -12,7 +12,6 @@ import { settings } from "../database/schema.js";
 
 export type InstanceSettings = {
   worldName: string | null;
-  contentLanguage: "en" | "fr" | null;
   distanceUnit: "m" | "ft";
   weightUnit: "kg" | "lb";
   volumeUnit: "L" | "gal";
@@ -37,8 +36,6 @@ export class SettingsService {
     const map = new Map(rows.map((row) => [row.key, row.value]));
     return {
       worldName: (map.get("world_name") as string | undefined) ?? null,
-      contentLanguage:
-        (map.get("content_language") as "en" | "fr" | undefined) ?? null,
       distanceUnit: unitSetting(map, "distance_unit", distanceUnits) as
         | "m"
         | "ft",

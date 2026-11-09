@@ -56,7 +56,6 @@ describe("BootstrapController", () => {
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "fr",
     });
     expect(service.bootstrapInstance).toHaveBeenCalledWith(
       expect.objectContaining({ worldName: "My World" }),

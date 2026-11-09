@@ -48,7 +48,6 @@ describe("auth schemas", () => {
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "fr",
     });
     expect(parsed.email).toBe("dm@example.com");
   });
@@ -59,7 +58,6 @@ describe("auth schemas", () => {
       password: "short",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "en",
     });
     expect(result.success).toBe(false);
   });

@@ -20,7 +20,6 @@ export const wizardSchema = z.object({
   password: passwordSchema,
   displayName: z.string().min(1).max(80),
   worldName: z.string().min(1).max(120),
-  contentLanguage: z.enum(locales).optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

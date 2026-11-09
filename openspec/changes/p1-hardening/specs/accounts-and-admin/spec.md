@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: First-startup wizard
-When the instance has no account, the application SHALL present a setup flow at `/setup` that creates the administrator account and the world (name, content language seeded from `AUTHORING_LOCALE`). Until the first account exists, the application SHALL redirect every route to `/setup`. Once an account exists, `/setup` SHALL redirect to the login page.
+When the instance has no account, the application SHALL present a setup flow at `/setup` that creates the administrator account and the world (name). Until the first account exists, the application SHALL redirect every route to `/setup`. Once an account exists, `/setup` SHALL redirect to the login page.
 
 #### Scenario: Bootstrapping a fresh instance
 - **WHEN** a visitor opens the application on an instance with zero accounts and completes the setup flow
@@ -31,7 +31,7 @@ The application SHALL authenticate users with email and password, verify passwor
 - **THEN** the session is terminated, the cookie is invalidated, and the user lands on the login page
 
 ### Requirement: Instance settings administration
-The admin panel SHALL allow editing the instance settings persisted in `settings`: distance unit (`m` or `ft`), weight unit (`kg` or `lb`) and volume unit (`L` or `gal`). Units SHALL be closed value lists — no free-text unit. The admin panel SHALL NOT expose a content-language control: record content is language-agnostic (written or imported in whatever language the DM uses), the per-account UI language switcher being the only language control. Changing any setting SHALL NOT recalculate any stored values. A stored unit value outside its list SHALL fall back to the list's first value at read time.
+The admin panel SHALL allow editing the instance settings persisted in `settings`: distance unit (`m` or `ft`), weight unit (`kg` or `lb`) and volume unit (`L` or `gal`). Units SHALL be closed value lists — no free-text unit. The application SHALL NOT maintain a content-language setting anywhere (no UI, no settings key, no environment variable): record content is language-agnostic — written or imported in whatever language the DM uses — and search runs on a single fixed configuration, the per-account UI language switcher being the only language control. Changing any setting SHALL NOT recalculate any stored values. A stored unit value outside its list SHALL fall back to the list's first value at read time.
 
 #### Scenario: Editing instance settings
 - **WHEN** an administrator changes any unit through the admin selects

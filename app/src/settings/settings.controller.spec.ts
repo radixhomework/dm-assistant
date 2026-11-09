@@ -6,13 +6,11 @@ function makeService(): vi.Mocked<SettingsService> {
   return {
     getAll: vi.fn(async () => ({
       worldName: "W",
-      contentLanguage: "en",
       distanceUnit: "m",
       weightUnit: "kg",
     })),
     update: vi.fn(async () => ({
       worldName: "W",
-      contentLanguage: "fr",
       distanceUnit: "m",
       weightUnit: "kg",
     })),

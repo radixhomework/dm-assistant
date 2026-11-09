@@ -9,13 +9,11 @@ describe("envSchema", () => {
       "postgres://dm:dm@localhost:5432/dm_assistant",
     );
     expect(env.UI_LOCALE).toBe("en");
-    expect(env.AUTHORING_LOCALE).toBe("en");
   });
 
   it("accepts every documented locale", () => {
-    const env = envSchema.parse({ UI_LOCALE: "fr", AUTHORING_LOCALE: "fr" });
+    const env = envSchema.parse({ UI_LOCALE: "fr" });
     expect(env.UI_LOCALE).toBe("fr");
-    expect(env.AUTHORING_LOCALE).toBe("fr");
   });
 
   it("rejects an unknown UI_LOCALE naming the offending variable", () => {

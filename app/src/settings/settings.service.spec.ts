@@ -10,7 +10,6 @@ describe("SettingsService", () => {
 
   it("returns null-valued content settings and default units on a fresh instance", async () => {
     const all = await service.getAll();
-    expect(all.contentLanguage).toBeNull();
     expect(all.worldName).toBeNull();
     // Closed unit lists: a fresh or invalid value falls back to the first
     // entry of each list.
@@ -21,10 +20,8 @@ describe("SettingsService", () => {
 
   it("updates settings partially and camelCases the keys", async () => {
     const updated = await service.update({
-      contentLanguage: "fr",
       distanceUnit: "ft",
     });
-    expect(updated.contentLanguage).toBe("fr");
     expect(updated.distanceUnit).toBe("ft");
     expect(updated.weightUnit).toBe("kg");
     expect(updated.volumeUnit).toBe("L");

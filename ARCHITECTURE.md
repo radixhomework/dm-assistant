@@ -26,7 +26,7 @@ Principle: **a single door**. The reverse proxy only sees the app container; Pos
 | UI i18n | **react-i18next**, fr + en catalogs, no hard-coded label | Ecosystem standard for React/Vite; every label exists in both languages from day 1 | Hard-coded strings, FormatJS, lingui, next-intl (Next.js-only) |
 | Backend | **NestJS**, **Drizzle**, **Zod** as pivot, `@nestjs/schedule` | Bounded modules, SQL-first, one schema = API validation + forms + types | Prisma, bare Fastify, Redis/BullMQ |
 | Tenancy | **One world per instance** (set up at the wizard); records carry the hierarchy (Campaign → Chapter → Scene, child→parent links); accounts `admin` / `dm` with blockable status, created by an administrator only | A personal tool: no multi-tenancy machinery; full access for authenticated accounts in P1 | Multi-world instances, full RBAC/ACL engine, public share links |
-| Data | **Postgres**: typed columns + JSONB, `tsvector` (config from the content language) + `unaccent`, `pg_trgm` | Native hybrid model, search language follows the content language, service already in place | SQLite (weak French FTS, service already there), pure document (typed relationships lost), CouchDB (offline not required) |
+| Data | **Postgres**: typed columns + JSONB, `tsvector` (one fixed configuration) + `unaccent`, `pg_trgm` | Native hybrid model, single-configuration search over language-agnostic content, service already in place | SQLite (weak French FTS, service already there), pure document (typed relationships lost), CouchDB (offline not required) |
 | Assets | **Internal S3 + backend gateway** (streaming), **sharp** thumbnails | S3 not exposed; ETag/immutable cache absorbs re-consultations | Presigned URLs (would require a reachable S3), map tiles (in-game presentation out of scope) |
 | PWA auth | **Session cookie `httpOnly` `SameSite=Strict`** stored in Postgres | Instantly revocable, zero rotation to code, same origin | JWT (revocation is complicated, no gain in a single service) |
 | MCP auth | **Opaque Bearer token** hashed in the database, per-DM, **restricted scope** (read/annotate/propose) | Standard MCP pattern; the scope materializes governance | JWT, OAuth |
@@ -76,7 +76,7 @@ settings         (key UNIQUE, value JSONB, updated_at)
 ```
 
 - Indexes: GIN on `fields`, `tags[]`, `mentions.target_slug`, `search_vector`; `pg_trgm` on `title`/`slug` (autocompletion).
-- Full-text search: `search_vector tsvector` on `entities`, trigger-maintained from `title` + `body` with the config derived from the content language (`en` → `english`, `fr` → `french`); `unaccent` always applied; changing the content language reindexes all records (background job).
+- Full-text search: `search_vector tsvector` on `entities`, trigger-maintained from `title` + `body`, with ONE fixed text-search configuration (no multilingual search — content is whatever language the DM wrote it in); `unaccent` always applied. The exact dictionary is chosen with the search change.
 - Auto-computed views = SQL queries over `entities` + `fields` (the six templates of that type).
 - Versioned Drizzle migrations; daily `pg_dump` → S3, **restore tested periodically**.
 - Hierarchy via relationships (child→parent kinds); the children of a record display at the end of its sheet through backlinks; play tracking lives on Scene records, derived upward.
@@ -101,7 +101,7 @@ settings         (key UNIQUE, value JSONB, updated_at)
 ## 8. Auth and security
 
 - argon2id; rate limit on login and `/mcp`; sessions `connect-pg-simple` (Postgres).
-- First-startup wizard creates the administrator account **and the world** (name, content language); **accounts are created by an administrator only** (admin panel — no self-service registration), login rate-limited; admins block/unblock accounts in the admin panel. Roles `admin` / `dm`, status `active` / `blocked`. Every data path is access-filtered in the repositories — no unfiltered query.
+- First-startup wizard creates the administrator account **and the world** (name); **accounts are created by an administrator only** (admin panel — no self-service registration), login rate-limited; admins block/unblock accounts in the admin panel. Roles `admin` / `dm`, status `active` / `blocked`. Every data path is access-filtered in the repositories — no unfiltered query.
 - Same origin (app + API served by the same container) → `SameSite=Strict` covers CSRF, no open CORS.
 - Nothing sensitive in the PWA build (static public shell, data behind auth).
 - Security headers at the reverse proxy: HSTS, tight CSP, `X-Content-Type-Options`.

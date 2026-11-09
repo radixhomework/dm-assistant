@@ -19,7 +19,6 @@ describe("AuthService", () => {
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "fr",
     };
   }
 
@@ -43,7 +42,6 @@ describe("AuthService", () => {
     const rows = await testDb.select().from(settings);
     const keys = rows.map((row) => row.key);
     expect(keys).toContain("world_name");
-    expect(keys).toContain("content_language");
     const [admin] = await testDb
       .select()
       .from(users)
