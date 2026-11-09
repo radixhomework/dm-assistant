@@ -23,6 +23,10 @@ export async function api<T>(
       | null;
     throw new Error(payload?.message ?? res.statusText);
   }
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  try {
+    return (await res.json()) as T;
+  } catch {
+    // Void endpoints answer with an empty body (204 or empty 200): no JSON.
+    return undefined as T;
+  }
 }

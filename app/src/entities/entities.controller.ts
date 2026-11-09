@@ -1,5 +1,6 @@
 import {
   Body,
+  HttpCode,
   Controller,
   Delete,
   Get,
@@ -55,17 +56,20 @@ export class EntitiesController {
     return this.entitiesService.update(slug, input);
   }
 
+  @HttpCode(204)
   @Delete(":slug")
   delete(@Param("slug") slug: string) {
     return this.entitiesService.delete(slug);
   }
 
+  @HttpCode(204)
   @Post(":slug/parent")
   attachParent(@Param("slug") slug: string, @Body() body: unknown) {
     const { parentSlug, kind } = parentSchema.parse(body);
     return this.relationshipsService.attach(slug, parentSlug, kind);
   }
 
+  @HttpCode(204)
   @Delete(":slug/parent/:kind")
   detachParent(
     @Param("slug") slug: string,
