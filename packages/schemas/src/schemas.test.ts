@@ -73,12 +73,11 @@ describe("settings schemas", () => {
   it("accepts partial updates", () => {
     const parsed = updateSettingsSchema.parse({ distanceUnit: "m" });
     expect(parsed.distanceUnit).toBe("m");
-    expect(parsed.contentLanguage).toBeUndefined();
   });
 
-  it("rejects an unknown content language", () => {
-    expect(
-      updateSettingsSchema.safeParse({ contentLanguage: "de" }).success,
-    ).toBe(false);
+  it("rejects an invalid unit", () => {
+    expect(updateSettingsSchema.safeParse({ distanceUnit: "miles" }).success).toBe(
+      false,
+    );
   });
 });

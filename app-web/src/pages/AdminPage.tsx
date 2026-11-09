@@ -27,7 +27,6 @@ export function AdminPage() {
     queryFn: () =>
       api<{
         worldName: string | null;
-        contentLanguage: string | null;
         distanceUnit: string | null;
         weightUnit: string | null;
         volumeUnit: string | null;
@@ -111,7 +110,6 @@ export function AdminPage() {
       await api("/api/admin/settings", {
         method: "PATCH",
         body: {
-          contentLanguage: formString(form, "contentLanguage"),
           distanceUnit: formString(form, "distanceUnit"),
           weightUnit: formString(form, "weightUnit"),
           volumeUnit: formString(form, "volumeUnit"),
@@ -245,13 +243,7 @@ export function AdminPage() {
           <p className="mt-4 text-sm text-muted">{t("common.loading")}</p>
         ) : (
         <form onSubmit={onSaveSettings} className="mt-4 flex max-w-md flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.contentLanguage")}
-            <select name="contentLanguage" defaultValue={settings.data?.contentLanguage ?? "en"} className="rounded-md border border-border bg-background px-3 py-2">
-              <option value="en">en</option>
-              <option value="fr">fr</option>
-            </select>
-          </label>
+
           <label className="flex flex-col gap-1 text-sm">
             {t("admin.distanceUnit")}
             <select name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className="rounded-md border border-border bg-background px-3 py-2">

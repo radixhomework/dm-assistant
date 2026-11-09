@@ -31,15 +31,19 @@ The application SHALL authenticate users with email and password, verify passwor
 - **THEN** the session is terminated, the cookie is invalidated, and the user lands on the login page
 
 ### Requirement: Instance settings administration
-The admin panel SHALL allow editing the instance settings persisted in `settings`: content language (`en` or `fr`), distance unit (`m` or `ft`), weight unit (`kg` or `lb`) and volume unit (`L` or `gal`). Units SHALL be closed value lists — no free-text unit. Changing the content language SHALL NOT recalculate any stored values. A stored unit value outside its list SHALL fall back to the list's first value at read time.
+The admin panel SHALL allow editing the instance settings persisted in `settings`: distance unit (`m` or `ft`), weight unit (`kg` or `lb`) and volume unit (`L` or `gal`). Units SHALL be closed value lists — no free-text unit. The admin panel SHALL NOT expose a content-language control: record content is language-agnostic (written or imported in whatever language the DM uses), the per-account UI language switcher being the only language control. Changing any setting SHALL NOT recalculate any stored values. A stored unit value outside its list SHALL fall back to the list's first value at read time.
 
 #### Scenario: Editing instance settings
-- **WHEN** an administrator changes the content language or any unit through the admin selects
+- **WHEN** an administrator changes any unit through the admin selects
 - **THEN** the value is persisted in `settings` and applied to the application
 
 #### Scenario: Invalid stored unit falls back
 - **WHEN** a settings row holds a unit value outside its closed list
 - **THEN** the application reads the list's first value instead of failing
+
+#### Scenario: No content-language control
+- **WHEN** an administrator views the admin panel settings
+- **THEN** no content-language field is offered
 
 ## ADDED Requirements
 

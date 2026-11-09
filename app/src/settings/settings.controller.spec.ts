@@ -34,7 +34,7 @@ describe("SettingsController", () => {
   });
 
   it("parses and delegates partial updates", async () => {
-    await controller.update({ contentLanguage: "fr" });
-    expect(service.update).toHaveBeenCalledWith({ contentLanguage: "fr" });
+    await controller.update({ distanceUnit: "ft" });
+    expect(service.update).toHaveBeenCalledWith({ distanceUnit: "ft" });
   });
 });

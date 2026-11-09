@@ -6,10 +6,7 @@ import {
 } from "@nestjs/common";
 import { hash } from "@node-rs/argon2";
 import { and, eq, ne, sql } from "drizzle-orm";
-import type {
-  UpdateProfileInput,
-  WizardInput,
-} from "@dm/schemas";
+import { envSchema, type UpdateProfileInput, type WizardInput } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { settings, users } from "../database/schema.js";
@@ -82,7 +79,13 @@ export class AuthService {
         .insert(settings)
         .values([
           { key: "world_name", value: input.worldName },
-          { key: "content_language", value: input.contentLanguage },
+          {
+            // No UI asks for the content language anymore: record content
+            // is whatever language the DM wrote or imported it in. The key
+            // stays for the P3 full-text search configuration only.
+            key: "content_language",
+            value: input.contentLanguage ?? envSchema.parse(process.env).AUTHORING_LOCALE,
+          },
         ])
         .onConflictDoUpdate({
           target: settings.key,

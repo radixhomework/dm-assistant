@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { locales } from "./env.js";
 
 /** Closed unit lists (PRE-SPEC.md §2): the admin panel edits these via selects. */
 export const distanceUnits = ["m", "ft"] as const;
@@ -8,8 +7,7 @@ export const volumeUnits = ["L", "gal"] as const;
 
 export const updateSettingsSchema = z
   .object({
-    contentLanguage: z.enum(locales),
-    distanceUnit: z.enum(distanceUnits),
+      distanceUnit: z.enum(distanceUnits),
     weightUnit: z.enum(weightUnits),
     volumeUnit: z.enum(volumeUnits),
   })

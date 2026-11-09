@@ -28,7 +28,6 @@
     "password": "Password (12+ characters)",
     "displayName": "Display name",
     "worldName": "World name",
-    "contentLanguage": "Content language",
     "submit": "Create the administrator"
   },
   "login": {
@@ -100,7 +99,6 @@
     "unblock": "Unblock",
     "create": "Create",
     "settings": "Instance settings",
-    "contentLanguage": "Content language",
     "distanceUnit": "Distance unit",
     "weightUnit": "Weight unit",
     "volumeUnit": "Volume unit",

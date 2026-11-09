@@ -32,7 +32,6 @@ export function SetupPage() {
           password: formString(form, "password"),
           displayName: formString(form, "displayName"),
           worldName: formString(form, "worldName"),
-          contentLanguage: formString(form, "contentLanguage"),
         }),
       });
       if (!res.ok) {
@@ -70,13 +69,6 @@ export function SetupPage() {
         <label className="flex flex-col gap-1 text-sm">
           {t("setup.worldName")}
           <input name="worldName" required className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("setup.contentLanguage")}
-          <select name="contentLanguage" className="rounded-md border border-border bg-background px-3 py-2">
-            <option value="en">en</option>
-            <option value="fr">fr</option>
-          </select>
         </label>
         {error && <p className="text-sm text-radish">{error}</p>}
         <button type="submit" className="rounded-md bg-primary px-4 py-2 text-background transition-colors duration-200 hover:bg-accent">
