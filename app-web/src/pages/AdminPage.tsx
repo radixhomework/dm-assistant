@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,9 +67,9 @@ export function AdminPage() {
     setError(null);
     setResetSaved(false);
     const form = new FormData(event.currentTarget);
-    const id = String(form.get("id") ?? "");
+    const id = formString(form, "id");
     try {
-      await adminResetPassword(id, String(form.get("newPassword") ?? ""));
+      await adminResetPassword(id, formString(form, "newPassword"));
       setResetFor(null);
       setResetSaved(true);
     } catch (submitError) {
@@ -148,25 +149,21 @@ export function AdminPage() {
             onSubmit={onCreateUser}
             className="mt-4 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
           >
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.email")}
-              <input name="email" type="email" required className="rounded-md border border-border bg-background px-3 py-2" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.password")}
-              <input name="password" type="password" minLength={12} required className="rounded-md border border-border bg-background px-3 py-2" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.displayName")}
-              <input name="displayName" required className="rounded-md border border-border bg-background px-3 py-2" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.role")}
-              <select name="role" className="rounded-md border border-border bg-background px-3 py-2">
+            <Field label={t("admin.email")}>
+              <input name="email" type="email" required className={inputClass} />
+            </Field>
+            <Field label={t("admin.password")}>
+              <input name="password" type="password" minLength={12} required className={inputClass} />
+            </Field>
+            <Field label={t("admin.displayName")}>
+              <input name="displayName" required className={inputClass} />
+            </Field>
+            <Field label={t("admin.role")}>
+              <select name="role" className={inputClass}>
                 <option value="dm">dm</option>
                 <option value="admin">admin</option>
               </select>
-            </label>
+            </Field>
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
               {t("admin.create")}
             </button>
@@ -220,10 +217,9 @@ export function AdminPage() {
               {resetFor === account.id && (
                 <form onSubmit={onResetPassword} className="mt-2 flex flex-col gap-2">
                   <input type="hidden" name="id" value={account.id} />
-                  <label className="flex flex-col gap-1 text-sm">
-                    {t("admin.newPassword")}
-                    <input name="newPassword" type="password" required minLength={12} className="rounded-md border border-border bg-background px-3 py-2" />
-                  </label>
+                  <Field label={t("admin.newPassword")}>
+                    <input name="newPassword" type="password" required minLength={12} className={inputClass} />
+                  </Field>
                   <button type="submit" className="self-start rounded-md bg-primary px-3 py-1 text-sm text-background hover:bg-accent">
                     {t("admin.resetPassword")}
                   </button>
@@ -244,27 +240,24 @@ export function AdminPage() {
         ) : (
         <form onSubmit={onSaveSettings} className="mt-4 flex max-w-md flex-col gap-3">
 
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.distanceUnit")}
-            <select name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className="rounded-md border border-border bg-background px-3 py-2">
+          <Field label={t("admin.distanceUnit")}>
+            <select name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className={inputClass}>
               <option value="m">m</option>
               <option value="ft">ft</option>
             </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.weightUnit")}
-            <select name="weightUnit" defaultValue={settings.data?.weightUnit ?? "kg"} className="rounded-md border border-border bg-background px-3 py-2">
+          </Field>
+          <Field label={t("admin.weightUnit")}>
+            <select name="weightUnit" defaultValue={settings.data?.weightUnit ?? "kg"} className={inputClass}>
               <option value="kg">kg</option>
               <option value="lb">lb</option>
             </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.volumeUnit")}
-            <select name="volumeUnit" defaultValue={settings.data?.volumeUnit ?? "L"} className="rounded-md border border-border bg-background px-3 py-2">
+          </Field>
+          <Field label={t("admin.volumeUnit")}>
+            <select name="volumeUnit" defaultValue={settings.data?.volumeUnit ?? "L"} className={inputClass}>
               <option value="L">L</option>
               <option value="gal">gal</option>
             </select>
-          </label>
+          </Field>
           <button type="submit" className="self-start rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
             {t("admin.save")}
           </button>

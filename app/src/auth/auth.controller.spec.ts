@@ -35,6 +35,20 @@ describe("AuthController", () => {
     const request2 = { user } as never;
     expect(controller.me(request2)).toBe(user);
   });
+
+  it("parses and delegates profile updates", async () => {
+    service.updateProfile = vi.fn(async () => ({ id: "1", email: "n@b.com", displayName: "D", role: "dm", uiLocale: "fr", status: "active" }));
+    const request2 = { user: { id: "u1" } } as never;
+    await controller.updateProfile(request2, { uiLocale: "fr" });
+    expect(service.updateProfile).toHaveBeenCalledWith("u1", { uiLocale: "fr" });
+  });
+
+  it("parses and delegates password changes", async () => {
+    service.changePassword = vi.fn(async () => undefined);
+    const request2 = { user: { id: "u1" } } as never;
+    await controller.changePassword(request2, { currentPassword: "c", newPassword: "n-passphrase-12" });
+    expect(service.changePassword).toHaveBeenCalledWith("u1", "c", "n-passphrase-12");
+  });
 });
 
 describe("BootstrapController", () => {

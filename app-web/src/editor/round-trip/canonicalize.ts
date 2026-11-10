@@ -6,8 +6,11 @@
  * preserved on purpose — two trailing spaces are hard-break syntax.
  */
 export function canonicalizeMarkdown(markdown: string): string {
-  const lf = markdown.replace(/\r\n/g, "\n");
-  return lf === "" ? "" : `${lf.replace(/\n+$/, "")}\n`;
+  const lf = markdown.replaceAll("\r\n", "\n");
+  // Linear trim of trailing newlines (a backtracking regex is S8786 bait).
+  let end = lf.length;
+  while (end > 0 && lf[end - 1] === "\n") end--;
+  return lf === "" ? "" : `${lf.slice(0, end)}\n`;
 }
 
 /**

@@ -84,7 +84,7 @@ export function RootLayout() {
               </nav>
               {user && (
                 <div className="ml-auto flex items-center gap-3">
-                  <div className="flex items-center gap-1" role="group" aria-label="UI language">
+                  <fieldset className="flex items-center gap-1 border-0 p-0" aria-label="UI language">
                     <button
                       type="button"
                       onClick={() => onSwitchLanguage("en")}
@@ -99,7 +99,7 @@ export function RootLayout() {
                     >
                       FR
                     </button>
-                  </div>
+                  </fieldset>
                   <Link
                     to="/account"
                     className="text-sm text-muted hover:text-accent"

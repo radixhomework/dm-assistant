@@ -6,12 +6,14 @@ import { useState } from "react";
  * server-side slug rule `^[a-z0-9-]+$`.
  */
 export function slugify(title: string): string {
-  return title
+  const collapsed = title
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^a-z0-9]+/g, "-");
+  const start = collapsed.startsWith("-") ? 1 : 0;
+  const end = collapsed.endsWith("-") ? collapsed.length - 1 : collapsed.length;
+  return start >= end ? "" : collapsed.slice(start, end);
 }
 
 /**

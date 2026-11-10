@@ -53,16 +53,16 @@ describe("committed corpus — empty-diff bar", () => {
   }
 });
 
-describe("local corpus — empty-diff bar", () => {
-  const docs = loadLocalCorpus();
-  if (docs.length === 0) {
-    it.skip("no local documents present (corpus-local is empty)");
-    return;
-  }
-  for (const doc of docs) {
-    it(`reproduces ${doc.path} byte-for-byte`, () => {
-      const expected = canonicalizeMarkdown(doc.content);
-      expect(canonicalizeMarkdown(roundTrip(doc.content)), `round-trip failed for ${doc.path}`).toBe(expected);
-    });
-  }
-});
+// The local (gitignored) corpus is registered only when documents exist,
+// so the pristine checkout has no empty suites.
+const localDocs = loadLocalCorpus();
+if (localDocs.length > 0) {
+  describe("local corpus — empty-diff bar", () => {
+    for (const doc of localDocs) {
+      it(`reproduces ${doc.path} byte-for-byte`, () => {
+        const expected = canonicalizeMarkdown(doc.content);
+        expect(canonicalizeMarkdown(roundTrip(doc.content)), `round-trip failed for ${doc.path}`).toBe(expected);
+      });
+    }
+  });
+}

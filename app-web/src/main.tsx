@@ -30,7 +30,7 @@ const rootRoute = createRootRoute({
     if (location.pathname === "/setup") return;
     // Fail open if the API is unreachable — nothing renders regardless.
     const state = await queryClient
-      .ensureQueryData({
+      .fetchQuery({
         queryKey: ["bootstrap"],
         queryFn: fetchBootstrapState,
         staleTime: 30_000,

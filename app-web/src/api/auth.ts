@@ -64,6 +64,9 @@ export function adminResetPassword(
 export async function logout(): Promise<void> {
   try {
     await api<void>("/api/auth/logout", { method: "POST" });
+  } catch {
+    // The session may already be gone (expired, network down); the local
+    // auth state is cleared regardless so the UI still leaves the page.
   } finally {
     queryClient.setQueryData(["me"], null);
     await queryClient.invalidateQueries({ queryKey: ["me"] });

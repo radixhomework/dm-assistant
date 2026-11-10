@@ -188,3 +188,132 @@ describe("CampaignViewPage scene creation", () => {
     });
   });
 });
+
+describe("CampaignViewPage deletions", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "en";
+    mockInstance();
+  });
+
+  function capturedFetch(): ReturnType<typeof vi.fn> {
+    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+      if (input === "/api/auth/me") {
+        return {
+          ok: true,
+          json: async () => ({
+            id: "1",
+            email: "a@b.c",
+            displayName: "DM",
+            role: "admin",
+          }),
+        };
+      }
+      if (input === "/api/records/north-realm" && init?.method === "DELETE") {
+        return { ok: true, status: 204 };
+      }
+      if (input === "/api/records/chapter-one" && init?.method === "DELETE") {
+        return { ok: true, status: 204 };
+      }
+      if (input === "/api/records/scene-one" && init?.method === "DELETE") {
+        return { ok: true, status: 204 };
+      }
+      if (input === "/api/records/north-realm") {
+        return {
+          ok: true,
+          json: async () => ({
+            id: "1",
+            slug: "north-realm",
+            type: "campaign",
+            perimeter: "campaign",
+            title: "The North Realm",
+            tags: [],
+            fields: {},
+            body: "",
+            tracking: {
+              slug: "north-realm",
+              status: "not_played",
+              children: [
+                { slug: "chapter-one", title: "Chapter One", status: "not_played" },
+              ],
+            },
+          }),
+        };
+      }
+      if (input === "/api/records/chapter-one/tracking") {
+        return {
+          ok: true,
+          json: async () => ({
+            slug: "chapter-one",
+            status: "not_played",
+            children: [
+              { slug: "scene-one", title: "Scene One", status: "not_played" },
+            ],
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  it("deletes a scene after confirmation", async () => {
+    const fetchMock = capturedFetch();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
+    await vi.waitFor(() => expect(screen.getByText("Scene One")).toBeDefined());
+    const sceneRow = screen.getByText("Scene One").closest("li");
+    if (!sceneRow) throw new Error("scene row missing");
+    const button = [...sceneRow.querySelectorAll("button")].find((b) => b.textContent === "Delete");
+    if (!button) throw new Error("scene delete button missing");
+    (button as HTMLElement).click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      const removed = calls.find(([path, init]) => path === "/api/records/scene-one" && init?.method === "DELETE");
+      expect(removed).toBeDefined();
+    });
+  });
+
+  it("deletes a chapter after confirmation", async () => {
+    const fetchMock = capturedFetch();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
+    await vi.waitFor(() => expect(screen.getByText("Chapter One")).toBeDefined());
+    const card = screen.getByText("Chapter One").closest("li");
+    if (!card) throw new Error("chapter card missing");
+    const button = [...card.querySelectorAll(":scope > div button")].find((b) => b.textContent === "Delete") as HTMLElement | undefined;
+    if (!button) throw new Error("chapter delete button missing");
+    button.click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      const removed = calls.find(([path, init]) => path === "/api/records/chapter-one" && init?.method === "DELETE");
+      expect(removed).toBeDefined();
+    });
+  });
+
+  it("deletes the campaign after confirmation", async () => {
+    const fetchMock = capturedFetch();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
+    await vi.waitFor(() => expect(screen.getByText("Delete campaign")).toBeDefined());
+    screen.getByText("Delete campaign").click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      const removed = calls.find(([path, init]) => path === "/api/records/north-realm" && init?.method === "DELETE");
+      expect(removed).toBeDefined();
+    });
+  });
+
+  it("does not delete when confirmation is dismissed", async () => {
+    const fetchMock = capturedFetch();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
+    await vi.waitFor(() => expect(screen.getByText("Delete campaign")).toBeDefined());
+    screen.getByText("Delete campaign").click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      const removed = calls.find(([path, init]) => path === "/api/records/north-realm" && init?.method === "DELETE");
+      expect(removed).toBeUndefined();
+    });
+  });
+});

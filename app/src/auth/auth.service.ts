@@ -11,7 +11,7 @@ import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { settings, users } from "../database/schema.js";
 import { SessionStore } from "./session.store.js";
-import type { SafeUser } from "../users/users.service.js";
+import { safeUserOf, type SafeUser } from "../users/users.service.js";
 
 @Injectable()
 export class AuthService {
@@ -108,7 +108,7 @@ export class AuthService {
         .where(eq(users.id, userId))
         .returning();
       if (!row) throw new UnauthorizedException();
-      return this.toSafe(row);
+      return safeUserOf(row);
     }
     const [row] = await this.db
       .update(users)
@@ -119,7 +119,7 @@ export class AuthService {
       .where(eq(users.id, userId))
       .returning();
     if (!row) throw new UnauthorizedException();
-    return this.toSafe(row);
+    return safeUserOf(row);
   }
 
   /** Password change: the current password must verify first. */
@@ -143,24 +143,5 @@ export class AuthService {
     }
     const passwordHash = await hash(newPassword);
     await this.db.update(users).set({ passwordHash }).where(eq(users.id, userId));
-  }
-
-  private toSafe(row: {
-    id: string;
-    email: string;
-    displayName: string;
-    role: string;
-    status: string;
-    uiLocale?: string | null;
-  }): SafeUser {
-    return {
-      id: row.id,
-      email: row.email,
-      displayName: row.displayName,
-      role: row.role as SafeUser["role"],
-      status: row.status as SafeUser["status"],
-      uiLocale:
-        row.uiLocale === "fr" ? "fr" : row.uiLocale === "en" ? "en" : null,
-    };
   }
 }

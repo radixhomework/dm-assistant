@@ -48,6 +48,38 @@ describe("RootLayout navigation", () => {
     expect(screen.getByText("page content")).toBeDefined();
   });
 
+  it("switches the UI language and persists the choice on the account", async () => {
+    const calls: Array<[string, RequestInit | undefined]> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        calls.push([input, init]);
+        if (input === "/api/auth/me") {
+          return {
+            ok: true,
+            json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin", uiLocale: null }),
+          };
+        }
+        if (input === "/api/auth/me" && init?.method === "PATCH") {
+          return {
+            ok: true,
+            json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin", uiLocale: "fr" }),
+          };
+        }
+        return { ok: true, status: 204, json: async () => ({}) };
+      }),
+    );
+    renderWithProviders(<RootLayout />);
+    await vi.waitFor(() => expect(screen.getByText("FR")).toBeDefined());
+    screen.getByText("FR").click();
+    await vi.waitFor(() => {
+      const patch = calls.find(
+        ([path, init]) => path === "/api/auth/me" && init?.method === "PATCH",
+      );
+      expect(patch).toBeDefined();
+    });
+  });
+
   it("hides the Admin section for a dm", () => {
     mockSession("dm");
     renderWithProviders(<RootLayout />);

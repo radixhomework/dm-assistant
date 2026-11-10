@@ -118,6 +118,30 @@ describe("AdminPage actions", () => {
     expect(confirmSpy).toHaveBeenCalled();
   });
 
+  it("resets a password via the inline form", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    mockInstance(captured);
+    renderWithProviders(<AdminPage />, "/admin");
+    await vi.waitFor(() => expect(screen.getByText("Set a new password")).toBeDefined());
+    screen.getByText("Set a new password").click();
+    await vi.waitFor(() => {
+      const form = document.querySelector("form");
+      expect(form).not.toBeNull();
+    });
+    const form = document.querySelector("form");
+    if (!form) throw new Error("form missing");
+    const field = form.querySelector('input[name="newPassword"]');
+    if (!field) throw new Error("newPassword missing");
+    (field as HTMLInputElement).value = "the-new-passphrase";
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => {
+      const post = captured.find(
+        ([path, init]) => path === "/api/admin/users/u1/password" && init?.method === "POST",
+      );
+      expect(post).toBeDefined();
+    });
+  });
+
   it("saves instance settings via the settings form", async () => {
     const captured: Array<[string, RequestInit]> = [];
     mockInstance(captured);

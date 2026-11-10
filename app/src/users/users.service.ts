@@ -6,6 +6,31 @@ import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { entities, users } from "../database/schema.js";
 
+function safeUiLocale(value: string | null | undefined): SafeUser["uiLocale"] {
+  if (value === "fr") return "fr";
+  if (value === "en") return "en";
+  return null;
+}
+
+/** Public projection — never expose the password hash (S3358-safe, shared). */
+export function safeUserOf(row: {
+  id: string;
+  email: string;
+  displayName: string;
+  role: string;
+  status: string;
+  uiLocale?: string | null;
+}): SafeUser {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.displayName,
+    role: row.role as SafeUser["role"],
+    status: row.status as SafeUser["status"],
+    uiLocale: safeUiLocale(row.uiLocale),
+  };
+}
+
 export type SafeUser = {
   id: string;
   email: string;
@@ -30,7 +55,7 @@ export class UsersService {
         role: input.role,
       })
       .returning();
-    return this.toSafe(row);
+    return safeUserOf(row);
   }
 
   async findByEmail(email: string) {
@@ -51,7 +76,7 @@ export class UsersService {
       .select()
       .from(users)
       .orderBy(desc(users.createdAt));
-    return rows.map((row) => this.toSafe(row));
+    return rows.map((row) => safeUserOf(row));
   }
 
   async setStatus(
@@ -63,7 +88,7 @@ export class UsersService {
       .set({ status })
       .where(eq(users.id, id))
       .returning();
-    return row ? this.toSafe(row) : null;
+    return row ? safeUserOf(row) : null;
   }
 
   /**
@@ -95,7 +120,7 @@ export class UsersService {
       .set({ passwordHash })
       .where(eq(users.id, id))
       .returning();
-    return row ? this.toSafe(row) : null;
+    return row ? safeUserOf(row) : null;
   }
 
   /** Public projection — never expose the password hash. */
@@ -107,7 +132,7 @@ export class UsersService {
     status: string;
     uiLocale?: string | null;
   }): SafeUser {
-    return this.toSafe(row);
+    return safeUserOf(row);
   }
 
   async verifyPassword(
@@ -117,22 +142,4 @@ export class UsersService {
     return verify(passwordHash, password);
   }
 
-  private toSafe(row: {
-    id: string;
-    email: string;
-    displayName: string;
-    role: string;
-    status: string;
-    uiLocale?: string | null;
-  }): SafeUser {
-    return {
-      id: row.id,
-      email: row.email,
-      displayName: row.displayName,
-      role: row.role as SafeUser["role"],
-      status: row.status as SafeUser["status"],
-      uiLocale:
-        row.uiLocale === "fr" ? "fr" : row.uiLocale === "en" ? "en" : null,
-    };
-  }
 }
