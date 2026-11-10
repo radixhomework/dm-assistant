@@ -152,7 +152,7 @@ export type Statistics = z.infer<typeof statisticsSchema>;
 
 /** Catalog body: Pitch, [Statistics], Public description, Private description. */
 function catalogSchema(withStatistics: boolean): TemplateSchema {
-  const fields: Record<string, z.ZodTypeAny> = {
+  const fields: Record<string, z.ZodType> = {
     pitch: z.string().optional(),
     public_description: z.string().optional(),
     private_description: z.string().optional(),
@@ -172,13 +172,13 @@ const assetField = assetReferenceSchema.optional();
 
 export type TemplateSchema = {
   /** Field validation: applies to the `fields` JSONB (references excluded). */
-  fields: z.ZodTypeAny;
+  fields: z.ZodType;
   /** Reference fields: rendered from the relationships table, key → target. */
   references: Record<string, ReferenceDeclaration>;
 };
 
 function template(
-  fields: Record<string, z.ZodTypeAny>,
+  fields: Record<string, z.ZodType>,
   references: Record<string, ReferenceDeclaration> = {},
 ): TemplateSchema {
   return { fields: z.object(fields).strict(), references };

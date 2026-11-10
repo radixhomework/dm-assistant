@@ -106,7 +106,7 @@ describe("template registry coverage", () => {
         if (name.endsWith(".md")) files.push(name.replace(/\.md$/, "").split(/[\\/]/).pop()!);
       }
     }
-    expect(files.length).toBe(23);
+    expect(files).toHaveLength(23);
     for (const name of files) {
       expect(templateSchemas[name as keyof typeof templateSchemas], `${name} registered`).toBeDefined();
     }
