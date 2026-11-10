@@ -19,7 +19,6 @@ describe("AuthService", () => {
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "fr",
     };
   }
 
@@ -43,12 +42,79 @@ describe("AuthService", () => {
     const rows = await testDb.select().from(settings);
     const keys = rows.map((row) => row.key);
     expect(keys).toContain("world_name");
-    expect(keys).toContain("content_language");
     const [admin] = await testDb
       .select()
       .from(users)
       .where(eq(users.email, input.email));
     expect(admin.role).toBe("admin");
+  });
+
+  async function createAdmin(): Promise<{ id: string; email: string; password: string }> {
+    const password = "a-long-enough-passphrase";
+    const email = `admin-${randomUUID()}@example.com`;
+    const { hash } = await import("@node-rs/argon2");
+    const [row] = await testDb
+      .insert(users)
+      .values({ email, displayName: "The DM", passwordHash: await hash(password), role: "admin" })
+      .returning();
+    return { id: row.id, email, password };
+  }
+
+  it("updates a profile (email, display name, ui locale)", async () => {
+    const admin = await createAdmin();
+    const movedEmail = `moved-${admin.id.slice(0, 8)}@example.com`;
+    const updated = await service.updateProfile(admin.id, {
+      email: movedEmail,
+      displayName: "Renamed DM",
+      uiLocale: "fr",
+    });
+    expect(updated.email).toBe(movedEmail);
+    expect(updated.displayName).toBe("Renamed DM");
+    expect(updated.uiLocale).toBe("fr");
+  });
+
+  it("updates profile fields partially", async () => {
+    const admin = await createAdmin();
+    const updated = await service.updateProfile(admin.id, { displayName: "Partially Renamed" });
+    expect(updated.displayName).toBe("Partially Renamed");
+    expect(updated.email).toBe(admin.email);
+    expect(updated.uiLocale).toBeNull();
+  });
+
+  it("refuses a profile update for an unknown user", async () => {
+    await expect(
+      service.updateProfile("00000000-0000-4000-8000-000000000000", { displayName: "X" }),
+    ).rejects.toThrow();
+  });
+
+  it("refuses a password change for an unknown user", async () => {
+    await expect(
+      service.changePassword("00000000-0000-4000-8000-000000000000", "a", "b-passphrase-12"),
+    ).rejects.toThrow();
+  });
+
+  it("refuses a profile email already used by another account", async () => {
+    const first = await createAdmin();
+    const second = await createAdmin();
+    const admin = { id: first.id };
+    await expect(
+      service.updateProfile(admin.id, { email: second.email }),
+    ).rejects.toThrow(/already used/);
+  });
+
+  it("changes a password after verifying the current one", async () => {
+    const admin = await createAdmin();
+    await service.changePassword(admin.id, admin.password, "the-next-passphrase");
+    const session = { userId: undefined as string | undefined };
+    const logged = await service.login(admin.email, "the-next-passphrase", session);
+    expect(logged.id).toBe(admin.id);
+  });
+
+  it("refuses a password change with a wrong current password", async () => {
+    const admin = await createAdmin();
+    await expect(
+      service.changePassword(admin.id, "wrong-current-pass", "another-passphrase"),
+    ).rejects.toThrow(/incorrect/);
   });
 
   it("refuses a second bootstrap", async () => {

@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { SlugTitleFields } from "../components/slug-fields.js";
 import { formString } from "../forms.js";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { useSlugAutoFill } from "../slug.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -14,6 +16,7 @@ type CampaignWithTracking = Omit<Entity, "tracking"> & {
 export function CampaignsPage() {
   const { t } = useTranslation();
   const { ready } = useRequireAuth();
+  const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
   const campaigns = useQuery({
     queryKey: ["campaigns"],
@@ -67,7 +70,7 @@ export function CampaignsPage() {
         </h1>
         <button
           type="button"
-          onClick={() => setError((value) => (value === "form" ? null : "form"))}
+          onClick={() => { setError((value) => (value === "form" ? null : "form")); if (error !== "form") slugFields.reset(); }}
           className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
           {t("campaigns.newCampaign")}
@@ -79,14 +82,7 @@ export function CampaignsPage() {
           onSubmit={onCreate}
           className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
         >
-          <label className="flex flex-col gap-1 text-sm">
-            {t("campaigns.title")}
-            <input name="title" required className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("campaigns.slug")}
-            <input name="slug" required pattern="[a-z0-9-]+" className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
+          <SlugTitleFields fields={slugFields} />
           {error !== null && error !== "form" && (
             <p className="text-sm text-radish">{error}</p>
           )}

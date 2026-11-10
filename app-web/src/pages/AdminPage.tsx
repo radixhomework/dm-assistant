@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { adminDeleteUser, adminResetPassword } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { SafeUserLike } from "../types.js";
 
@@ -12,6 +14,8 @@ export function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [resetFor, setResetFor] = useState<string | null>(null);
+  const [resetSaved, setResetSaved] = useState(false);
 
   const users = useQuery({
     queryKey: ["admin-users"],
@@ -24,9 +28,9 @@ export function AdminPage() {
     queryFn: () =>
       api<{
         worldName: string | null;
-        contentLanguage: string | null;
         distanceUnit: string | null;
         weightUnit: string | null;
+        volumeUnit: string | null;
       }>("/api/admin/settings"),
     enabled: ready,
     retry: false,
@@ -58,6 +62,34 @@ export function AdminPage() {
     }
   }
 
+  async function onResetPassword(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setResetSaved(false);
+    const form = new FormData(event.currentTarget);
+    const id = formString(form, "id");
+    try {
+      await adminResetPassword(id, formString(form, "newPassword"));
+      setResetFor(null);
+      setResetSaved(true);
+    } catch (submitError) {
+      setError(String(submitError));
+    }
+  }
+
+  async function onDeleteUser(id: string) {
+    setError(null);
+    try {
+      await adminDeleteUser(id);
+      await users.refetch();
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : String(deleteError);
+      if (message.includes("still has campaigns")) setError(t("admin.userHasCampaigns"));
+      else if (message.includes("your own account")) setError(t("admin.selfDelete"));
+      else setError(message);
+    }
+  }
+
   async function onSetStatus(id: string, status: "active" | "blocked") {
     setError(null);
     try {
@@ -79,9 +111,9 @@ export function AdminPage() {
       await api("/api/admin/settings", {
         method: "PATCH",
         body: {
-          contentLanguage: formString(form, "contentLanguage"),
           distanceUnit: formString(form, "distanceUnit"),
           weightUnit: formString(form, "weightUnit"),
+          volumeUnit: formString(form, "volumeUnit"),
         },
       });
       setSaved(true);
@@ -117,25 +149,21 @@ export function AdminPage() {
             onSubmit={onCreateUser}
             className="mt-4 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
           >
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.email")}
-              <input name="email" type="email" required className="rounded-md border border-border bg-background px-3 py-2" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.password")}
-              <input name="password" type="password" minLength={12} required className="rounded-md border border-border bg-background px-3 py-2" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.displayName")}
-              <input name="displayName" required className="rounded-md border border-border bg-background px-3 py-2" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("admin.role")}
-              <select name="role" className="rounded-md border border-border bg-background px-3 py-2">
+            <Field label={t("admin.email")}>
+              <input name="email" type="email" required className={inputClass} />
+            </Field>
+            <Field label={t("admin.password")}>
+              <input name="password" type="password" minLength={12} required className={inputClass} />
+            </Field>
+            <Field label={t("admin.displayName")}>
+              <input name="displayName" required className={inputClass} />
+            </Field>
+            <Field label={t("admin.role")}>
+              <select name="role" className={inputClass}>
                 <option value="dm">dm</option>
                 <option value="admin">admin</option>
               </select>
-            </label>
+            </Field>
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
               {t("admin.create")}
             </button>
@@ -171,6 +199,33 @@ export function AdminPage() {
                   {t("admin.unblock")}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => { setResetFor(resetFor === account.id ? null : account.id); setResetSaved(false); }}
+                className="rounded-md border border-border px-3 py-1 text-sm text-muted hover:bg-background"
+              >
+                {t("admin.resetPassword")}
+              </button>              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(t("admin.deleteUserConfirm"))) void onDeleteUser(account.id);
+                }}
+                className="rounded-md border border-border px-3 py-1 text-sm text-radish hover:bg-background"
+              >
+                {t("admin.deleteUser")}
+              </button>
+              {resetFor === account.id && (
+                <form onSubmit={onResetPassword} className="mt-2 flex flex-col gap-2">
+                  <input type="hidden" name="id" value={account.id} />
+                  <Field label={t("admin.newPassword")}>
+                    <input name="newPassword" type="password" required minLength={12} className={inputClass} />
+                  </Field>
+                  <button type="submit" className="self-start rounded-md bg-primary px-3 py-1 text-sm text-background hover:bg-accent">
+                    {t("admin.resetPassword")}
+                  </button>
+                  {resetSaved && <p className="text-sm text-primary">{t("admin.passwordReset")}</p>}
+                </form>
+              )}
             </li>
           ))}
         </ul>
@@ -180,27 +235,35 @@ export function AdminPage() {
         <h2 className="font-display text-2xl font-semibold text-ink">
           {t("admin.settings")}
         </h2>
+        {settings.data === undefined ? (
+          <p className="mt-4 text-sm text-muted">{t("common.loading")}</p>
+        ) : (
         <form onSubmit={onSaveSettings} className="mt-4 flex max-w-md flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.contentLanguage")}
-            <select name="contentLanguage" defaultValue={settings.data?.contentLanguage ?? "en"} className="rounded-md border border-border bg-background px-3 py-2">
-              <option value="en">en</option>
-              <option value="fr">fr</option>
+
+          <Field label={t("admin.distanceUnit")}>
+            <select name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className={inputClass}>
+              <option value="m">m</option>
+              <option value="ft">ft</option>
             </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.distanceUnit")}
-            <input name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("admin.weightUnit")}
-            <input name="weightUnit" defaultValue={settings.data?.weightUnit ?? "kg"} className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
+          </Field>
+          <Field label={t("admin.weightUnit")}>
+            <select name="weightUnit" defaultValue={settings.data?.weightUnit ?? "kg"} className={inputClass}>
+              <option value="kg">kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </Field>
+          <Field label={t("admin.volumeUnit")}>
+            <select name="volumeUnit" defaultValue={settings.data?.volumeUnit ?? "L"} className={inputClass}>
+              <option value="L">L</option>
+              <option value="gal">gal</option>
+            </select>
+          </Field>
           <button type="submit" className="self-start rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
             {t("admin.save")}
           </button>
           {saved && <p className="text-sm text-primary">{t("admin.saved")}</p>}
         </form>
+        )}
       </section>
     </div>
   );

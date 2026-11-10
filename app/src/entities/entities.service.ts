@@ -30,9 +30,12 @@ export class EntitiesService {
     private readonly relationships: RelationshipsService,
   ) {}
 
-  async create(input: CreateEntityInput): Promise<EntityRow> {
+  async create(input: CreateEntityInput, createdBy?: string): Promise<EntityRow> {
     try {
-      const [row] = await this.db.insert(entities).values(input).returning();
+      const [row] = await this.db
+        .insert(entities)
+        .values({ ...input, createdBy: createdBy ?? null })
+        .returning();
       return row;
     } catch (error) {
       if (isUniqueViolation(error)) {

@@ -13,6 +13,7 @@ export function RecordEditPage() {
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const record = useQuery({
     queryKey: ["record", slug],
     queryFn: () => api<Entity>(`/api/records/${slug}`),
@@ -32,6 +33,7 @@ export function RecordEditPage() {
   async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setSaved(false);
     const form = new FormData(event.currentTarget);
     let fields: unknown;
     try {
@@ -53,6 +55,7 @@ export function RecordEditPage() {
           body: formString(form, "body"),
         },
       });
+      setSaved(true);
     } catch (saveError) {
       setError(String(saveError));
     }
@@ -76,7 +79,7 @@ export function RecordEditPage() {
       <p className="mt-1 text-sm text-muted">{data.type}</p>
       <form onSubmit={onSave} className="mt-6 flex max-w-2xl flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">
-          {t("lore.title")}
+          {t("common.fields.title")}
           <input name="title" defaultValue={data.title} className="rounded-md border border-border bg-background px-3 py-2" />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -91,6 +94,7 @@ export function RecordEditPage() {
           {t("lore.body")}
           <textarea name="body" rows={10} defaultValue={data.body} className="rounded-md border border-border bg-background px-3 py-2" />
         </label>
+        {saved && <p className="text-sm text-primary">{t("lore.saved")}</p>}
         {error && <p className="text-sm text-radish">{error}</p>}
         <div className="flex gap-3">
           <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">

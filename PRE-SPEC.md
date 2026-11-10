@@ -11,22 +11,22 @@ Detailed, verifiable behavior that will feed the OpenSpec changes (`openspec/`).
 - Boundary: template-derived labels (field names, named blocks, enum values from `templates/`) are data preserved verbatim in English — they live **outside** the i18n catalogs and are not translated by them.
 - Dates and numbers formatted with `Intl` according to the active UI locale.
 
-## 2. Configuration, content language and full-text search
+## 2. Configuration and full-text search
 
 - **One world per instance**: the world is the instance — no worlds table, no world-level settings layer.
-- `settings(key UNIQUE, value)` at instance scope. v1 keys: `ui_locale`, `content_language`, `distance_unit`, `weight_unit`, `calendar`.
-- `AUTHORING_LOCALE` in `.env` (default `en`, alternative `fr`): content language set at the first-startup wizard, stored in `settings`.
-- Full-text search: `search_vector tsvector` on `entities`, trigger-maintained from `title` + `body` with the config derived from the content language (`en` → `english`, `fr` → `french`); `unaccent` always applied; GIN-indexed. One world = one config — no per-scope merge. Changing the content language reindexes all records (background job). Queries parse with the same config.
+- `settings(key UNIQUE, value)` at instance scope. v1 keys: `ui_locale`, `distance_unit`, `weight_unit`, `volume_unit`, `world_name`, `calendar`.
+- **Single-configuration search (decision, 2026-11-09)**: there is no multilingual search. `search_vector tsvector` on `entities`, trigger-maintained from `title` + `body`, uses ONE fixed text-search configuration for all content, whatever language the records are written in (`unaccent` always applied; GIN-indexed). The exact dictionary is chosen with the P3 search change. Queries parse with the same configuration.
 - Acceptance: searching ignores accents in both languages (e.g. `ecole` finds `École` in fr; same behavior in en).
-- **Units** (distance, weight): instance settings edited in the admin panel; values are stored in the configured unit — changing the unit **never** recalculates anything (a labeling preference, not a conversion engine). The conversion barème is displayed as help next to the unit selectors: 5 ft = 1.5 m · 1 mile = 1.5 km · 1 lb = 500 g · 1 gal = 4 l. The SRD import converts values once into the world's units.
+- **Units** (distance, weight, volume): instance settings edited in the admin panel; values are stored in the configured unit — changing the unit **never** recalculates anything (a labeling preference, not a conversion engine). The conversion barème is displayed as help next to the unit selectors: 5 ft = 1.5 m · 1 mile = 1.5 km · 1 lb = 500 g · 1 gal = 4 l. The SRD import converts values once into the world's units.
+- **No content i18n (decision, 2026-11-09)**: record content is in whatever language the DM used to type or import it — the application never translates content, and no UI exposes a "content language" anymore. The per-account FR/EN header switcher is the only language control. There is no content-language setting anywhere (no UI, no settings key, no env var) — search runs on a single fixed configuration.
 
 ## 3. Accounts and access — decision in progress
 
 Settled:
 
-- **First-startup wizard**: creates the administrator account **and the world** (name, content language).
+- **First-startup wizard**: creates the administrator account **and the world** (name).
 - **No self-service registration**: accounts are created exclusively by an administrator from the admin panel (explicit action — user decision).
-- **Admin panel** (admin only): create accounts, block/unblock accounts, edit instance settings (content language, units; calendar editor lands with the calendar feature).
+- **Admin panel** (admin only): create accounts, block/unblock accounts, edit instance settings (units; calendar editor lands with the calendar feature).
 - Roles `admin` / `dm`; account status `active` / `blocked` (blocked = cannot log in; content and grants stay intact).
 - **P1 access rule**: every authenticated account has full read/write access to the one world (personal-tool stance); fine-grained sharing deferred — introducing `shares` later is additive.
 - Every data path is access-filtered in the repositories — no unfiltered query path, whatever evolves from this model.
@@ -56,6 +56,7 @@ Field structure lives in `templates/` (15 templates + 8 catalogs, fields in expl
 7. **Mechanical fields are never invented** — DM notes or SRD import only (charter rule 6).
 8. **Hierarchy**: Campaign → Chapter → Scene carried by child→parent references (0..1); the children of a record display at the end of its sheet (backlinks section). A one-shot is a campaign with a single chapter.
 9. **Play tracking**: explicit status on Scene only (not played / in progress / played); Chapter and Campaign derive theirs from their children.
+10. **Sheet layout is bespoke per template**: a record sheet is not a generic field list — each template gets its own sheet component in code (sections, columns, field order; shared blocks for Statistics, running notes, system sections), worked template by template with the DM (UI work through the impeccable skills). `templates/` field order is the data order; the layout may group and arrange fields beyond it. The sheets are phased at records-editor proposal time — mechanism and a first template, then the remaining templates one by one, each reviewed by the DM.
 
 Field-type vocabulary: prose · short text · free numeric string · money (GP/SP/CP, factor 10 between each) · calendar date · recurrence · enum · reference 0..1 · reference 0..n · asset reference · play status · **reusable Statistics block** (embedded by Characters and entities, Monsters, Fauna, Flora — full definition in `templates/_index.md`: 6 ability scores with SRD-calculated modifier shown after leaving edit mode, optional saving throws carrying both raw score and modifier, AC, HP with formula, multi-mode speed, initiative modifier, SRD alignment/type/size, darkvision with world unit, passive perception, damage-type references).
 
@@ -87,5 +88,5 @@ No direct-write tool exists (double lock: token scope + application service). Re
 ## 8. Settings screen and admin panel
 
 - **Settings screen** (every DM): UI language, Wizards of the Coast attribution (credits page).
-- **Admin panel** (admin only): account management (create, block/unblock), registration toggle, instance settings (content language, distance/weight units with barème help, calendar definition).
+- **Admin panel** (admin only): account management (create, block/unblock), registration toggle, instance settings (distance/weight/volume units with barème help, calendar definition).
 - Persisted in `settings`; `.env` provides startup defaults only.

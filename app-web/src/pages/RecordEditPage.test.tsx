@@ -75,4 +75,31 @@ describe("RecordEditPage", () => {
       expect(patch).toBeDefined();
     });
   });
+
+  it("shows a success confirmation after saving", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_input: string) => ({
+        ok: true,
+        json: async () => ({
+          id: "1",
+          slug: "city-of-glass",
+          type: "places",
+          perimeter: "world",
+          title: "City of Glass",
+          tags: [],
+          fields: {},
+          body: "A city of towers.",
+        }),
+      })),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    const form = document.querySelector("form");
+    if (!form) throw new Error("form missing");
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(screen.getByText("Saved.")).toBeDefined());
+  });
 });

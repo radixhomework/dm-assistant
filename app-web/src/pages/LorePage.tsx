@@ -1,15 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
+import { SlugTitleFields } from "../components/slug-fields.js";
+import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { useSlugAutoFill } from "../slug.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import { worldTemplates, type Entity } from "../types.js";
 
 export function LorePage() {
   const { t } = useTranslation();
   const { ready } = useRequireAuth();
+  const slugFields = useSlugAutoFill();
   const records = useQuery({
     queryKey: ["lore-records"],
     queryFn: () => api<Entity[]>("/api/records?perimeter=world"),
@@ -57,7 +61,10 @@ export function LorePage() {
         </h1>
         <button
           type="button"
-          onClick={() => setCreating((value) => !value)}
+          onClick={() => {
+            if (!creating) slugFields.reset();
+            setCreating((value) => !value);
+          }}
           className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
           {t("lore.newRecord")}
@@ -67,24 +74,16 @@ export function LorePage() {
 
       {creating && (
         <form onSubmit={onCreate} className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4">
-          <label className="flex flex-col gap-1 text-sm">
-            {t("lore.type")}
-            <select name="type" className="rounded-md border border-border bg-background px-3 py-2">
+          <Field label={t("lore.type")}>
+            <select name="type" className={inputClass}>
               {worldTemplates.map((template) => (
                 <option key={template} value={template}>
                   {template}
                 </option>
               ))}
             </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("lore.slug")}
-            <input name="slug" required pattern="[a-z0-9-]+" className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("lore.title")}
-            <input name="title" required className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
+          </Field>
+          <SlugTitleFields fields={slugFields} />
           {error && <p className="text-sm text-radish">{error}</p>}
           <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
             {t("lore.create")}

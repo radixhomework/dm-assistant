@@ -15,7 +15,6 @@ export const envSchema = z.object({
     .min(1)
     .default("postgres://dm:dm@localhost:5432/dm_assistant"),
   UI_LOCALE: z.enum(locales).default("en"),
-  AUTHORING_LOCALE: z.enum(locales).default("en"),
   SESSION_SECRET: z.string().min(16).default("dev-only-session-secret"),
   COOKIE_SECURE: z.enum(["true", "false"]).default("false"),
 });

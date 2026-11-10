@@ -47,9 +47,7 @@ describe("SetupPage submit", () => {
       if (!field) throw new Error(`${name} missing`);
       (field as HTMLInputElement).value = value;
     }
-    const language = form.querySelector('select[name="contentLanguage"]');
-    if (!language) throw new Error("language missing");
-    (language as HTMLSelectElement).value = "fr";
+
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;

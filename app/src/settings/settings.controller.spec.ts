@@ -6,13 +6,11 @@ function makeService(): vi.Mocked<SettingsService> {
   return {
     getAll: vi.fn(async () => ({
       worldName: "W",
-      contentLanguage: "en",
       distanceUnit: "m",
       weightUnit: "kg",
     })),
     update: vi.fn(async () => ({
       worldName: "W",
-      contentLanguage: "fr",
       distanceUnit: "m",
       weightUnit: "kg",
     })),
@@ -34,7 +32,7 @@ describe("SettingsController", () => {
   });
 
   it("parses and delegates partial updates", async () => {
-    await controller.update({ contentLanguage: "fr" });
-    expect(service.update).toHaveBeenCalledWith({ contentLanguage: "fr" });
+    await controller.update({ distanceUnit: "ft" });
+    expect(service.update).toHaveBeenCalledWith({ distanceUnit: "ft" });
   });
 });

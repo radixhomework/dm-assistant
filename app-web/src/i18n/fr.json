@@ -4,22 +4,30 @@
     "tagline": "Votre monde et vos campagnes, au même endroit"
   },
   "home": {
-    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui demande attention."
+    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui mérite attention."
   },
   "nav": {
     "lore": "Lore",
     "campaigns": "Campagnes",
     "admin": "Admin",
-    "logout": "Déconnexion"
+    "logout": "Se déconnecter"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue",
+    "cancel": "Annuler",
+    "fields": {
+      "title": "Titre",
+      "slug": "Slug"
+    }
   },
   "setup": {
     "title": "Bienvenue sur votre instance",
     "intro": "Créez le compte administrateur et nommez votre monde.",
     "email": "Email",
     "password": "Mot de passe (12+ caractères)",
-    "displayName": "Nom affiché",
+    "displayName": "Nom d'affichage",
     "worldName": "Nom du monde",
-    "contentLanguage": "Langue du contenu",
     "submit": "Créer l'administrateur"
   },
   "login": {
@@ -30,11 +38,9 @@
   },
   "lore": {
     "title": "Lore",
-    "intro": "Les fiches du monde, groupées par type de template.",
+    "intro": "Fiches du monde, groupées par type de template.",
     "newRecord": "Nouvelle fiche",
     "type": "Type",
-    "slug": "Slug",
-    "title": "Titre",
     "create": "Créer",
     "open": "Ouvrir",
     "delete": "Supprimer",
@@ -42,13 +48,12 @@
     "tags": "Tags (séparés par des virgules)",
     "fields": "Champs (JSON)",
     "save": "Enregistrer",
+    "saved": "Enregistré.",
     "empty": "Aucune fiche pour l'instant."
   },
   "campaigns": {
     "title": "Campagnes",
     "newCampaign": "Nouvelle campagne",
-    "title": "Titre",
-    "slug": "Slug",
     "create": "Créer",
     "open": "Ouvrir",
     "chapters": "Chapitres",
@@ -56,12 +61,30 @@
     "scenes": "Scènes",
     "newScene": "Nouvelle scène",
     "status": {
-      "not_played": "Non joué",
+      "not_played": "Non jouée",
       "in_progress": "En cours",
-      "played": "Joué"
+      "played": "Jouée"
     },
+    "delete": "Supprimer",
+    "deleteCampaign": "Supprimer la campagne",
+    "deleteCampaignConfirm": "Supprimer cette campagne ? Les chapitres doivent être supprimés d’abord.",
+    "deleteConfirm": "Supprimer cet élément ?",
     "setStatus": "Définir le statut",
     "empty": "Aucune campagne pour l'instant."
+  },
+  "account": {
+    "title": "Mon compte",
+    "profileSection": "Profil",
+    "passwordSection": "Mot de passe",
+    "email": "Email",
+    "displayName": "Nom d'affichage",
+    "uiLanguage": "Langue de l'interface",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe (12+ caractères)",
+    "saveProfile": "Enregistrer le profil",
+    "changePassword": "Changer le mot de passe",
+    "saved": "Enregistré.",
+    "passwordChanged": "Mot de passe modifié."
   },
   "admin": {
     "title": "Admin",
@@ -69,28 +92,30 @@
     "createUser": "Créer un utilisateur",
     "email": "Email",
     "password": "Mot de passe (12+ caractères)",
-    "displayName": "Nom affiché",
+    "displayName": "Nom d'affichage",
     "role": "Rôle",
     "status": "Statut",
     "block": "Bloquer",
     "unblock": "Débloquer",
     "create": "Créer",
-    "settings": "Réglages de l'instance",
-    "contentLanguage": "Langue du contenu",
+    "settings": "Paramètres de l'instance",
     "distanceUnit": "Unité de distance",
     "weightUnit": "Unité de poids",
+    "volumeUnit": "Unité de volume",
+    "newPassword": "Nouveau mot de passe (12+ caractères)",
+    "resetPassword": "Définir un nouveau mot de passe",
+    "deleteUser": "Supprimer",
+    "deleteUserConfirm": "Supprimer cet utilisateur ? Action irréversible.",
+    "userHasCampaigns": "Cet utilisateur a encore des campagnes — suppression refusée.",
+    "selfDelete": "Vous ne pouvez pas supprimer votre propre compte.",
+    "passwordReset": "Mot de passe mis à jour.",
     "save": "Enregistrer",
     "saved": "Enregistré."
-  },
-  "common": {
-    "loading": "Chargement…",
-    "error": "Une erreur est survenue",
-    "cancel": "Annuler"
   },
   "health": {
     "title": "État de l'API",
     "loading": "Vérification…",
     "ok": "En ligne",
-    "error": "Hors ligne — vérifiez que le serveur de l'application tourne"
+    "error": "Hors ligne — vérifiez que le serveur applicatif tourne"
   }
 }

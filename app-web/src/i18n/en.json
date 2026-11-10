@@ -12,6 +12,15 @@
     "admin": "Admin",
     "logout": "Log out"
   },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "cancel": "Cancel",
+    "fields": {
+      "title": "Title",
+      "slug": "Slug"
+    }
+  },
   "setup": {
     "title": "Welcome to your instance",
     "intro": "Create the administrator account and name your world.",
@@ -19,7 +28,6 @@
     "password": "Password (12+ characters)",
     "displayName": "Display name",
     "worldName": "World name",
-    "contentLanguage": "Content language",
     "submit": "Create the administrator"
   },
   "login": {
@@ -33,8 +41,6 @@
     "intro": "World records, grouped by template type.",
     "newRecord": "New record",
     "type": "Type",
-    "slug": "Slug",
-    "title": "Title",
     "create": "Create",
     "open": "Open",
     "delete": "Delete",
@@ -42,13 +48,12 @@
     "tags": "Tags (comma-separated)",
     "fields": "Fields (JSON)",
     "save": "Save",
+    "saved": "Saved.",
     "empty": "No records yet."
   },
   "campaigns": {
     "title": "Campaigns",
     "newCampaign": "New campaign",
-    "title": "Title",
-    "slug": "Slug",
     "create": "Create",
     "open": "Open",
     "chapters": "Chapters",
@@ -60,8 +65,26 @@
       "in_progress": "In progress",
       "played": "Played"
     },
+    "delete": "Delete",
+    "deleteCampaign": "Delete campaign",
+    "deleteCampaignConfirm": "Delete this campaign? Chapters must be deleted first.",
+    "deleteConfirm": "Delete this item?",
     "setStatus": "Set status",
     "empty": "No campaigns yet."
+  },
+  "account": {
+    "title": "My account",
+    "profileSection": "Profile",
+    "passwordSection": "Password",
+    "email": "Email",
+    "displayName": "Display name",
+    "uiLanguage": "UI language",
+    "currentPassword": "Current password",
+    "newPassword": "New password (12+ characters)",
+    "saveProfile": "Save profile",
+    "changePassword": "Change password",
+    "saved": "Saved.",
+    "passwordChanged": "Password changed."
   },
   "admin": {
     "title": "Admin",
@@ -76,16 +99,18 @@
     "unblock": "Unblock",
     "create": "Create",
     "settings": "Instance settings",
-    "contentLanguage": "Content language",
     "distanceUnit": "Distance unit",
     "weightUnit": "Weight unit",
+    "volumeUnit": "Volume unit",
+    "newPassword": "New password (12+ characters)",
+    "resetPassword": "Set a new password",
+    "deleteUser": "Delete",
+    "deleteUserConfirm": "Delete this user? This cannot be undone.",
+    "userHasCampaigns": "This user still has campaigns — deletion refused.",
+    "selfDelete": "You cannot delete your own account.",
+    "passwordReset": "Password updated.",
     "save": "Save",
     "saved": "Saved."
-  },
-  "common": {
-    "loading": "Loading…",
-    "error": "Something went wrong",
-    "cancel": "Cancel"
   },
   "health": {
     "title": "API status",

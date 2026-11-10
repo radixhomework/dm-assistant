@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { fetchBootstrapState } from "../api/auth.js";
+import { queryClient } from "../query-client.js";
 
 export function SetupPage() {
   const { t } = useTranslation();
@@ -23,7 +25,7 @@ export function SetupPage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
-      await fetch("/api/bootstrap", {
+      const res = await fetch("/api/bootstrap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -31,9 +33,15 @@ export function SetupPage() {
           password: formString(form, "password"),
           displayName: formString(form, "displayName"),
           worldName: formString(form, "worldName"),
-          contentLanguage: formString(form, "contentLanguage"),
         }),
       });
+      if (!res.ok) {
+        setError(res.statusText);
+        return;
+      }
+      // The router guard caches the bootstrap state: update it before
+      // navigating, or the fresh instance would bounce back to /setup.
+      queryClient.setQueryData(["bootstrap"], { adminExists: true });
       void navigate({ to: "/login" });
     } catch (submitError) {
       setError(String(submitError));
@@ -47,29 +55,18 @@ export function SetupPage() {
       </h1>
       <p className="mt-2 text-muted">{t("setup.intro")}</p>
       <form onSubmit={onSubmit} className="mt-8 flex max-w-md flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          {t("setup.email")}
-          <input name="email" type="email" required className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("setup.password")}
-          <input name="password" type="password" minLength={12} required className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("setup.displayName")}
-          <input name="displayName" required className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("setup.worldName")}
-          <input name="worldName" required className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("setup.contentLanguage")}
-          <select name="contentLanguage" className="rounded-md border border-border bg-background px-3 py-2">
-            <option value="en">en</option>
-            <option value="fr">fr</option>
-          </select>
-        </label>
+        <Field label={t("setup.email")}>
+          <input name="email" type="email" required className={inputClass} />
+        </Field>
+        <Field label={t("setup.password")}>
+          <input name="password" type="password" minLength={12} required className={inputClass} />
+        </Field>
+        <Field label={t("setup.displayName")}>
+          <input name="displayName" required className={inputClass} />
+        </Field>
+        <Field label={t("setup.worldName")}>
+          <input name="worldName" required className={inputClass} />
+        </Field>
         {error && <p className="text-sm text-radish">{error}</p>}
         <button type="submit" className="rounded-md bg-primary px-4 py-2 text-background transition-colors duration-200 hover:bg-accent">
           {t("setup.submit")}

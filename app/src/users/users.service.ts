@@ -1,10 +1,35 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { desc, eq } from "drizzle-orm";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
+import { and, desc, eq } from "drizzle-orm";
 import { hash, verify } from "@node-rs/argon2";
 import type { CreateUserInput } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
-import { users } from "../database/schema.js";
+import { entities, users } from "../database/schema.js";
+
+function safeUiLocale(value: string | null | undefined): SafeUser["uiLocale"] {
+  if (value === "fr") return "fr";
+  if (value === "en") return "en";
+  return null;
+}
+
+/** Public projection — never expose the password hash (S3358-safe, shared). */
+export function safeUserOf(row: {
+  id: string;
+  email: string;
+  displayName: string;
+  role: string;
+  status: string;
+  uiLocale?: string | null;
+}): SafeUser {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.displayName,
+    role: row.role as SafeUser["role"],
+    status: row.status as SafeUser["status"],
+    uiLocale: safeUiLocale(row.uiLocale),
+  };
+}
 
 export type SafeUser = {
   id: string;
@@ -12,6 +37,7 @@ export type SafeUser = {
   displayName: string;
   role: "admin" | "dm";
   status: "active" | "blocked";
+  uiLocale: "en" | "fr" | null;
 };
 
 @Injectable()
@@ -29,7 +55,7 @@ export class UsersService {
         role: input.role,
       })
       .returning();
-    return this.toSafe(row);
+    return safeUserOf(row);
   }
 
   async findByEmail(email: string) {
@@ -50,7 +76,7 @@ export class UsersService {
       .select()
       .from(users)
       .orderBy(desc(users.createdAt));
-    return rows.map((row) => this.toSafe(row));
+    return rows.map((row) => safeUserOf(row));
   }
 
   async setStatus(
@@ -62,7 +88,39 @@ export class UsersService {
       .set({ status })
       .where(eq(users.id, id))
       .returning();
-    return row ? this.toSafe(row) : null;
+    return row ? safeUserOf(row) : null;
+  }
+
+  /**
+   * Admin user deletion. Refused while the user created any campaign
+   * record (their content must not orphan) and for the acting admin
+   * themselves. Non-campaign authorships keep their records; the author
+   * reference is cleared by the FK on-delete rule.
+   */
+  async deleteUser(id: string, actingUserId: string): Promise<void> {
+    if (id === actingUserId) {
+      throw new ConflictException("You cannot delete your own account");
+    }
+    const [campaign] = await this.db
+      .select({ id: entities.id })
+      .from(entities)
+      .where(and(eq(entities.createdBy, id), eq(entities.perimeter, "campaign")))
+      .limit(1);
+    if (campaign) {
+      throw new ConflictException("This user still has campaigns");
+    }
+    await this.db.delete(users).where(eq(users.id, id));
+  }
+
+  /** Admin password reset: replaces the hash, touches nothing else. */
+  async setPassword(id: string, newPassword: string): Promise<SafeUser | null> {
+    const passwordHash = await hash(newPassword);
+    const [row] = await this.db
+      .update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, id))
+      .returning();
+    return row ? safeUserOf(row) : null;
   }
 
   /** Public projection — never expose the password hash. */
@@ -72,8 +130,9 @@ export class UsersService {
     displayName: string;
     role: string;
     status: string;
+    uiLocale?: string | null;
   }): SafeUser {
-    return this.toSafe(row);
+    return safeUserOf(row);
   }
 
   async verifyPassword(
@@ -83,19 +142,4 @@ export class UsersService {
     return verify(passwordHash, password);
   }
 
-  private toSafe(row: {
-    id: string;
-    email: string;
-    displayName: string;
-    role: string;
-    status: string;
-  }): SafeUser {
-    return {
-      id: row.id,
-      email: row.email,
-      displayName: row.displayName,
-      role: row.role as SafeUser["role"],
-      status: row.status as SafeUser["status"],
-    };
-  }
 }

@@ -102,6 +102,71 @@ describe("AdminPage actions", () => {
     });
   });
 
+  it("deletes a user via the delete button after confirmation", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    mockInstance(captured);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<AdminPage />, "/admin");
+    await vi.waitFor(() => expect(screen.getByText("Delete")).toBeDefined());
+    screen.getByText("Delete").click();
+    await vi.waitFor(() => {
+      const removed = captured.find(
+        ([path, init]) => path === "/api/admin/users/u1" && init?.method === "DELETE",
+      );
+      expect(removed).toBeDefined();
+    });
+    expect(confirmSpy).toHaveBeenCalled();
+  });
+
+  it("resets a password via the inline form", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    mockInstance(captured);
+    renderWithProviders(<AdminPage />, "/admin");
+    await vi.waitFor(() => expect(screen.getByText("Set a new password")).toBeDefined());
+    screen.getByText("Set a new password").click();
+    await vi.waitFor(() => {
+      const form = document.querySelector("form");
+      expect(form).not.toBeNull();
+    });
+    const form = document.querySelector("form");
+    if (!form) throw new Error("form missing");
+    const field = form.querySelector('input[name="newPassword"]');
+    if (!field) throw new Error("newPassword missing");
+    (field as HTMLInputElement).value = "the-new-passphrase";
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => {
+      const post = captured.find(
+        ([path, init]) => path === "/api/admin/users/u1/password" && init?.method === "POST",
+      );
+      expect(post).toBeDefined();
+    });
+  });
+
+  it("shows the refusal when a user still has campaigns", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input === "/api/admin/users" && !init?.method) {
+          return { ok: true, json: async () => [{ id: "u2", email: "c@b.c", displayName: "Creator", role: "dm", status: "active" }] };
+        }
+        if (input === "/api/admin/users/u2" && init?.method === "DELETE") {
+          return { ok: false, status: 409, json: async () => ({ message: "This user still has campaigns" }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      }),
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<AdminPage />, "/admin");
+    await vi.waitFor(() => expect(screen.getByText("Delete")).toBeDefined());
+    screen.getByText("Delete").click();
+    await vi.waitFor(() =>
+      expect(screen.getByText(/deletion refused/i)).toBeDefined(),
+    );
+  });
+
   it("saves instance settings via the settings form", async () => {
     const captured: Array<[string, RequestInit]> = [];
     mockInstance(captured);

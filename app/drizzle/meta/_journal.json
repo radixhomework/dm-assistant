@@ -15,6 +15,20 @@
       "when": 1794087523735,
       "tag": "0001_moaning_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794171723868,
+      "tag": "0002_powerful_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794229695942,
+      "tag": "0003_oval_wild_child",
+      "breakpoints": true
     }
   ]
 }

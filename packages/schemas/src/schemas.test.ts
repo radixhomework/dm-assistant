@@ -48,7 +48,6 @@ describe("auth schemas", () => {
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "fr",
     });
     expect(parsed.email).toBe("dm@example.com");
   });
@@ -59,7 +58,6 @@ describe("auth schemas", () => {
       password: "short",
       displayName: "The DM",
       worldName: "My World",
-      contentLanguage: "en",
     });
     expect(result.success).toBe(false);
   });
@@ -73,12 +71,11 @@ describe("settings schemas", () => {
   it("accepts partial updates", () => {
     const parsed = updateSettingsSchema.parse({ distanceUnit: "m" });
     expect(parsed.distanceUnit).toBe("m");
-    expect(parsed.contentLanguage).toBeUndefined();
   });
 
-  it("rejects an unknown content language", () => {
-    expect(
-      updateSettingsSchema.safeParse({ contentLanguage: "de" }).success,
-    ).toBe(false);
+  it("rejects an invalid unit", () => {
+    expect(updateSettingsSchema.safeParse({ distanceUnit: "miles" }).success).toBe(
+      false,
+    );
   });
 });
