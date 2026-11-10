@@ -1,3 +1,10 @@
+/**
+ * The reusable Statistics block embedded by the Characters and entities,
+ * Monsters, Fauna and Flora templates (full definition in
+ * templates/_index.md). Mechanical values are never invented by the
+ * application — they come from the DM's input or the SRD import only.
+ */
+
 import { z } from "zod";
 
 export const abilities = [

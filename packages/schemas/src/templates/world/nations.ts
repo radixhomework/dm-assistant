@@ -1,3 +1,10 @@
+/**
+ * "Nations" template schema — world perimeter (Society category).
+ * 
+ * Source of truth: templates/world/society/nations.md. political_system
+ * holds the 16-value Political system enum from the templates.
+ */
+
 import { z } from "zod";
 import { assetField, proseField, refMany, refOne, template } from "../factory.js";
 import { numericStringSchema } from "../vocabulary.js";

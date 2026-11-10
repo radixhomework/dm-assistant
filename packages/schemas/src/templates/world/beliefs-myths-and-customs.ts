@@ -1,3 +1,9 @@
+/**
+ * "Beliefs, myths and customs" template schema — world perimeter (Culture category).
+ * 
+ * Source of truth: templates/world/culture/beliefs-myths-and-customs.md.
+ */
+
 import { assetField, proseField, refMany, refOne, template } from "../factory.js";
 import { numericStringSchema } from "../vocabulary.js";
 

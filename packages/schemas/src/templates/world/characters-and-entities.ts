@@ -1,3 +1,12 @@
+/**
+ * "Characters and entities" template schema — world perimeter (Characters category).
+ * 
+ * Source of truth: templates/world/characters/characters-and-entities.md.
+ * The statistics field carries the reusable SRD-shaped block. Reference
+ * values (origin, species, classes, languages and the association lists)
+ * live in the relationships table keyed by field, never in fields JSONB.
+ */
+
 import { z } from "zod";
 import { assetField, proseField, refMany, refOne, template } from "../factory.js";
 import { statisticsSchema } from "../statistics.js";

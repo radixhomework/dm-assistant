@@ -1,3 +1,9 @@
+/**
+ * "Works" template schema — world perimeter (Culture category).
+ * 
+ * Source of truth: templates/world/culture/works.md.
+ */
+
 import { assetField, proseField, refMany, refOne, template } from "../factory.js";
 
 export const works = template(

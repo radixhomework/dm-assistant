@@ -1,3 +1,11 @@
+/**
+ * "Monsters" template schema — world perimeter (Bestiary category).
+ * 
+ * Source of truth: templates/world/bestiary/monsters.md. Traits and
+ * actions are free prose; every mechanical value belongs to the statistics
+ * block (charter rule 6: mechanical fields are never invented).
+ */
+
 import { assetField, proseField, refMany, template } from "../factory.js";
 import { statisticsSchema } from "../statistics.js";
 

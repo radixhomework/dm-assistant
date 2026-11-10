@@ -1,3 +1,9 @@
+/**
+ * "Knowledge and technologies" template schema — world perimeter (Culture category).
+ * 
+ * Source of truth: templates/world/culture/knowledge-and-technologies.md.
+ */
+
 import { assetField, proseField, refMany, refOne, template } from "../factory.js";
 
 export const knowledgeAndTechnologies = template(

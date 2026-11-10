@@ -1,3 +1,10 @@
+/**
+ * "Organizations" template schema — world perimeter (Society category).
+ * 
+ * Source of truth: templates/world/society/organizations.md. member_count
+ * is a free numeric string (single or approximate figure).
+ */
+
 import { assetField, proseField, refMany, refOne, template } from "../factory.js";
 import { numericStringSchema } from "../vocabulary.js";
 

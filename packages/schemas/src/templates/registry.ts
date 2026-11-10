@@ -1,3 +1,8 @@
+/**
+ * Template registry: assembles the 23 per-template schemas (15 templates +
+ * 8 catalogs) into the lookup the API validation and the form renderer use.
+ */
+
 import { beliefsMythsAndCustoms } from "./world/beliefs-myths-and-customs.js";
 import { charactersAndEntities } from "./world/characters-and-entities.js";
 import { equipmentAndItems } from "./world/equipment-and-items.js";
@@ -23,6 +28,7 @@ import { species } from "./catalogs/species.js";
 import { treasureTypes } from "./catalogs/treasure-types.js";
 import type { TemplateSchema } from "./factory.js";
 
+/** The 23 template/catalog schemas, keyed by record type. */
 export const templateSchemas = {
   // World perimeter
   "characters-and-entities": charactersAndEntities,
@@ -55,6 +61,10 @@ export const templateSchemas = {
 export type TemplateType = keyof typeof templateSchemas;
 export const templateTypes = Object.keys(templateSchemas) as TemplateType[];
 
+/**
+ * Looks up the schema of a record type. Returns undefined for unregistered
+ * types — those keep the P1 structural fields validation.
+ */
 export function templateSchemaOf(type: string): TemplateSchema | undefined {
   return templateSchemas[type as TemplateType];
 }

@@ -1,3 +1,9 @@
+/**
+ * Shared field-type vocabulary used by the per-template schemas
+ * (PRE-SPEC.md §5): currency-aware money, world-calendar dates, recurrence,
+ * free numeric strings, asset references and play order.
+ */
+
 import { z } from "zod";
 
 /**
