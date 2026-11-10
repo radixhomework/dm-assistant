@@ -133,13 +133,13 @@ describe("EntitiesService", () => {
     const before = await service.tracking("north-realm");
     expect(before.status).toBe("not_played");
 
-    await service.update("scene-one", { fields: { status: "in_progress" } });
+    await service.update("scene-one", { fields: { play_status: "in_progress" } });
     const during = await service.tracking("chapter-one");
     expect(during.status).toBe("in_progress");
     const campaignDuring = await service.tracking("north-realm");
     expect(campaignDuring.status).toBe("in_progress");
 
-    await service.update("scene-one", { fields: { status: "played" } });
+    await service.update("scene-one", { fields: { play_status: "played" } });
     const after = await service.tracking("chapter-one");
     expect(after.status).toBe("played");
     const campaignAfter = await service.tracking("north-realm");
@@ -186,5 +186,30 @@ describe("EntitiesService edge cases", () => {
       type: "campaign",
     });
     expect(campaigns.map((row) => row.slug)).toEqual(["a-campaign"]);
+  });
+  it("validates fields against the template schema", async () => {
+    const places = { slug: "validated-place", type: "places", perimeter: "world" as const, title: "Validated Place", fields: { population: "2M" } };
+    await service.create(places);
+    const read = await service.getBySlug("validated-place");
+    expect(read.fields).toEqual({ population: "2M" });
+  });
+
+  it("rejects unknown template fields with a stable code", async () => {
+    const bad = { slug: "bad-place", type: "places", perimeter: "world" as const, title: "Bad Place", fields: { nickname: "The Pearl" } };
+    await expect(service.create(bad)).rejects.toMatchObject({
+      response: { code: "fields_invalid" },
+    });
+  });
+
+  it("keeps structural validation for unregistered types", async () => {
+    await service.create({
+      slug: "custom-type-record",
+      type: "custom-type",
+      perimeter: "world",
+      title: "Custom",
+      fields: { anything: [1, 2, 3] },
+    });
+    const read = await service.getBySlug("custom-type-record");
+    expect(read.fields).toEqual({ anything: [1, 2, 3] });
   });
 });

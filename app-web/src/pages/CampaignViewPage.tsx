@@ -97,7 +97,7 @@ export function CampaignViewPage() {
       const scene = await api<Entity>(`/api/records/${sceneSlug}`);
       await api(`/api/records/${sceneSlug}`, {
         method: "PATCH",
-        body: { fields: { ...scene.fields, status } },
+        body: { fields: { ...scene.fields, play_status: status } },
       });
       await campaign.refetch();
       await chapterTrackings.refetch();

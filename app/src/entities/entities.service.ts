@@ -1,14 +1,16 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { and, eq, or } from "drizzle-orm";
-import type {
-  CreateEntityInput,
-  PlayStatus,
-  UpdateEntityInput,
+import {
+  templateSchemaOf,
+  type CreateEntityInput,
+  type PlayStatus,
+  type UpdateEntityInput,
 } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -31,10 +33,11 @@ export class EntitiesService {
   ) {}
 
   async create(input: CreateEntityInput, createdBy?: string): Promise<EntityRow> {
+    const fields = validateFields(input.type, input.fields ?? {});
     try {
       const [row] = await this.db
         .insert(entities)
-        .values({ ...input, createdBy: createdBy ?? null })
+        .values({ ...input, fields, createdBy: createdBy ?? null })
         .returning();
       return row;
     } catch (error) {
@@ -76,12 +79,13 @@ export class EntitiesService {
 
   async update(slug: string, input: UpdateEntityInput): Promise<EntityRow> {
     const existing = await this.getBySlug(slug);
+    const fields = input.fields === undefined ? undefined : validateFields(existing.type, input.fields);
     const [row] = await this.db
       .update(entities)
       .set({
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.tags !== undefined ? { tags: input.tags } : {}),
-        ...(input.fields !== undefined ? { fields: input.fields } : {}),
+        ...(fields !== undefined ? { fields } : {}),
         ...(input.body !== undefined ? { body: input.body } : {}),
         updatedAt: new Date(),
       })
@@ -127,8 +131,8 @@ export class EntitiesService {
 
   statusOf(fields: unknown): PlayStatus {
     const record = (fields ?? {}) as Record<string, unknown>;
-    if (record["status"] === "in_progress") return "in_progress";
-    if (record["status"] === "played") return "played";
+    if (record["play_status"] === "in_progress") return "in_progress";
+    if (record["play_status"] === "played") return "played";
     return "not_played";
   }
 }
@@ -148,6 +152,31 @@ function childKindOf(type: string): "chapter" | "scene" | null {
   if (type === "campaign") return "chapter";
   if (type === "chapter") return "scene";
   return null;
+}
+
+/**
+ * Template-schema validation of the fields JSONB (template-schemas
+ * capability): unknown record types keep the P1 structural validation.
+ * Reference fields live in the relationships table, never in fields.
+ */
+function validateFields(
+  type: string,
+  fields: Record<string, unknown>,
+): Record<string, unknown> {
+  const template = templateSchemaOf(type);
+  if (!template) return fields;
+  const parsed = template.fields.safeParse(fields);
+  if (!parsed.success) {
+    throw new BadRequestException({
+      code: "fields_invalid",
+      message: "fields_invalid",
+      issues: parsed.error.issues.map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+      })),
+    });
+  }
+  return parsed.data as Record<string, unknown>;
 }
 
 function isUniqueViolation(error: unknown): boolean {

@@ -2,10 +2,10 @@
 
 ## 1. Template schemas (`packages/schemas`)
 
-- [ ] 1.1 Field-type vocabulary: money (currency-aware), calendar date, recurrence, typed references (0..1 / 0..n), order, statistics block — each with unit tests on the validation rules
-- [ ] 1.2 Statistics block schema: ability scores + SRD modifier computation (pure function), saving throws, AC, HP, multi-mode speed, initiative, enums, darkvision, passive perception, damage-type references
-- [ ] 1.3 One schema per template/catalog (23) in `packages/schemas/src/templates.ts` + registry test asserting exact coverage against `templates/`
-- [ ] 1.4 API-side validation: service parses `fields` against the record's template schema (unknown types keep structural validation); error codes translated client-side; suite tests
+- [x] 1.1 Field-type vocabulary: money (currency-aware), calendar date, recurrence, typed references (0..1 / 0..n), order, statistics block — each with unit tests on the validation rules
+- [x] 1.2 Statistics block schema: ability scores + SRD modifier computation (pure function), saving throws, AC, HP, multi-mode speed, initiative, enums, darkvision, passive perception, damage-type references
+- [x] 1.3 One schema per template/catalog (23) in `packages/schemas/src/templates.ts` + registry test asserting exact coverage against `templates/`
+- [x] 1.4 API-side validation: service parses `fields` against the record's template schema (unknown types keep structural validation); error codes translated client-side; suite tests
 
 ## 2. Autocomplete and mentions backend
 
