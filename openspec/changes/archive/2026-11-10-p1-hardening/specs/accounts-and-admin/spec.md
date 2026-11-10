@@ -48,7 +48,7 @@ The admin panel SHALL allow editing the instance settings persisted in `settings
 ## ADDED Requirements
 
 ### Requirement: Per-account UI language
-Every account MAY pick its UI language (`en` or `fr`), stored on the account. The choice SHALL be applied at page load for authenticated users; anonymous visitors and accounts without a choice SHALL get the instance default (`UI_LOCALE` build-time default). Changing the UI language SHALL NOT affect the world's content language.
+Every account MAY pick its UI language (`en` or `fr`), stored on the account. The choice SHALL be applied at page load for authenticated users; anonymous visitors and accounts without a choice SHALL get the instance default (`UI_LOCALE` build-time default). The UI language affects only interface rendering — record content is never translated.
 
 #### Scenario: Language switch persists
 - **WHEN** an authenticated user switches the UI language from the header switcher and reloads the application

@@ -27,4 +27,4 @@
 
 - [x] 5.1 Append the **Verdict** section to design.md (per-document results, evidence, attempted workarounds) — plan A confirmed or plan B triggered per the fail criteria in design.md decision 4
 - [x] 5.2 On plan A: mark `ARCHITECTURE.md` §10 risk #1 retired with the evidence; on plan B: rewrite `ARCHITECTURE.md` §2 Editor row and §10 in the same change (`AGENTS.md` §5) — verify the doc diff matches the verdict
-- [ ] 5.3 Run `openspec validate --change round-trip-spike --strict` and the full `npm test -w app-web` suite; both green closes the spike and unblocks the `records-editor` proposal
+- [x] 5.3 Run `openspec validate --change round-trip-spike --strict` and the full `npm test -w app-web` suite; both green closes the spike and unblocks the `records-editor` proposal
