@@ -1,15 +1,9 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  abilityModifier,
-  calendarDateSchema,
-  moneySchema,
-  recurrenceSchema,
-  statisticsSchema,
-  templateSchemas,
-  templateTypes,
-} from "./templates.js";
+import { templateSchemas, templateTypes } from "./registry.js";
+import { abilityModifier, statisticsSchema } from "./statistics.js";
+import { calendarDateSchema, moneySchema, recurrenceSchema } from "./vocabulary.js";
 
 // ---------------------------------------------------------------------------
 // Registry coverage — the visible label→key mapping for DM review
@@ -96,7 +90,7 @@ describe("template registry coverage", () => {
   });
 
   it("maps every template file to a registry entry", () => {
-    const templatesDir = join(__dirname, "../../../templates");
+    const templatesDir = join(__dirname, "../../../../templates");
     const files: string[] = [];
     for (const dir of ["world", "campaign", "catalogs"]) {
       const base = join(templatesDir, dir);
