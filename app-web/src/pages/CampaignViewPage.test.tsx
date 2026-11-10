@@ -317,3 +317,83 @@ describe("CampaignViewPage deletions", () => {
     });
   });
 });
+
+describe("CampaignViewPage deletion refusal", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "en";
+  });
+
+  it("surfaces the server refusal when a chapter still has scenes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (input === "/api/auth/me") {
+          return {
+            ok: true,
+            json: async () => ({
+              id: "1",
+              email: "a@b.c",
+              displayName: "DM",
+              role: "admin",
+            }),
+          };
+        }
+        if (input === "/api/records/chapter-one" && init?.method === "DELETE") {
+          return {
+            ok: false,
+            status: 409,
+            json: async () => ({ message: "This record is a parent: remove its scenes first" }),
+          };
+        }
+        if (input === "/api/records/north-realm") {
+          return {
+            ok: true,
+            json: async () => ({
+              id: "1",
+              slug: "north-realm",
+              type: "campaign",
+              perimeter: "campaign",
+              title: "The North Realm",
+              tags: [],
+              fields: {},
+              body: "",
+              tracking: {
+                slug: "north-realm",
+                status: "not_played",
+                children: [
+                  { slug: "chapter-one", title: "Chapter One", status: "not_played" },
+                ],
+              },
+            }),
+          };
+        }
+        if (input === "/api/records/chapter-one/tracking") {
+          return {
+            ok: true,
+            json: async () => ({
+              slug: "chapter-one",
+              status: "not_played",
+              children: [
+                { slug: "scene-one", title: "Scene One", status: "not_played" },
+              ],
+            }),
+          };
+        }
+        return { ok: true, json: async () => ({}) };
+      }),
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
+    await vi.waitFor(() => expect(screen.getByText("Chapter One")).toBeDefined());
+    const card = screen.getByText("Chapter One").closest("li");
+    if (!card) throw new Error("chapter card missing");
+    const button = [...card.querySelectorAll(":scope > div button")].find(
+      (b) => b.textContent === "Delete",
+    ) as HTMLElement | undefined;
+    if (!button) throw new Error("chapter delete button missing");
+    button.click();
+    await vi.waitFor(() =>
+      expect(screen.getByText(/remove its scenes first/i)).toBeDefined(),
+    );
+  });
+});

@@ -20,7 +20,8 @@ describe("corpus loaders", () => {
     writeFileSync(join(dir, "b.md"), "B\n", "utf8");
     writeFileSync(join(dir, "c.txt"), "ignored\n", "utf8");
     const docs = loadFromPath(dir);
-    expect(docs.map((d) => d.path.split(/[\/]/).pop())).toEqual(["a.md", "b.md"]);
+    const names = docs.map((d) => d.path.split("\\").pop()?.split("/").pop());
+    expect(names).toEqual(["a.md", "b.md"]);
   });
 
   it("rejects an unreadable target path", () => {

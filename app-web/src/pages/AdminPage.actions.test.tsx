@@ -142,6 +142,31 @@ describe("AdminPage actions", () => {
     });
   });
 
+  it("shows the refusal when a user still has campaigns", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input === "/api/admin/users" && !init?.method) {
+          return { ok: true, json: async () => [{ id: "u2", email: "c@b.c", displayName: "Creator", role: "dm", status: "active" }] };
+        }
+        if (input === "/api/admin/users/u2" && init?.method === "DELETE") {
+          return { ok: false, status: 409, json: async () => ({ message: "This user still has campaigns" }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      }),
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<AdminPage />, "/admin");
+    await vi.waitFor(() => expect(screen.getByText("Delete")).toBeDefined());
+    screen.getByText("Delete").click();
+    await vi.waitFor(() =>
+      expect(screen.getByText(/deletion refused/i)).toBeDefined(),
+    );
+  });
+
   it("saves instance settings via the settings form", async () => {
     const captured: Array<[string, RequestInit]> = [];
     mockInstance(captured);
