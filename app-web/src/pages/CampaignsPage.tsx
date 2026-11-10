@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Field, inputClass } from "../components/form.js";
+import { SlugTitleFields } from "../components/slug-fields.js";
 import { formString } from "../forms.js";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -82,25 +82,7 @@ export function CampaignsPage() {
           onSubmit={onCreate}
           className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
         >
-          <Field label={t("common.fields.title")}>
-            <input
-              name="title"
-              required
-              value={slugFields.title}
-              onChange={(event) => slugFields.onTitleChange(event.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("common.fields.slug")}>
-            <input
-              name="slug"
-              required
-              pattern="[a-z0-9-]+"
-              value={slugFields.slug}
-              onChange={(event) => slugFields.onSlugChange(event.target.value)}
-              className={inputClass}
-            />
-          </Field>
+          <SlugTitleFields fields={slugFields} />
           {error !== null && error !== "form" && (
             <p className="text-sm text-radish">{error}</p>
           )}

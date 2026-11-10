@@ -1,7 +1,7 @@
 /// <reference types="node" />
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 
 /** A corpus document: its path relative to this module directory, for reporting. */
 export type CorpusDocument = {
@@ -60,7 +60,7 @@ export function loadLocalCorpus(): CorpusDocument[] {
  * round-trip script — personal documents never touch the committed corpus.
  */
 export function loadFromPath(target: string): CorpusDocument[] {
-  const absolute = join(process.cwd(), target);
+  const absolute = resolve(process.cwd(), target);
   if (statSync(absolute).isFile()) {
     return [{ path: target, content: readFileSync(absolute, "utf8") }];
   }

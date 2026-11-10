@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { SlugTitleFields } from "../components/slug-fields.js";
 import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { Link } from "@tanstack/react-router";
@@ -82,25 +83,7 @@ export function LorePage() {
               ))}
             </select>
           </Field>
-          <Field label={t("common.fields.title")}>
-            <input
-              name="title"
-              required
-              value={slugFields.title}
-              onChange={(event) => slugFields.onTitleChange(event.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("common.fields.slug")}>
-            <input
-              name="slug"
-              required
-              pattern="[a-z0-9-]+"
-              value={slugFields.slug}
-              onChange={(event) => slugFields.onSlugChange(event.target.value)}
-              className={inputClass}
-            />
-          </Field>
+          <SlugTitleFields fields={slugFields} />
           {error && <p className="text-sm text-radish">{error}</p>}
           <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
             {t("lore.create")}

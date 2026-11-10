@@ -73,6 +73,26 @@ describe("AuthService", () => {
     expect(updated.uiLocale).toBe("fr");
   });
 
+  it("updates profile fields partially", async () => {
+    const admin = await createAdmin();
+    const updated = await service.updateProfile(admin.id, { displayName: "Partially Renamed" });
+    expect(updated.displayName).toBe("Partially Renamed");
+    expect(updated.email).toBe(admin.email);
+    expect(updated.uiLocale).toBeNull();
+  });
+
+  it("refuses a profile update for an unknown user", async () => {
+    await expect(
+      service.updateProfile("00000000-0000-4000-8000-000000000000", { displayName: "X" }),
+    ).rejects.toThrow();
+  });
+
+  it("refuses a password change for an unknown user", async () => {
+    await expect(
+      service.changePassword("00000000-0000-4000-8000-000000000000", "a", "b-passphrase-12"),
+    ).rejects.toThrow();
+  });
+
   it("refuses a profile email already used by another account", async () => {
     const first = await createAdmin();
     const second = await createAdmin();

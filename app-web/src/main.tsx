@@ -17,7 +17,7 @@ import { CampaignViewPage } from "./pages/CampaignViewPage";
 import { AdminPage } from "./pages/AdminPage";
 import { AccountPage } from "./pages/AccountPage";
 import { RecordEditPage } from "./pages/RecordEditPage";
-import { fetchBootstrapState } from "./api/auth.js";
+import { fetchBootstrapState, type BootstrapState } from "./api/auth.js";
 import { queryClient } from "./query-client.js";
 import "./i18n";
 import "./styles.css";
@@ -29,13 +29,14 @@ const rootRoute = createRootRoute({
   beforeLoad: async ({ location }) => {
     if (location.pathname === "/setup") return;
     // Fail open if the API is unreachable — nothing renders regardless.
-    const state = await queryClient
-      .fetchQuery({
-        queryKey: ["bootstrap"],
-        queryFn: fetchBootstrapState,
-        staleTime: 30_000,
-      })
-      .catch(() => null);
+    // Explicit cache read + fetch keeps us off the deprecated client
+    // fetchQuery/ensureQueryData overloads (S1874).
+    let state: BootstrapState | null =
+      queryClient.getQueryData(["bootstrap"]) ?? null;
+    if (!state) {
+      state = await fetchBootstrapState().catch(() => null);
+      if (state) queryClient.setQueryData(["bootstrap"], state);
+    }
     if (state && !state.adminExists) {
       throw redirect({ to: "/setup" });
     }
