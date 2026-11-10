@@ -1,7 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import { resetTables, testDb } from "../testing/test-db.js";
-import { users } from "../database/schema.js";
-import { EntitiesService, foldStatuses } from "./entities.service.js";
+import { entities, mentions, users } from "../database/schema.js";
+import { EntitiesService, foldStatuses, parseMentionSlugs } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
 describe("foldStatuses (pure)", () => {
@@ -156,6 +157,66 @@ describe("EntitiesService edge cases", () => {
   beforeEach(resetTables);
 
 
+  it("writes the mention set on create and replaces it on update", async () => {
+    await service.create({
+      slug: "mentioning-place",
+      type: "places",
+      perimeter: "world",
+      title: "Mentioning Place",
+      fields: {},
+      body: "Below @north-realm, above @chapter-one.",
+    });
+    const [owner] = await testDb
+      .select({ id: entities.id })
+      .from(entities)
+      .where(eq(entities.slug, "mentioning-place"));
+    let rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
+    expect(rows.map((r) => r.targetSlug).sort()).toEqual(["chapter-one", "north-realm"]);
+
+    await service.update("mentioning-place", { body: "Now only @north-realm." });
+    rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
+    expect(rows.map((r) => r.targetSlug)).toEqual(["north-realm"]);
+  });
+
+  it("keeps mention rows pointing at deleted targets (dead links)", async () => {
+    await service.create({
+      slug: "ghost-place",
+      type: "places",
+      perimeter: "world",
+      title: "Ghost Place",
+      fields: {},
+      body: "A dead @vanished-place.",
+    });
+    const [owner] = await testDb
+      .select({ id: entities.id })
+      .from(entities)
+      .where(eq(entities.slug, "ghost-place"));
+    const rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
+    expect(rows.map((r) => r.targetSlug)).toEqual(["vanished-place"]);
+  });
+
+  it("suggests records by title for autocomplete", async () => {
+    await service.create({
+      slug: "validated-place",
+      type: "places",
+      perimeter: "world",
+      title: "Silver City",
+    });
+    const results = await service.autocomplete("silver");
+    expect(results.map((r) => r.slug)).toContain("validated-place");
+  });
+
+  it("filters autocomplete suggestions by template type", async () => {
+    await service.create({
+      slug: "typed-campaign",
+      type: "campaign",
+      perimeter: "campaign",
+      title: "A Silver Campaign",
+    });
+    const results = await service.autocomplete("silver", "campaign");
+    expect(results.every((r) => r.type === "campaign")).toBe(true);
+    expect(results.map((r) => r.slug)).toContain("typed-campaign");
+  });
   it("rejects reading an unknown slug", async () => {
     await expect(service.getBySlug("does-not-exist")).rejects.toThrow(
       /not found/,
@@ -211,5 +272,26 @@ describe("EntitiesService edge cases", () => {
     });
     const read = await service.getBySlug("custom-type-record");
     expect(read.fields).toEqual({ anything: [1, 2, 3] });
+  });
+});
+
+describe("parseMentionSlugs", () => {
+  it("extracts word-start mentions", () => {
+    expect(parseMentionSlugs("See @silver-city and @north-realm.")).toEqual([
+      "silver-city",
+      "north-realm",
+    ]);
+  });
+
+  it("ignores email addresses by construction", () => {
+    expect(parseMentionSlugs("write to user@example.com or me@work.org")).toEqual([]);
+  });
+
+  it("deduplicates and keeps first-seen order", () => {
+    expect(parseMentionSlugs("@b then @a then @b again")).toEqual(["b", "a"]);
+  });
+
+  it("returns nothing without mentions", () => {
+    expect(parseMentionSlugs("plain prose, no mentions at all")).toEqual([]);
   });
 });

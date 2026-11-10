@@ -9,9 +9,9 @@
 
 ## 2. Autocomplete and mentions backend
 
-- [ ] 2.1 Migration: `mentions` table, `pg_trgm` indexes on `entities.title`/`slug`; run and verify
-- [ ] 2.2 `GET /api/records?q=&type=` autocomplete endpoint (trigram search, access-filtered, template filter); service tests
-- [ ] 2.3 Mentions parsing on save: walk the body markdown, replace-all into `mentions`; test parsing with edge cases (emails, word-start rule)
+- [x] 2.1 Migration: `mentions` table, `pg_trgm` indexes on `entities.title`/`slug`; run and verify
+- [x] 2.2 `GET /api/records?q=&type=` autocomplete endpoint (trigram search, access-filtered, template filter); service tests
+- [x] 2.3 Mentions parsing on save: walk the body markdown, replace-all into `mentions`; test parsing with edge cases (emails, word-start rule)
 
 ## 3. Prose editor
 

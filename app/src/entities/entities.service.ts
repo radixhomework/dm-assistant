@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, eq, or } from "drizzle-orm";
+import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import {
   templateSchemaOf,
   type CreateEntityInput,
@@ -14,7 +14,7 @@ import {
 } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
-import { entities } from "../database/schema.js";
+import { entities, mentions } from "../database/schema.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
 export type EntityRow = typeof entities.$inferSelect;
@@ -39,6 +39,7 @@ export class EntitiesService {
         .insert(entities)
         .values({ ...input, fields, createdBy: createdBy ?? null })
         .returning();
+      await this.replaceMentions(row.id, row.body);
       return row;
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -91,13 +92,46 @@ export class EntitiesService {
       })
       .where(eq(entities.id, existing.id))
       .returning();
+    const body = input.body === undefined ? existing.body : input.body;
+    await this.replaceMentions(row.id, body);
     return row;
+  }
+
+  /** Replace-all: the mention set of a record is exactly its body's. */
+  private async replaceMentions(entityId: string, body: string): Promise<void> {
+    const slugs = parseMentionSlugs(body);
+    await this.db.delete(mentions).where(eq(mentions.entityId, entityId));
+    if (slugs.length > 0) {
+      await this.db.insert(mentions).values(slugs.map((slug) => ({ entityId, targetSlug: slug })));
+    }
   }
 
   async delete(slug: string): Promise<void> {
     const existing = await this.getBySlug(slug);
     await this.relationships.assertNoChildren(existing.id);
     await this.db.delete(entities).where(eq(entities.id, existing.id));
+  }
+
+  /**
+   * Title autocomplete for mentions (PRE-SPEC.md §6): trigram-backed
+   * ILIKE over title and slug, newest-relevant first, capped at 10.
+   */
+  async autocomplete(
+    query: string,
+    type?: string,
+  ): Promise<Array<{ slug: string; title: string; type: string }>> {
+    // Escape ILIKE wildcards so the query matches literally.
+    const literal = query.replaceAll(/[%\\_]/g, "\\$&");
+    const conditions = [
+      or(ilike(entities.title, `%${literal}%`), ilike(entities.slug, `%${literal}%`)),
+    ];
+    if (type) conditions.push(eq(entities.type, type));
+    return this.db
+      .select({ slug: entities.slug, title: entities.title, type: entities.type })
+      .from(entities)
+      .where(and(...conditions))
+      .orderBy(desc(sql`similarity(${entities.title}, ${query})`))
+      .limit(10);
   }
 
   /** Play tracking with upward aggregation (PRE-SPEC.md §5, rule 9).
@@ -159,6 +193,20 @@ function childKindOf(type: string): "chapter" | "scene" | null {
  * capability): unknown record types keep the P1 structural validation.
  * Reference fields live in the relationships table, never in fields.
  */
+/**
+ * Extracts @slug mentions from a markdown body (PRE-SPEC.md §6): the @
+ * must start a word (preceded by space, punctuation or line start — an
+ * email like user@example.com never triggers) and the slug follows the
+ * slug charset until a separator. Deduplicated, order-preserved.
+ */
+export function parseMentionSlugs(body: string): string[] {
+  const found: string[] = [];
+  for (const [, slug] of body.matchAll(/(?:^|[^a-z0-9-])@([a-z0-9-]+)(?=$|[^a-z0-9-])/g)) {
+    if (!found.includes(slug)) found.push(slug);
+  }
+  return found;
+}
+
 function validateFields(
   type: string,
   fields: Record<string, unknown>,

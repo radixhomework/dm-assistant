@@ -30,7 +30,12 @@ export class EntitiesController {
   list(
     @Query("perimeter") perimeter?: "world" | "campaign",
     @Query("type") type?: string,
+    @Query("q") q?: string,
   ) {
+    if (q) {
+      // Mention autocomplete mode: trigram search by title/slug.
+      return this.entitiesService.autocomplete(q, type);
+    }
     return this.entitiesService.list({ perimeter, type });
   }
 

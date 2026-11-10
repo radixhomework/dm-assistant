@@ -95,3 +95,23 @@ export const relationships = pgTable(
     index("relationships_to_idx").on(t.toId, t.kind),
   ],
 );
+
+/**
+ * `@slug` mentions parsed from record bodies on save (PRE-SPEC.md §6).
+ * Rows reference the target by slug text — a deleted target keeps its
+ * rows so the rendering marks the mention as a dead link.
+ */
+export const mentions = pgTable(
+  "mentions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    entityId: uuid("entity_id")
+      .notNull()
+      .references(() => entities.id, { onDelete: "cascade" }),
+    targetSlug: text("target_slug").notNull(),
+  },
+  (t) => [
+    index("mentions_entity_idx").on(t.entityId),
+    index("mentions_target_idx").on(t.targetSlug),
+  ],
+);
