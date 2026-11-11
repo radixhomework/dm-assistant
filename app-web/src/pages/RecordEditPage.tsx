@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { ProseEditor } from "../editor/prose-editor.js";
+import { RecordFormFields } from "../components/record-form-fields.js";
+import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
@@ -32,6 +34,7 @@ function RecordPage({ slug }: { readonly slug: string }) {
   const [editSession, setEditSession] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [body, setBody] = useState<string | null>(null);
+  const [fields, setFields] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
   const record = useQuery({
     queryKey: ["record", slug],
@@ -44,7 +47,10 @@ function RecordPage({ slug }: { readonly slug: string }) {
   // through onChange instead of FormData (one markdown source of truth).
   // Hooks stay above the early returns.
   useEffect(() => {
-    if (record.data) setBody(record.data.body);
+    if (record.data) {
+      setBody(record.data.body);
+      setFields(record.data.fields);
+    }
   }, [record.data]);
 
   // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
@@ -84,11 +90,15 @@ function RecordPage({ slug }: { readonly slug: string }) {
     setSaved(false);
     const form = new FormData(event.currentTarget);
     let fields: unknown;
-    try {
-      fields = JSON.parse(formString(form, "fields") || "{}");
-    } catch {
-      setError("Invalid JSON");
-      return;
+    if (templateSchemaOf(data.type)) {
+      fields = fields ?? {};
+    } else {
+      try {
+        fields = JSON.parse(formString(form, "fields") || "{}");
+      } catch {
+        setError("Invalid JSON");
+        return;
+      }
     }
     try {
       await api(`/api/records/${slug}`, {
@@ -137,10 +147,18 @@ function RecordPage({ slug }: { readonly slug: string }) {
             {t("lore.tags")}
             <input name="tags" defaultValue={data.tags.join(", ")} className="rounded-md border border-border bg-background px-3 py-2" />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("lore.fields")}
-            <textarea name="fields" rows={8} defaultValue={fieldsJson} className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm" />
-          </label>
+          {templateSchemaOf(data.type) ? (
+            <RecordFormFields
+              schema={templateSchemaOf(data.type)!}
+              fields={fields ?? {}}
+              onChange={setFields}
+            />
+          ) : (
+            <label className="flex flex-col gap-1 text-sm">
+              {t("lore.fields")}
+              <textarea name="fields" rows={8} defaultValue={fieldsJson} className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm" />
+            </label>
+          )}
           <div className="flex flex-col gap-1 text-sm">
             {t("lore.body")}
             <ProseEditor

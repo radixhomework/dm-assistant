@@ -69,9 +69,10 @@ describe("RecordEditPage", () => {
     expect((title as HTMLInputElement | null)?.value).toBe("City of Glass");
     const form = document.querySelector("form");
     if (!form) throw new Error("form missing");
-    const fields = form.querySelector('textarea[name="fields"]');
-    if (!fields) throw new Error("fields missing");
-    (fields as HTMLTextAreaElement).value = '{"population":"2M"}';
+    // The generated form renders the Places template fields (phase 4).
+    const population = form.querySelector('input[name="population"]');
+    if (!population) throw new Error("population missing");
+    (population as HTMLInputElement).value = "2M";
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await vi.waitFor(() => {
       const calls = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>);
