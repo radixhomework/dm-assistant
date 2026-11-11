@@ -13,11 +13,11 @@ function ToolButton({
   title,
   action,
 }: {
-  editor: Editor;
-  active: boolean;
-  label: string;
-  title: string;
-  action: () => void;
+  readonly editor: Editor;
+  readonly active: boolean;
+  readonly label: string;
+  readonly title: string;
+  readonly action: () => void;
 }) {
   return (
     <button
@@ -57,7 +57,7 @@ export function ProseEditor({
 }) {
   const { t } = useTranslation();
   // Re-render the toolbar on every transaction so active states follow.
-  const [, setRevision] = useState(0);
+  const [renderTick, setRenderTick] = useState(0);
   const editor = useEditor({
     extensions: buildExtensions(),
     content: markdown,
@@ -72,7 +72,7 @@ export function ProseEditor({
 
   useEffect(() => {
     if (!editor) return;
-    const rerender = () => setRevision((value) => value + 1);
+    const rerender = () => setRenderTick((value) => value + 1);
     editor.on("transaction", rerender);
     return () => {
       editor.off("transaction", rerender);
@@ -88,6 +88,7 @@ export function ProseEditor({
       {!readonly && (
         <>
           <div
+            data-revision={renderTick}
             className="flex flex-wrap items-center gap-1"
             role="toolbar"
             aria-label={t("editor.toolbar")}

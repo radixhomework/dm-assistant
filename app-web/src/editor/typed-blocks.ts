@@ -39,7 +39,8 @@ export function createTypedBlock(name: TypedBlockName): Node {
       level: "block",
       start: `:::${name}`,
       tokenize(src, _tokens, lexer) {
-        const open = new RegExp(`^:::${name}[ \\t]*\\n([\\s\\S]*?)\\n:::[ \\t]*(?:\\n|$)`).exec(src);
+        const pattern = String.raw`^:::${name}[\t]*\n([\s\S]*?)\n:::[\t]*(?:\n|$)`;
+        const open = new RegExp(pattern).exec(src);
         if (!open) return undefined;
         return {
           type: token,

@@ -21,7 +21,7 @@ export function RecordEditPage() {
   return <RecordPage key={slug} slug={slug} />;
 }
 
-function RecordPage({ slug }: { slug: string }) {
+function RecordPage({ slug }: { readonly slug: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { ready } = useRequireAuth();

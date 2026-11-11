@@ -92,7 +92,7 @@ export class EntitiesService {
       })
       .where(eq(entities.id, existing.id))
       .returning();
-    const body = input.body === undefined ? existing.body : input.body;
+    const body = input.body ?? existing.body;
     await this.replaceMentions(row.id, body);
     return row;
   }
@@ -121,7 +121,7 @@ export class EntitiesService {
     type?: string,
   ): Promise<Array<{ slug: string; title: string; type: string }>> {
     // Escape ILIKE wildcards so the query matches literally.
-    const literal = query.replaceAll(/[%\\_]/g, "\\$&");
+    const literal = query.replaceAll(new RegExp(String.raw`[%_\\]`, "g"), String.raw`\$&`);
     const conditions = [
       or(ilike(entities.title, `%${literal}%`), ilike(entities.slug, `%${literal}%`)),
     ];
