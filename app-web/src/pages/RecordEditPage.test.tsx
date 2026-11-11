@@ -61,6 +61,10 @@ describe("RecordEditPage", () => {
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
+    // Opens in reading mode; entering edit mounts the form.
+    expect(document.querySelector("form")).toBeNull();
+    screen.getByText("Edit").click();
+    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
     const title = document.querySelector('input[name="title"]');
     expect((title as HTMLInputElement | null)?.value).toBe("City of Glass");
     const form = document.querySelector("form");
@@ -97,9 +101,21 @@ describe("RecordEditPage", () => {
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
+    screen.getByText("Edit").click();
+    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
     const form = document.querySelector("form");
     if (!form) throw new Error("form missing");
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await vi.waitFor(() => expect(screen.getByText("Saved.")).toBeDefined());
+  });
+
+  it("opens in reading mode by default", async () => {
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    expect(document.querySelector("form")).toBeNull();
+    expect(screen.getByText("Edit")).toBeDefined();
+    expect(screen.getByText("Delete")).toBeDefined();
   });
 });

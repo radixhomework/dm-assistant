@@ -16,9 +16,9 @@
     "linkPrompt": "Link URL (empty removes it)",
     "image": "Image",
     "imagePrompt": "Image URL",
-    "hardBreak": "Line break",
     "attention": "Attention point",
-    "mechanics": "DM mechanics"
+    "mechanics": "DM mechanics",
+    "highlightToolbar": "Highlight blocks"
   },
   "app": {
     "title": "DM Assistant",
@@ -138,5 +138,8 @@
     "loading": "Checking…",
     "ok": "Online",
     "error": "Offline — check that the app server is running"
+  },
+  "record": {
+    "edit": "Edit"
   }
 }

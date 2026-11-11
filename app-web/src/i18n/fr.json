@@ -16,9 +16,9 @@
     "linkPrompt": "URL du lien (vide pour le retirer)",
     "image": "Image",
     "imagePrompt": "URL de l'image",
-    "hardBreak": "Saut de ligne",
     "attention": "Point d'attention",
-    "mechanics": "Mécanique DM"
+    "mechanics": "Mécanique DM",
+    "highlightToolbar": "Blocs de mise en exergue"
   },
   "app": {
     "title": "DM Assistant",
@@ -138,5 +138,8 @@
     "loading": "Vérification…",
     "ok": "En ligne",
     "error": "Hors ligne — vérifiez que le serveur applicatif tourne"
+  },
+  "record": {
+    "edit": "Éditer"
   }
 }
