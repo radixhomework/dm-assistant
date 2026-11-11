@@ -2,6 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthController, BootstrapController } from "./auth.controller.js";
 import type { AuthService } from "./auth.service.js";
 
+function makeSettings(): vi.Mocked<SettingsService> {
+  return {
+    getAll: vi.fn(async () => ({ worldName: "Fraëweld", distanceUnit: "m", weightUnit: "kg", volumeUnit: "L" })),
+    update: vi.fn(),
+  } as unknown as vi.Mocked<SettingsService>;
+}
+
 function makeService(): vi.Mocked<AuthService> {
   return {
     login: vi.fn(async () => ({ id: "1", username: "a", email: "a@b.com", role: "admin" })),
@@ -53,15 +60,20 @@ describe("AuthController", () => {
 
 describe("BootstrapController", () => {
   let service: vi.Mocked<AuthService>;
+  let settings: vi.Mocked<SettingsService>;
   let controller: BootstrapController;
 
   beforeEach(() => {
     service = makeService();
-    controller = new BootstrapController(service);
+    settings = makeSettings();
+    controller = new BootstrapController(service, settings);
   });
 
-  it("reports the bootstrap state", async () => {
-    await expect(controller.state()).resolves.toEqual({ adminExists: false });
+  it("reports the bootstrap state with the world name", async () => {
+    await expect(controller.state()).resolves.toEqual({
+      adminExists: false,
+      worldName: "Fraëweld",
+    });
   });
 
   it("delegates the wizard payload", async () => {
