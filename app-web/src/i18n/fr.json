@@ -18,6 +18,7 @@
     "imagePrompt": "URL de l'image",
     "attention": "Point d'attention",
     "mechanics": "Mécanique DM",
+    "mentionNoResults": "Aucune fiche correspondante",
     "highlightToolbar": "Blocs de mise en exergue"
   },
   "app": {

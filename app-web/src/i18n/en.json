@@ -18,6 +18,7 @@
     "imagePrompt": "Image URL",
     "attention": "Attention point",
     "mechanics": "DM mechanics",
+    "mentionNoResults": "No matching record",
     "highlightToolbar": "Highlight blocks"
   },
   "app": {

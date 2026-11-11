@@ -5,6 +5,7 @@ import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
 import { AttentionPoint, Mechanics } from "./typed-blocks.js";
 import { RecordMention } from "./mention-node.js";
+import { mentionSuggestion } from "./mention-suggestion.js";
 
 /**
  * The single source of truth for the editor's extension set: the mounted
@@ -27,6 +28,6 @@ export function buildExtensions(): AnyExtension[] {
     Image,
     AttentionPoint,
     Mechanics,
-    RecordMention,
+    RecordMention.configure({ suggestion: mentionSuggestion }),
   ];
 }
