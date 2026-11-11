@@ -1,7 +1,7 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { templateSchemas, templateTypes } from "./registry.js";
+import { templateSchemaOf, templateSchemas, templateTypes } from "./registry.js";
 import { abilityModifier, statisticsSchema } from "./statistics.js";
 import { calendarDateSchema, moneySchema, recurrenceSchema } from "./vocabulary.js";
 
@@ -87,6 +87,10 @@ describe("template registry coverage", () => {
       expect(Object.keys(shape).sort(), `${type} fields`).toEqual([...expected.fields].sort());
       expect(Object.keys(schema.references).sort(), `${type} references`).toEqual([...expected.references].sort());
     }
+  });
+
+  it("returns undefined for an unregistered type", () => {
+    expect(templateSchemaOf("no-such-type")).toBeUndefined();
   });
 
   it("maps every template file to a registry entry", () => {
