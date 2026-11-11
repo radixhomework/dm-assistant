@@ -15,8 +15,14 @@ import type { Entity } from "../types.js";
  * the interim reading body at phase 9.
  */
 export function RecordEditPage() {
-  const { t } = useTranslation();
   const { slug } = useParams({ from: "/records/$slug" });
+  // Remount per record: navigating slug → slug resets mode, body and
+  // flags through the component lifecycle instead of competing effects.
+  return <RecordPage key={slug} slug={slug} />;
+}
+
+function RecordPage({ slug }: { slug: string }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const [mode, setMode] = useState<"read" | "edit">("read");
@@ -39,13 +45,6 @@ export function RecordEditPage() {
   useEffect(() => {
     if (record.data) setBody(record.data.body);
   }, [record.data]);
-
-  // Record switches reset the flow: back to reading, editor remounts.
-  useEffect(() => {
-    setMode("read");
-    setBody(null);
-    setSaved(false);
-  }, [slug]);
 
   if (!ready) return null;
   if (record.isPending)
@@ -181,7 +180,7 @@ export function RecordEditPage() {
       {saved && <p className="mt-3 text-sm text-primary">{t("lore.saved")}</p>}
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}
       <div className="mt-6">
-        <ProseEditor key={slug} markdown={body} readonly />
+        <ProseEditor markdown={body} readonly />
       </div>
     </div>
   );
