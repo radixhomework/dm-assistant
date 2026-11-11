@@ -116,7 +116,7 @@ function RecordPage({ slug }: { readonly slug: string }) {
           {data.title}
         </h1>
         <p className="mt-1 text-sm text-muted">{data.type}</p>
-        <form onSubmit={onSave} className="mt-6 flex max-w-2xl flex-col gap-4">
+        <form onSubmit={onSave} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm">
             {t("common.fields.title")}
             <input name="title" defaultValue={data.title} className="rounded-md border border-border bg-background px-3 py-2" />

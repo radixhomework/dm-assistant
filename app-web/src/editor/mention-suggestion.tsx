@@ -111,7 +111,10 @@ export const mentionSuggestion: Omit<SuggestionOptions<MentionCandidate>, "edito
           editor: props.editor,
         });
         const element = renderer.element as HTMLElement;
-        element.style.position = "absolute";
+        // clientRect is viewport-relative: fixed keeps the popup at the
+        // caret regardless of page scroll (absolute drifted by the scroll
+        // offset - several lines above on long records).
+        element.style.position = "fixed";
         document.body.appendChild(element);
         position(props.clientRect?.());
       },
