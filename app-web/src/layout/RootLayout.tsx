@@ -2,21 +2,14 @@ import { useEffect } from "react";
 import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchMe, logout, updateProfile } from "../api/auth.js";
+import { fetchMe, logout } from "../api/auth.js";
 import { queryClient } from "../query-client.js";
 
 const navItemClass = (active: boolean) =>
   `font-display text-xl px-3 py-1 rounded-md transition-colors duration-200 ${
     active
-      ? "bg-primary text-background"
-      : "text-ink hover:text-accent"
-  }`;
-
-const languageClass = (active: boolean) =>
-  `rounded-md px-2 py-0.5 text-sm transition-colors duration-200 ${
-    active
-      ? "bg-primary text-background"
-      : "text-muted hover:text-accent"
+      ? "bg-accent text-background"
+      : "text-background/75 hover:text-background"
   }`;
 
 export function RootLayout() {
@@ -41,16 +34,25 @@ export function RootLayout() {
     void navigate({ to: "/login" });
   }
 
-  function onSwitchLanguage(next: "en" | "fr") {
-    if (i18n.language === next) return;
-    void i18n.changeLanguage(next);
-    if (user) {
-      // Persist on the account; keep the session local if it fails.
-      void updateProfile({ uiLocale: next })
-        .then((updated) => queryClient.setQueryData(["me"], updated))
-        .catch(() => undefined);
-    }
+  // Record pages descend from Lore (world perimeter) or Campaigns
+  // (campaign perimeter): keep the section highlighted using the cached
+  // record. Unknown during load → no highlight.
+  let recordPerimeter: string | null = null;
+  const recordMatch = /^\/records\/([^/]+)$/.exec(pathname);
+  if (recordMatch) {
+    const cached = queryClient.getQueryData<{ perimeter: "world" | "campaign" }>([
+      "record",
+      decodeURIComponent(recordMatch[1]),
+    ]);
+    recordPerimeter = cached?.perimeter ?? null;
   }
+
+  const loreActive =
+    pathname === "/" ||
+    (pathname.startsWith("/records/") && recordPerimeter !== "campaign");
+  const campaignsActive =
+    pathname.startsWith("/campaigns") ||
+    (pathname.startsWith("/records/") && recordPerimeter === "campaign");
 
   return (
     <div className="min-h-screen">
@@ -58,58 +60,33 @@ export function RootLayout() {
         <Outlet />
       ) : (
         <>
-          <header className="border-b border-border bg-surface">
+          <header className="border-b border-[#1e211c] bg-[#2e332b]">
             <div className="mx-auto flex w-full max-w-[1100px] items-center gap-4 px-6 py-3">
-              <Link to="/" className="font-display text-2xl font-semibold text-ink">
+              <Link to="/" className="font-display text-2xl font-semibold text-background">
                 {t("app.title")}
               </Link>
               <nav className="ml-4 flex items-center gap-2">
-                <Link to="/" className={navItemClass(pathname === "/")}>
+                <Link to="/" className={navItemClass(loreActive)}>
                   {t("nav.lore")}
                 </Link>
-                <Link
-                  to="/campaigns"
-                  className={navItemClass(pathname.startsWith("/campaigns"))}
-                >
+                <Link to="/campaigns" className={navItemClass(campaignsActive)}>
                   {t("nav.campaigns")}
                 </Link>
                 {user?.role === "admin" && (
-                  <Link
-                    to="/admin"
-                    className={navItemClass(pathname === "/admin")}
-                  >
+                  <Link to="/admin" className={navItemClass(pathname === "/admin")}>
                     {t("nav.admin")}
                   </Link>
                 )}
               </nav>
               {user && (
                 <div className="ml-auto flex items-center gap-3">
-                  <fieldset className="flex items-center gap-1 border-0 p-0" aria-label="UI language">
-                    <button
-                      type="button"
-                      onClick={() => onSwitchLanguage("en")}
-                      className={languageClass(i18n.language === "en")}
-                    >
-                      EN
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSwitchLanguage("fr")}
-                      className={languageClass(i18n.language === "fr")}
-                    >
-                      FR
-                    </button>
-                  </fieldset>
-                  <Link
-                    to="/account"
-                    className="text-sm text-muted hover:text-accent"
-                  >
+                  <Link to="/account" className="text-sm text-background/75 hover:text-background">
                     {user.displayName}
                   </Link>
                   <button
                     type="button"
                     onClick={() => void onLogout()}
-                    className="text-sm text-muted hover:text-accent"
+                    className="text-sm text-background/75 hover:text-background"
                   >
                     {t("nav.logout")}
                   </button>

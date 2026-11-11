@@ -55,6 +55,6 @@ describe("LorePage", () => {
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
-    expect(screen.getByText("places")).toBeDefined();
+    expect(screen.getByText("Places")).toBeDefined();
   });
 });

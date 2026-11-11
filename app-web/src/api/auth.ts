@@ -3,6 +3,7 @@ import { queryClient } from "../query-client.js";
 
 export type CurrentUser = {
   id: string;
+  username: string | null;
   email: string;
   displayName: string;
   role: "admin" | "dm";

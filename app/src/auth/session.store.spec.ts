@@ -14,6 +14,7 @@ describe("SessionStore", () => {
     const [row] = await testDb
       .insert(users)
       .values({
+        username: `sessions-${randomUUID().slice(0, 8)}`,
         email: `sessions-${randomUUID()}@example.com`,
         displayName: "Session Owner",
         passwordHash: "$argon2id$placeholder",

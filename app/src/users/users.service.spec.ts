@@ -16,6 +16,7 @@ describe("UsersService", () => {
     const email = `${randomUUID()}@example.com`;
     emails.push(email);
     return {
+      username: email.split("@")[0],
       email,
       password: "a-long-enough-passphrase",
       displayName: "Test DM",

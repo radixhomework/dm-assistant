@@ -50,13 +50,14 @@
     "password": "Password (12+ characters)",
     "displayName": "Display name",
     "worldName": "World name",
-    "submit": "Create the administrator"
+    "submit": "Create the administrator",
+    "username": "Username"
   },
   "login": {
     "title": "Log in",
-    "email": "Email",
     "password": "Password",
-    "submit": "Log in"
+    "submit": "Log in",
+    "identifier": "Username"
   },
   "lore": {
     "title": "Lore",
@@ -71,7 +72,21 @@
     "fields": "Fields (JSON)",
     "save": "Save",
     "saved": "Saved.",
-    "empty": "No records yet."
+    "empty": "No records yet.",
+    "categories": {
+      "characters-and-entities": "Characters and entities",
+      "places": "Places",
+      "organizations": "Organizations",
+      "monsters": "Monsters",
+      "nations": "Nations",
+      "natural-landmarks": "Natural landmarks",
+      "works": "Works",
+      "events": "Events",
+      "equipment-and-items": "Equipment and items",
+      "beliefs-myths-and-customs": "Beliefs, myths and customs",
+      "knowledge-and-technologies": "Knowledge and technologies",
+      "game-rules": "Game rules"
+    }
   },
   "campaigns": {
     "title": "Campaigns",
@@ -106,14 +121,14 @@
     "saveProfile": "Save profile",
     "changePassword": "Change password",
     "saved": "Saved.",
-    "passwordChanged": "Password changed."
+    "passwordChanged": "Password changed.",
+    "username": "Username"
   },
   "admin": {
     "title": "Admin",
     "users": "Users",
     "createUser": "Create user",
     "email": "Email",
-    "password": "Password (12+ characters)",
     "displayName": "Display name",
     "role": "Role",
     "status": "Status",
@@ -132,7 +147,8 @@
     "selfDelete": "You cannot delete your own account.",
     "passwordReset": "Password updated.",
     "save": "Save",
-    "saved": "Saved."
+    "saved": "Saved.",
+    "username": "Username"
   },
   "health": {
     "title": "API status",

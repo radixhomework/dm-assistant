@@ -49,6 +49,7 @@ export function AdminPage() {
       await api("/api/admin/users", {
         method: "POST",
         body: {
+          username: formString(form, "username"),
           email: formString(form, "email"),
           password: formString(form, "password"),
           displayName: formString(form, "displayName"),
@@ -149,6 +150,9 @@ export function AdminPage() {
             onSubmit={onCreateUser}
             className="mt-4 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
           >
+            <Field label={t("admin.username")}>
+              <input name="username" required minLength={2} className={inputClass} />
+            </Field>
             <Field label={t("admin.email")}>
               <input name="email" type="email" required className={inputClass} />
             </Field>

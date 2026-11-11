@@ -4,7 +4,7 @@ import type { AuthService } from "./auth.service.js";
 
 function makeService(): vi.Mocked<AuthService> {
   return {
-    login: vi.fn(async () => ({ id: "1", email: "a@b.com", role: "admin" })),
+    login: vi.fn(async () => ({ id: "1", username: "a", email: "a@b.com", role: "admin" })),
     adminExists: vi.fn(async () => false),
     bootstrapInstance: vi.fn(async () => ({ email: "a@b.com" })),
   } as unknown as vi.Mocked<AuthService>;
@@ -23,7 +23,7 @@ describe("AuthController", () => {
 
   it("parses the login payload and delegates to the service", async () => {
     const result = await controller.login(request, {
-      email: "a@b.com",
+      identifier: "a@b.com",
       password: "secret",
     });
     expect(result.email).toBe("a@b.com");
@@ -66,6 +66,7 @@ describe("BootstrapController", () => {
 
   it("delegates the wizard payload", async () => {
     await controller.bootstrap({
+      username: "admin",
       email: "a@b.com",
       password: "a-long-enough-passphrase",
       displayName: "The DM",

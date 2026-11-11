@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { hash } from "@node-rs/argon2";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, ne, or, sql } from "drizzle-orm";
 import type { UpdateProfileInput, WizardInput } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -30,14 +30,15 @@ export class AuthService {
   }
 
   async login(
-    email: string,
+    identifier: string,
     password: string,
     session: { userId?: string },
-  ): Promise<{ id: string; email: string; role: string }> {
+  ): Promise<{ id: string; username: string | null; email: string; role: string }> {
+    const id = identifier.toLowerCase();
     const [user] = await this.db
       .select()
       .from(users)
-      .where(eq(users.email, email.toLowerCase()));
+      .where(or(eq(users.username, id), eq(users.email, id)));
     if (!user) {
       throw new UnauthorizedException("Invalid credentials");
     }
@@ -55,7 +56,14 @@ export class AuthService {
     session.userId = user.id;
     await this.sessionStore.pruneExpired();
 
-    return { id: user.id, email: user.email, role: user.role };
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
+
+    return { id: user.id, username: user.username, email: user.email, role: user.role };
   }
 
   /** Creates the administrator and the world in one transaction. */
@@ -68,6 +76,7 @@ export class AuthService {
       const [admin] = await tx
         .insert(users)
         .values({
+          username: input.username,
           email: input.email.toLowerCase(),
           displayName: input.displayName,
           passwordHash,

@@ -34,6 +34,8 @@ export const users = pgTable("users", {
     .default("active"),
   /** Per-account UI language (null = instance default from UI_LOCALE). */
   uiLocale: text("ui_locale", { enum: ["en", "fr"] }),
+  /** Login name — unique, lowercase; the email stays a profile field. */
+  username: text("username"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

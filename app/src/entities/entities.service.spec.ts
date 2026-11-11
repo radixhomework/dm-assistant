@@ -59,7 +59,7 @@ describe("EntitiesService", () => {
     const authorId = "11111111-1111-4111-8111-111111111111";
     await testDb
       .insert(users)
-      .values({ id: authorId, email: "author@example.com", displayName: "Author", passwordHash: "x" })
+      .values({ id: authorId, username: "author", email: "author@example.com", displayName: "Author", passwordHash: "x" })
       .onConflictDoNothing();
     const created = await service.create({ ...scene, slug: "scene-authored" }, authorId);
     expect(created.createdBy).toBe(authorId);

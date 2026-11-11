@@ -47,6 +47,7 @@ export const worldTemplates: WorldTemplate[] = [
 
 export type SafeUserLike = {
   id: string;
+  username?: string | null;
   email: string;
   displayName: string;
   role: "admin" | "dm";

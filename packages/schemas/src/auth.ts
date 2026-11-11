@@ -3,12 +3,23 @@ import { locales } from "./env.js";
 
 export const passwordSchema = z.string().min(12).max(128);
 
+/**
+ * Login name: lowercase letters, digits, dots, dashes and underscores —
+ * unique per instance. The email stays a profile field, not the login.
+ */
+export const usernameSchema = z
+  .string()
+  .min(2)
+  .max(40)
+  .regex(/^[a-z0-9][a-z0-9._-]*$/, "lowercase letters, digits, dots, dashes and underscores");
+
 export const loginSchema = z.object({
-  email: z.email(),
+  identifier: z.string().min(1).max(200),
   password: z.string().min(1),
 });
 
 export const createUserSchema = z.object({
+  username: usernameSchema,
   email: z.email(),
   password: passwordSchema,
   displayName: z.string().min(1).max(80),
@@ -16,6 +27,7 @@ export const createUserSchema = z.object({
 });
 
 export const wizardSchema = z.object({
+  username: usernameSchema,
   email: z.email(),
   password: passwordSchema,
   displayName: z.string().min(1).max(80),

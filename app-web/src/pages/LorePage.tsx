@@ -7,8 +7,37 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { useSlugAutoFill } from "../slug.js";
-import { useRequireAuth } from "./useRequireAuth.js";
+
+
+const categoryIcons: Record<string, LucideIcon> = {
+  "characters-and-entities": Users,
+  places: MapPin,
+  organizations: Landmark,
+  monsters: Skull,
+  nations: Landmark,
+  "natural-landmarks": Mountain,
+  works: ScrollText,
+  events: CalendarDays,
+  "equipment-and-items": Sword,
+  "beliefs-myths-and-customs": Sparkles,
+  "knowledge-and-technologies": Lightbulb,
+  "game-rules": Scale,
+};import { useRequireAuth } from "./useRequireAuth.js";
 import { worldTemplates, type Entity } from "../types.js";
+import {
+  CalendarDays,
+  Skull,
+  Landmark,
+  Lightbulb,
+  MapPin,
+  Mountain,
+  Scale,
+  ScrollText,
+  Sparkles,
+  Sword,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 export function LorePage() {
   const { t } = useTranslation();
@@ -21,6 +50,7 @@ export function LorePage() {
     retry: false,
   });
   const [creating, setCreating] = useState(false);
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   if (!ready) return null;
@@ -93,25 +123,52 @@ export function LorePage() {
 
       {list.length === 0 && <p className="mt-8 text-muted">{t("lore.empty")}</p>}
 
-      {[...byType.entries()].map(([type, typeRecords]) => (
-        <section key={type} className="mt-8">
-          <h2 className="font-display text-2xl font-semibold text-ink">{type}</h2>
-          <ul className="mt-2 flex flex-col gap-1">
-            {typeRecords.map((record) => (
-              <li key={record.slug} className="flex items-baseline justify-between rounded-md border border-border bg-surface px-4 py-2">
-                <span className="text-ink">{record.title}</span>
-                <Link
-                  to="/records/$slug"
-                  params={{ slug: record.slug }}
-                  className="text-sm text-accent hover:underline"
-                >
-                  {t("lore.open")}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      {worldTemplates.map((type) => {
+        const typeRecords = byType.get(type) ?? [];
+        if (typeRecords.length === 0) return null;
+        const Icon = categoryIcons[type];
+        const isCollapsed = collapsed.has(type);
+        return (
+          <section key={type} className="mt-6">
+            <button
+              type="button"
+              aria-expanded={!isCollapsed}
+              onClick={() =>
+                setCollapsed((current) => {
+                  const next = new Set(current);
+                  if (next.has(type)) next.delete(type);
+                  else next.add(type);
+                  return next;
+                })
+              }
+              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors duration-200 hover:bg-surface"
+            >
+              {Icon && <Icon className="size-5 text-accent" aria-hidden />}
+              <h2 className="font-display text-2xl font-semibold text-ink">
+                {t(`lore.categories.${type}`)}
+              </h2>
+              <span className="text-sm text-muted">({typeRecords.length})</span>
+              <span className="ml-auto text-sm text-muted">{isCollapsed ? "▸" : "▾"}</span>
+            </button>
+            {!isCollapsed && (
+              <ul className="mt-2 flex flex-col gap-1">
+                {typeRecords.map((record) => (
+                  <li key={record.slug} className="flex items-baseline justify-between rounded-md border border-border bg-surface px-4 py-2">
+                    <span className="text-ink">{record.title}</span>
+                    <Link
+                      to="/records/$slug"
+                      params={{ slug: record.slug }}
+                      className="text-sm text-accent hover:underline"
+                    >
+                      {t("lore.open")}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }
