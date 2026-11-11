@@ -87,8 +87,8 @@ export function ProseEditor({
     const dom = editor.view.dom;
     const onClick = (event: MouseEvent) => {
       if (editor.isEditable) return;
-      const mention = (event.target as HTMLElement).closest('[data-type="mention"]');
-      const slug = mention?.getAttribute("data-id");
+      const mention = (event.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
+      const slug = mention?.dataset.id;
       if (slug) window.open(`/records/${slug}`, "_blank", "noopener");
     };
     dom.addEventListener("click", onClick);
