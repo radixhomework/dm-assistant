@@ -68,7 +68,7 @@ export function RootLayout() {
         <Outlet />
       ) : (
         <>
-          <header className="border-b border-[#1e211c] bg-[#2e332b]">
+          <header className="sticky top-0 z-40 border-b border-[#1e211c] bg-[#2e332b]">
             <div className="mx-auto flex w-full max-w-[1100px] items-center gap-4 px-6 py-3">
               <Link to="/" className="font-display text-2xl font-semibold text-background">
                 {getWorldName() ?? t("app.title")}
