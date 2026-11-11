@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { formString } from "../forms.js";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { ProseEditor } from "../editor/prose-editor.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -13,6 +14,7 @@ export function RecordEditPage() {
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
+  const [body, setBody] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const record = useQuery({
     queryKey: ["record", slug],
@@ -20,6 +22,13 @@ export function RecordEditPage() {
     enabled: ready,
     retry: false,
   });
+
+  // The editor owns the body once the record is loaded; changes flow
+  // through onChange instead of FormData (one markdown source of truth).
+  // Hooks stay above the early returns.
+  useEffect(() => {
+    if (record.data) setBody(record.data.body);
+  }, [record.data]);
 
   if (!ready) return null;
   if (record.isPending)
@@ -52,7 +61,7 @@ export function RecordEditPage() {
             .map((tag) => tag.trim())
             .filter(Boolean),
           fields,
-          body: formString(form, "body"),
+          body: body ?? "",
         },
       });
       setSaved(true);
@@ -90,10 +99,10 @@ export function RecordEditPage() {
           {t("lore.fields")}
           <textarea name="fields" rows={8} defaultValue={fieldsJson} className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm" />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
+        <div className="flex flex-col gap-1 text-sm">
           {t("lore.body")}
-          <textarea name="body" rows={10} defaultValue={data.body} className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
+          <ProseEditor markdown={body ?? ""} onChange={setBody} />
+        </div>
         {saved && <p className="text-sm text-primary">{t("lore.saved")}</p>}
         {error && <p className="text-sm text-radish">{error}</p>}
         <div className="flex gap-3">

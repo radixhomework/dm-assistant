@@ -1,4 +1,24 @@
 {
+  "editor": {
+    "toolbar": "Formatting toolbar",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strike": "Strikethrough",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "inlineCode": "Inline code",
+    "codeBlock": "Code block",
+    "quote": "Quote",
+    "bulletList": "Bullet list",
+    "orderedList": "Numbered list",
+    "link": "Link",
+    "linkPrompt": "Link URL (empty removes it)",
+    "image": "Image",
+    "imagePrompt": "Image URL",
+    "hardBreak": "Line break",
+    "attention": "Attention point",
+    "mechanics": "DM mechanics"
+  },
   "app": {
     "title": "DM Assistant",
     "tagline": "Your world and campaigns, in one place"

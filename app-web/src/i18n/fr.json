@@ -1,4 +1,24 @@
 {
+  "editor": {
+    "toolbar": "Barre de mise en forme",
+    "bold": "Gras",
+    "italic": "Italique",
+    "strike": "Barré",
+    "heading2": "Titre 2",
+    "heading3": "Titre 3",
+    "inlineCode": "Code inline",
+    "codeBlock": "Bloc de code",
+    "quote": "Citation",
+    "bulletList": "Liste à puces",
+    "orderedList": "Liste numérotée",
+    "link": "Lien",
+    "linkPrompt": "URL du lien (vide pour le retirer)",
+    "image": "Image",
+    "imagePrompt": "URL de l'image",
+    "hardBreak": "Saut de ligne",
+    "attention": "Point d'attention",
+    "mechanics": "Mécanique DM"
+  },
   "app": {
     "title": "DM Assistant",
     "tagline": "Votre monde et vos campagnes, au même endroit"

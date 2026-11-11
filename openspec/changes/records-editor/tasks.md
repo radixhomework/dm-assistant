@@ -15,10 +15,10 @@
 
 ## 3. Prose editor
 
-- [ ] 3.1 TipTap editor component: mounted editor from the spike's extension set + toolbar mapping (bold/italic/strike/headings/code/quote/lists/table/link/image/hard break); body loads via `setContent` markdown, saves via `getMarkdown()`
-- [ ] 3.2 Wire the editor into the record form (replacing the body textarea); round-trip suite re-run on the corpus green
-- [ ] 3.3 Typed blocks: generalize `AttentionPoint` into a fenced-container factory, add `:::mechanics`; toolbar insertion; corpus fixtures for both; suite green
-- [ ] 3.4 Mentions node: `@tiptap/extension-mention` + suggestion plugin (word start, slug charset, debounce, template filter); corpus fixture; suite green
+- [x] 3.1 TipTap editor component: mounted editor from the spike's extension set + toolbar mapping (bold/italic/strike/headings/code/quote/lists/table/link/image/hard break); body loads via `setContent` markdown, saves via `getMarkdown()`
+- [x] 3.2 Wire the editor into the record form (replacing the body textarea); round-trip suite re-run on the corpus green
+- [x] 3.3 Typed blocks: generalize `AttentionPoint` into a fenced-container factory, add `:::mechanics`; toolbar insertion; corpus fixtures for both; suite green
+- [x] 3.4 Mentions node: `@tiptap/extension-mention` + suggestion plugin (word start, slug charset, debounce, template filter); corpus fixture; suite green
 
 ## 4. Forms
 
