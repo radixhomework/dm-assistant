@@ -80,6 +80,7 @@ export function ProseEditor({
         <ToolButton editor={editor} active={editor.isActive("strike")} label="S" title={t("editor.strike")} action={() => cmd().toggleStrike().run()} />
         <ToolButton editor={editor} active={editor.isActive("heading", { level: 2 })} label="H2" title={t("editor.heading2")} action={() => cmd().toggleHeading({ level: 2 }).run()} />
         <ToolButton editor={editor} active={editor.isActive("heading", { level: 3 })} label="H3" title={t("editor.heading3")} action={() => cmd().toggleHeading({ level: 3 }).run()} />
+        <ToolButton editor={editor} active={editor.isActive("heading", { level: 4 })} label="H4" title={t("editor.heading4")} action={() => cmd().toggleHeading({ level: 4 }).run()} />
         <ToolButton editor={editor} active={editor.isActive("code")} label={"< >"} title={t("editor.inlineCode")} action={() => cmd().toggleCode().run()} />
         <ToolButton editor={editor} active={editor.isActive("codeBlock")} label={"{" + "}"} title={t("editor.codeBlock")} action={() => cmd().toggleCodeBlock().run()} />
         <ToolButton editor={editor} active={editor.isActive("blockquote")} label="❝" title={t("editor.quote")} action={() => cmd().toggleBlockquote().run()} />
