@@ -35,8 +35,9 @@ async function resolveTitle(slug: string): Promise<string | null> {
  * Reading view of a mention: displays the referenced record's current
  * title (dynamic resolution — renames follow without rewriting), falling
  * back to the slug while loading and an explicit dead-link style when
- * the target is gone. The data attributes keep the container click
- * handler (open the record in a new tab) working.
+ * the target is gone. No "@" prefix in reading mode — the title reads as
+ * prose. The data attributes keep the container click handler (open the
+ * record in a new tab) working.
  */
 export function MentionView(props: NodeViewProps) {
   const slug = props.node.attrs.id as string;
@@ -54,6 +55,9 @@ export function MentionView(props: NodeViewProps) {
   }, [slug]);
 
   const dead = title === null;
+  // The @ prefix marks the mention while typing; the reading view shows
+  // the referenced record's title as plain prose.
+  const prefix = props.editor.isEditable ? "@" : "";
   return (
     <NodeViewWrapper
       as="span"
@@ -61,7 +65,7 @@ export function MentionView(props: NodeViewProps) {
       data-id={slug}
       className={dead ? "mention dead-link" : "mention"}
     >
-      {dead ? `@${slug}` : `@${title}`}
+      {dead ? `${prefix}${slug}` : `${prefix}${title}`}
     </NodeViewWrapper>
   );
 }
