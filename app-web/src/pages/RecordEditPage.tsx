@@ -40,11 +40,22 @@ export function RecordEditPage() {
     if (record.data) setBody(record.data.body);
   }, [record.data]);
 
+  // Record switches reset the flow: back to reading, editor remounts.
+  useEffect(() => {
+    setMode("read");
+    setBody(null);
+    setSaved(false);
+  }, [slug]);
+
   if (!ready) return null;
   if (record.isPending)
     return <p className="text-muted">{t("common.loading")}</p>;
   if (record.isError || !record.data)
     return <p className="text-radish">{t("common.error")}</p>;
+  // The read view mounts its editor only once the body is known: TipTap
+  // ignores content prop changes after mount, so mounting with "" would
+  // show an empty record.
+  if (body === null) return <p className="text-muted">{t("common.loading")}</p>;
 
   const data = record.data;
   const fieldsJson = JSON.stringify(data.fields, null, 2);
@@ -122,8 +133,8 @@ export function RecordEditPage() {
           <div className="flex flex-col gap-1 text-sm">
             {t("lore.body")}
             <ProseEditor
-              key={editSession}
-              markdown={body ?? ""}
+              key={slug + ":" + editSession}
+              markdown={body}
               onChange={setBody}
             />
           </div>
@@ -170,7 +181,7 @@ export function RecordEditPage() {
       {saved && <p className="mt-3 text-sm text-primary">{t("lore.saved")}</p>}
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}
       <div className="mt-6">
-        <ProseEditor markdown={body ?? ""} readonly />
+        <ProseEditor key={slug} markdown={body} readonly />
       </div>
     </div>
   );
