@@ -125,6 +125,9 @@ export const mentionSuggestion: Omit<SuggestionOptions<MentionCandidate>, "edito
         position(props.clientRect?.());
       },
       onUpdate: (props: SuggestionProps<MentionCandidate>) => {
+        // The resolved fetch dispatches here: the popup must receive the
+        // fetched items, not just follow the caret.
+        renderer?.updateProps(props);
         position(props.clientRect?.());
       },
       onKeyDown: (props: SuggestionKeyDownProps) => {
