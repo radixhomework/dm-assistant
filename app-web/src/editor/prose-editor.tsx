@@ -79,6 +79,22 @@ export function ProseEditor({
     };
   }, [editor]);
 
+  // Reading mode: a mention click opens the referenced record in a new
+  // tab. In edit mode the click belongs to the node (selection/deletion),
+  // so the handler stays readonly-only.
+  useEffect(() => {
+    if (!editor) return;
+    const dom = editor.view.dom;
+    const onClick = (event: MouseEvent) => {
+      if (editor.isEditable) return;
+      const mention = (event.target as HTMLElement).closest('[data-type="mention"]');
+      const slug = mention?.getAttribute("data-id");
+      if (slug) window.open(`/records/${slug}`, "_blank", "noopener");
+    };
+    dom.addEventListener("click", onClick);
+    return () => dom.removeEventListener("click", onClick);
+  }, [editor]);
+
   if (!editor) return null;
 
   const cmd = () => editor.chain().focus();

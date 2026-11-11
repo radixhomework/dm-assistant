@@ -154,3 +154,18 @@ body {
 .mention-list-item.selected {
   background: rgba(77, 89, 71, 0.12);
 }
+
+/* Mention links in reading mode */
+.ProseMirror[contenteditable="false"] [data-type="mention"] {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-editor .mention.dead-link {
+  color: #8a5e61;
+  text-decoration: line-through wavy;
+}
+.prose-editor .mention {
+  white-space: nowrap;
+}

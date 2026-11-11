@@ -1,5 +1,7 @@
 import Mention from "@tiptap/extension-mention";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { MarkdownToken } from "@tiptap/core";
+import { MentionView } from "./mention-view.js";
 
 /**
  * `@slug` mention node (PRE-SPEC.md §6). The official Mention extension
@@ -11,12 +13,20 @@ import type { MarkdownToken } from "@tiptap/core";
  * no attribute override — TipTap v3's parent chain on addAttributes is
  * not extensible this way.
  *
+ * Display: the React node view resolves the referenced record's current
+ * title (dynamic title resolution at render time, dead-link style for
+ * deleted targets).
+ *
  * Word-start rule: the tokenizer's start() only reports "@" preceded by
  * start-of-chunk or a non-slug character, so email addresses
  * (user@example.com) never tokenize as mentions.
  */
 export const RecordMention = Mention.extend({
   markdownTokenName: "mention",
+
+  addNodeView() {
+    return ReactNodeViewRenderer(MentionView);
+  },
 
   markdownTokenizer: {
     name: "mention",
