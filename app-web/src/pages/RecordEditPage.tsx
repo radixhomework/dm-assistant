@@ -46,6 +46,16 @@ function RecordPage({ slug }: { readonly slug: string }) {
     if (record.data) setBody(record.data.body);
   }, [record.data]);
 
+  // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
+  useEffect(() => {
+    document.title = record.data
+      ? `DMA - ${record.data.title}`
+      : "DM Assistant";
+    return () => {
+      document.title = "DM Assistant";
+    };
+  }, [record.data]);
+
   if (!ready) return null;
   if (record.isPending)
     return <p className="text-muted">{t("common.loading")}</p>;
