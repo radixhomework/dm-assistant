@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchMe, logout } from "../api/auth.js";
+import { fetchMe, getWorldName, logout } from "../api/auth.js";
 import { queryClient } from "../query-client.js";
 
 const navItemClass = (active: boolean) =>
@@ -20,6 +20,14 @@ export function RootLayout() {
 
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe, retry: false });
   const user = me.data;
+
+  // Tab title: white-labeled with the world name; record pages override
+  // with their own title (RecordEditPage).
+  useEffect(() => {
+    if (!pathname.startsWith("/records/")) {
+      document.title = getWorldName() ?? "DM Assistant";
+    }
+  }, [pathname, me.data]);
 
   // Apply the account's UI language at load (null = instance default).
   useEffect(() => {
@@ -63,7 +71,7 @@ export function RootLayout() {
           <header className="border-b border-[#1e211c] bg-[#2e332b]">
             <div className="mx-auto flex w-full max-w-[1100px] items-center gap-4 px-6 py-3">
               <Link to="/" className="font-display text-2xl font-semibold text-background">
-                {t("app.title")}
+                {getWorldName() ?? t("app.title")}
               </Link>
               <nav className="ml-4 flex items-center gap-2">
                 <Link to="/" className={navItemClass(loreActive)}>

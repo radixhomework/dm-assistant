@@ -50,7 +50,8 @@ export function LorePage() {
     retry: false,
   });
   const [creating, setCreating] = useState(false);
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  // Categories start collapsed; the set tracks the expanded ones.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   if (!ready) return null;
@@ -127,14 +128,14 @@ export function LorePage() {
         const typeRecords = byType.get(type) ?? [];
         if (typeRecords.length === 0) return null;
         const Icon = categoryIcons[type];
-        const isCollapsed = collapsed.has(type);
+        const isCollapsed = !expanded.has(type);
         return (
           <section key={type} className="mt-6">
             <button
               type="button"
               aria-expanded={!isCollapsed}
               onClick={() =>
-                setCollapsed((current) => {
+                setExpanded((current) => {
                   const next = new Set(current);
                   if (next.has(type)) next.delete(type);
                   else next.add(type);

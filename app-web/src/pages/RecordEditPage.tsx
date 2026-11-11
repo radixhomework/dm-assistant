@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { ProseEditor } from "../editor/prose-editor.js";
+import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -48,11 +49,12 @@ function RecordPage({ slug }: { readonly slug: string }) {
 
   // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
   useEffect(() => {
+    const world = getWorldName();
     document.title = record.data
-      ? `DMA - ${record.data.title}`
-      : "DM Assistant";
+      ? `${world ?? "DM Assistant"} - ${record.data.title}`
+      : (world ?? "DM Assistant");
     return () => {
-      document.title = "DM Assistant";
+      document.title = world ?? "DM Assistant";
     };
   }, [record.data]);
 

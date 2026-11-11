@@ -12,6 +12,7 @@ export type CurrentUser = {
 
 export type BootstrapState = {
   adminExists: boolean;
+  worldName: string | null;
 };
 
 export async function fetchMe(): Promise<CurrentUser> {
@@ -25,6 +26,14 @@ export async function fetchMe(): Promise<CurrentUser> {
 
 export function fetchBootstrapState(): Promise<BootstrapState> {
   return api<BootstrapState>("/api/bootstrap");
+}
+
+/**
+ * The world name (white-label branding), read from the bootstrap cache —
+ * the router guard guarantees it is loaded before any page renders.
+ */
+export function getWorldName(): string | null {
+  return queryClient.getQueryData<BootstrapState>(["bootstrap"])?.worldName ?? null;
 }
 
 export type ProfileInput = {
