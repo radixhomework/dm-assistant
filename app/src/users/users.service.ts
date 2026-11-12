@@ -54,7 +54,7 @@ export class UsersService {
         .insert(users)
         .values({
           username: input.username,
-          email: input.email.toLowerCase(),
+          email: (input.email ?? `${input.username}@instance.local`).toLowerCase(),
           displayName: input.displayName,
           passwordHash,
           role: input.role,

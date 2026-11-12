@@ -14,13 +14,13 @@ export const usernameSchema = z
   .regex(/^[a-z0-9][a-z0-9._-]*$/, "lowercase letters, digits, dots, dashes and underscores");
 
 export const loginSchema = z.object({
-  identifier: z.string().min(1).max(200),
+  username: usernameSchema,
   password: z.string().min(1),
 });
 
 export const createUserSchema = z.object({
   username: usernameSchema,
-  email: z.email(),
+  email: z.email().optional(),
   password: passwordSchema,
   displayName: z.string().min(1).max(80),
   role: z.enum(["admin", "dm"]).default("dm"),
@@ -28,7 +28,8 @@ export const createUserSchema = z.object({
 
 export const wizardSchema = z.object({
   username: usernameSchema,
-  email: z.email(),
+  // No email at instance creation: login is by username. A real email can
+  // be added later through the profile page.
   password: passwordSchema,
   displayName: z.string().min(1).max(80),
   worldName: z.string().min(1).max(120),

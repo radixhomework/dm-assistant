@@ -77,7 +77,9 @@ export class AuthService {
         .insert(users)
         .values({
           username: input.username,
-          email: input.email.toLowerCase(),
+          // No email at creation (login is by username); a placeholder keeps
+          // the NOT NULL constraint until a real one is set in the profile.
+          email: `${input.username}@instance.local`,
           displayName: input.displayName,
           passwordHash,
           role: "admin",
@@ -93,7 +95,7 @@ export class AuthService {
         });
       return admin;
     });
-    return { email: input.email.toLowerCase() };
+    return { email: `${input.username}@instance.local` };
   }
 
   /** Profile self-service: email, display name and UI language. */

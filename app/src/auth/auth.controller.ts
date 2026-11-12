@@ -33,8 +33,8 @@ export class AuthController {
     @Req() req: AuthedRequest,
     @Body() body: unknown,
   ) {
-    const { identifier, password } = loginSchema.parse(body);
-    const user = await this.authService.login(identifier, password, req.session);
+    const { username, password } = loginSchema.parse(body);
+    const user = await this.authService.login(username, password, req.session);
     return { id: user.id, email: user.email, role: user.role };
   }
 

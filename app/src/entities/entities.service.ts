@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import {
+  proseFieldKeys,
   templateSchemaOf,
   type CreateEntityInput,
   type PlayStatus,
@@ -39,7 +40,7 @@ export class EntitiesService {
         .insert(entities)
         .values({ ...input, fields, createdBy: createdBy ?? null })
         .returning();
-      await this.replaceMentions(row.id, row.body);
+      await this.replaceMentions(row.id, row.body, fields);
       return row;
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -93,13 +94,28 @@ export class EntitiesService {
       .where(eq(entities.id, existing.id))
       .returning();
     const body = input.body ?? existing.body;
-    await this.replaceMentions(row.id, body);
+    const mentionSources: Record<string, unknown> = {
+      ...(existing.fields ?? {}),
+      ...(fields ?? {}),
+    };
+    await this.replaceMentions(row.id, body, mentionSources);
     return row;
   }
 
-  /** Replace-all: the mention set of a record is exactly its body's. */
-  private async replaceMentions(entityId: string, body: string): Promise<void> {
-    const slugs = parseMentionSlugs(body);
+  /**
+   * Replace-all: the mention set of a record is exactly the mentions of
+   * its body plus its prose field values (descriptions, running notes…).
+   */
+  private async replaceMentions(
+    entityId: string,
+    body: string,
+    fields: Record<string, unknown>,
+  ): Promise<void> {
+    const proseText = Object.entries(fields)
+      .filter(([key, value]) => proseFieldKeys.has(key) && typeof value === "string")
+      .map(([, value]) => value as string)
+      .join("\n");
+    const slugs = parseMentionSlugs(`${body}\n${proseText}`);
     await this.db.delete(mentions).where(eq(mentions.entityId, entityId));
     if (slugs.length > 0) {
       await this.db.insert(mentions).values(slugs.map((slug) => ({ entityId, targetSlug: slug })));

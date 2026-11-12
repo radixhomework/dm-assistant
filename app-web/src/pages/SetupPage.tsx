@@ -29,7 +29,7 @@ export function SetupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: formString(form, "email"),
+          username: formString(form, "username"),
           password: formString(form, "password"),
           displayName: formString(form, "displayName"),
           worldName: formString(form, "worldName"),
@@ -41,7 +41,10 @@ export function SetupPage() {
       }
       // The router guard caches the bootstrap state: update it before
       // navigating, or the fresh instance would bounce back to /setup.
-      queryClient.setQueryData(["bootstrap"], { adminExists: true });
+      queryClient.setQueryData(["bootstrap"], {
+        adminExists: true,
+        worldName: formString(form, "worldName"),
+      });
       void navigate({ to: "/login" });
     } catch (submitError) {
       setError(String(submitError));
@@ -55,8 +58,8 @@ export function SetupPage() {
       </h1>
       <p className="mt-2 text-muted">{t("setup.intro")}</p>
       <form onSubmit={onSubmit} className="mt-8 flex max-w-md flex-col gap-4">
-        <Field label={t("setup.email")}>
-          <input name="email" type="email" required className={inputClass} />
+        <Field label={t("setup.username")}>
+          <input name="username" required minLength={2} autoComplete="username" className={inputClass} />
         </Field>
         <Field label={t("setup.password")}>
           <input name="password" type="password" minLength={12} required className={inputClass} />

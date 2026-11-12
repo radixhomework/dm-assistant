@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Field, inputClass } from "./form.js";
-import { classifyField, enumKeyOf, enumOptions } from "./field-classify.js";
+import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import type { TemplateSchema } from "@dm/schemas";
 
@@ -14,10 +14,14 @@ function ProseControl(props: {
   readonly value: string;
   readonly onChange: (value: string) => void;
 }) {
+  // No <label> wrapper: a label forwards clicks to the first control,
+  // which here is the toolbar's Bold button — clicking the field label
+  // would toggle bold.
   return (
-    <Field label={props.label}>
+    <div className="flex flex-col gap-1 text-sm">
+      <span>{props.label}</span>
       <ProseEditor markdown={props.value} onChange={props.onChange} />
-    </Field>
+    </div>
   );
 }
 
@@ -351,7 +355,6 @@ export function RecordFormFields(props: {
         break;
       case "enum": {
         const options = enumOptions(schema) ?? [];
-        const enumKey = enumKeyOf(schema);
         controls.push(
           <Field key={key} label={label}>
             <select
@@ -363,7 +366,7 @@ export function RecordFormFields(props: {
               <option value="">—</option>
               {options.map((option) => (
                 <option key={option} value={option}>
-                  {t(`enums.${enumKeyOf(schema)}.${option}`, {
+                  {t(`enums.${key}.${option}`, {
                     defaultValue: option.replaceAll("_", " "),
                   })}
                 </option>

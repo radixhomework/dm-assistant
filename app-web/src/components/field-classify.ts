@@ -1,4 +1,4 @@
-import { statisticsSchema } from "@dm/schemas";
+import { proseFieldKeys, statisticsSchema } from "@dm/schemas";
 
 export type FieldKind =
   | "prose"
@@ -11,17 +11,6 @@ export type FieldKind =
   | "order"
   | "statistics"
   | "asset";
-
-const PROSE_KEYS = new Set([
-  "public_description",
-  "private_description",
-  "dm_summary",
-  "traits",
-  "actions",
-  "bonus_actions",
-  "running_notes",
-  "pitch",
-]);
 
 type SchemaNode = { def?: { type?: string; innerType?: SchemaNode; shape?: Record<string, unknown>; entries?: Record<string, unknown> } };
 
@@ -73,7 +62,7 @@ export function classifyField(key: string, schema: unknown): FieldKind {
   const def = (inner as { def?: { type?: string } }).def;
   if (def?.type === "number") return "order";
   if (def?.type === "array") return "statistics"; // slug lists: damage-type refs
-  if (PROSE_KEYS.has(key)) return "prose";
+  if (proseFieldKeys.has(key)) return "prose";
   if (key === "illustration") return "asset";
   return "text";
 }
@@ -85,12 +74,3 @@ export function enumOptions(schema: unknown): string[] | null {
 
 export { statisticsSchema };
 
-/**
- * The i18n enum registry key for an enum field: the first entry name of
- * the enum (place_type, gender, political_system, size, rarity...).
- */
-export function enumKeyOf(schema: unknown): string {
-  const def = (unwrap(schema) as { def?: { entries?: Record<string, unknown> } }).def;
-  const first = def?.entries ? Object.keys(def.entries)[0] : undefined;
-  return first ?? "";
-}

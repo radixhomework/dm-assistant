@@ -28,7 +28,7 @@ describe("LoginPage", () => {
     renderWithProviders(<LoginPage />, "/login");
     const form = document.querySelector("form");
     if (!form) throw new Error("form missing");
-    const identifier = form.querySelector('input[name="identifier"]');
+    const identifier = form.querySelector('input[name="username"]');
     const password = form.querySelector('input[name="password"]');
     if (!identifier || !password) throw new Error("inputs missing");
     (identifier as HTMLInputElement).value = "dm";

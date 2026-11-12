@@ -57,7 +57,7 @@
     "title": "Log in",
     "password": "Password",
     "submit": "Log in",
-    "identifier": "Username"
+    "username": "Username"
   },
   "lore": {
     "title": "Lore",

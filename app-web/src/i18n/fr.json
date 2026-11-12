@@ -57,7 +57,7 @@
     "title": "Connexion",
     "password": "Mot de passe",
     "submit": "Se connecter",
-    "identifier": "Nom d'utilisateur"
+    "username": "Nom d'utilisateur"
   },
   "lore": {
     "title": "Lore",

@@ -40,14 +40,14 @@ describe("AuthService", () => {
   it("bootstraps the admin and the world settings atomically", async () => {
     const input = wizardInput();
     const result = await service.bootstrapInstance(input);
-    expect(result.email).toBe(input.email);
+    expect(result.email).toBe(`${input.username}@instance.local`);
     const rows = await testDb.select().from(settings);
     const keys = rows.map((row) => row.key);
     expect(keys).toContain("world_name");
     const [admin] = await testDb
       .select()
       .from(users)
-      .where(eq(users.email, input.email));
+      .where(eq(users.username, input.username));
     expect(admin.role).toBe("admin");
   });
 

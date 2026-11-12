@@ -30,11 +30,11 @@ describe("AuthController", () => {
 
   it("parses the login payload and delegates to the service", async () => {
     const result = await controller.login(request, {
-      identifier: "a@b.com",
+      username: "ab",
       password: "secret",
     });
     expect(result.email).toBe("a@b.com");
-    expect(service.login).toHaveBeenCalledWith("a@b.com", "secret", request.session);
+    expect(service.login).toHaveBeenCalledWith("ab", "secret", request.session);
   });
 
   it("returns the authenticated user", () => {
@@ -79,7 +79,6 @@ describe("BootstrapController", () => {
   it("delegates the wizard payload", async () => {
     await controller.bootstrap({
       username: "admin",
-      email: "a@b.com",
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",

@@ -4,7 +4,6 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
-import { ProseEditor } from "../editor/prose-editor.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
@@ -29,9 +28,6 @@ function RecordPage({ slug }: { readonly slug: string }) {
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const [mode, setMode] = useState<"read" | "edit">("read");
-  // Bumps on every entry into edit mode so the editor remounts with the
-  // last saved body — cancelling truly discards.
-  const [editSession, setEditSession] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [body, setBody] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
@@ -80,7 +76,6 @@ function RecordPage({ slug }: { readonly slug: string }) {
   function enterEdit() {
     setSaved(false);
     setError(null);
-    setEditSession((value) => value + 1);
     setMode("edit");
   }
 
@@ -152,14 +147,6 @@ function RecordPage({ slug }: { readonly slug: string }) {
               <textarea name="fields" rows={8} defaultValue={fieldsJson} className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm" />
             </label>
           )}
-          <div className="flex flex-col gap-1 text-sm">
-            {t("lore.body")}
-            <ProseEditor
-              key={slug + ":" + editSession}
-              markdown={body}
-              onChange={setBody}
-            />
-          </div>
           {error && <p className="text-sm text-radish">{error}</p>}
           <div className="flex gap-3">
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
@@ -239,7 +226,6 @@ function RecordPage({ slug }: { readonly slug: string }) {
                 ))}
               </dl>
             )}
-            <ProseEditor markdown={body} readonly />
           </div>
         );
       })()}
