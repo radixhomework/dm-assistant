@@ -161,6 +161,10 @@ function RecordPage({
               <textarea name="fields" rows={8} defaultValue={fieldsJson} className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm" />
             </label>
           )}
+          <div className="flex flex-col gap-1 text-sm">
+            <span>{t("lore.body")}</span>
+            <ProseEditor markdown={body ?? ""} onChange={setBody} />
+          </div>
           {error && <p className="text-sm text-radish">{error}</p>}
           <div className="flex gap-3">
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">

@@ -45,7 +45,7 @@ function recordOf(
   };
 }
 
-function stubFetch(record: unknown): ReturnType<typeof vi.fn> {
+function stubFetch(record: unknown) {
   return vi.stubGlobal(
     "fetch",
     vi.fn(async (input: string) => {
