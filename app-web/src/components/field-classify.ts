@@ -1,9 +1,8 @@
-import { proseFieldKeys, statisticsSchema } from "@dm/schemas";
+import { proseFieldKeys } from "@dm/schemas";
 
 export type FieldKind =
   | "prose"
   | "text"
-  | "numericString"
   | "money"
   | "calendarDate"
   | "recurrence"
@@ -42,6 +41,19 @@ function enumValues(schema: unknown): string[] | null {
 }
 
 /**
+ * Classifies an object-shaped field by its keys (the structured
+ * vocabularies): money, calendar date, recurrence, statistics.
+ * Returns null when the keys match none of them.
+ */
+function objectFieldKind(keys: string[]): FieldKind | null {
+  if (keys.includes("amount") && keys.includes("currency")) return "money";
+  if (keys.includes("era") || (keys.includes("year") && keys.includes("month"))) return "calendarDate";
+  if (keys.includes("unit") && keys.includes("interval")) return "recurrence";
+  if (keys.includes("strength")) return "statistics";
+  return null;
+}
+
+/**
  * Classifies a template field for form rendering, from the schema's zod
  * shape: objects are discriminated by their keys (money, calendar date,
  * recurrence, statistics), enums become selects, arrays are slug lists,
@@ -50,13 +62,7 @@ function enumValues(schema: unknown): string[] | null {
  */
 export function classifyField(key: string, schema: unknown): FieldKind {
   const keys = objectKeys(schema);
-  if (keys) {
-    if (keys.includes("amount") && keys.includes("currency")) return "money";
-    if (keys.includes("era") || (keys.includes("year") && keys.includes("month"))) return "calendarDate";
-    if (keys.includes("unit") && keys.includes("interval")) return "recurrence";
-    if (keys.includes("strength")) return "statistics";
-    return "text";
-  }
+  if (keys) return objectFieldKind(keys) ?? "text";
   if (enumValues(schema)) return "enum";
   const inner = unwrap(schema);
   const def = (inner as { def?: { type?: string } }).def;
@@ -72,5 +78,5 @@ export function enumOptions(schema: unknown): string[] | null {
   return enumValues(schema);
 }
 
-export { statisticsSchema };
+export { statisticsSchema } from "@dm/schemas";
 

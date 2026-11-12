@@ -5,8 +5,7 @@ import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import type { TemplateSchema } from "@dm/schemas";
 
-type FieldValue = unknown;
-type Fields = Record<string, FieldValue>;
+type Fields = Record<string, unknown>;
 
 /** Prose fields use the full rich-text editor (toolbar + mentions). */
 function ProseControl(props: {
@@ -185,11 +184,17 @@ function StatisticsControl(props: {
     return `(${Math.floor((score - 10) / 2) >= 0 ? "+" : ""}${Math.floor((score - 10) / 2)})`;
   };
 
-  const setPart = (key: string, value: FieldValue) => props.onChange({ ...props.value, [key]: value });
+  const setPart = (key: string, value: unknown) => props.onChange({ ...props.value, [key]: value });
   const numberPart = (key: string) => {
     const value = props.value[key];
     return typeof value === "number" ? value : "";
   };
+  const textPart = (key: string) => {
+    const value = props.value[key];
+    return typeof value === "string" ? value : "";
+  };
+  // hp is the nested { average, formula } object of the statistics value.
+  const hp = props.value.hp as { average?: number; formula?: string } | undefined;
 
   return (
     <Field label={props.label}>
@@ -258,14 +263,10 @@ function StatisticsControl(props: {
           <Field label={t("stats.hpAverage")}>
             <input
               type="number"
-              value={
-                typeof (props.value.hp as { average?: number } | undefined)?.average === "number"
-                  ? (props.value.hp as { average: number }).average
-                  : ""
-              }
+              value={typeof hp?.average === "number" ? hp.average : ""}
               onChange={(event) =>
                 setPart("hp", {
-                  ...(props.value.hp as Fields | undefined),
+                  ...hp,
                   average: event.target.value === "" ? undefined : Number(event.target.value),
                 })
               }
@@ -274,10 +275,10 @@ function StatisticsControl(props: {
           </Field>
           <Field label={t("stats.hpFormula")}>
             <input
-              value={String((props.value.hp as Fields | undefined)?.formula ?? "")}
+              value={hp?.formula ?? ""}
               onChange={(event) =>
                 setPart("hp", {
-                  ...(props.value.hp as Fields | undefined),
+                  ...hp,
                   formula: event.target.value,
                 })
               }
@@ -288,21 +289,21 @@ function StatisticsControl(props: {
         <div className="flex flex-wrap gap-2">
           <Field label={t("stats.alignment")}>
             <input
-              value={String(props.value.alignment ?? "")}
+              value={textPart("alignment")}
               onChange={(event) => setPart("alignment", event.target.value)}
               className={inputClass}
             />
           </Field>
           <Field label={t("stats.creatureType")}>
             <input
-              value={String(props.value.creatureType ?? "")}
+              value={textPart("creatureType")}
               onChange={(event) => setPart("creatureType", event.target.value)}
               className={inputClass}
             />
           </Field>
           <Field label={t("stats.size")}>
             <select
-              value={String(props.value.size ?? "")}
+              value={textPart("size")}
               onChange={(event) => setPart("size", event.target.value === "" ? undefined : event.target.value)}
               className={inputClass}
             >
@@ -336,11 +337,11 @@ export function RecordFormFields(props: {
     shape: Record<string, unknown>;
   }).shape;
 
-  const setField = (key: string, value: FieldValue) => props.onChange({ ...props.fields, [key]: value });
+  const setField = (key: string, value: unknown) => props.onChange({ ...props.fields, [key]: value });
 
   const controls: Array<ReturnType<typeof Field>> = [];
   for (const [key, schema] of Object.entries(shape)) {
-    const kind = classifyField(key, schema as Parameters<typeof classifyField>[1]);
+    const kind = classifyField(key, schema);
     const label = t(`fields.${key}`);
     const value = props.fields[key];
     const asString = typeof value === "string" ? value : "";
@@ -408,17 +409,6 @@ export function RecordFormFields(props: {
         );
         break;
       case "asset":
-        controls.push(
-          <Field key={key} label={label}>
-            <input
-              name={key}
-              value={asString}
-              onChange={(event) => setField(key, event.target.value)}
-              className={inputClass}
-            />
-          </Field>,
-        );
-        break;
       case "text":
         controls.push(
           <Field key={key} label={label}>
@@ -431,17 +421,6 @@ export function RecordFormFields(props: {
           </Field>,
         );
         break;
-      default:
-        controls.push(
-          <Field key={key} label={label}>
-            <input
-              name={key}
-              value={asString}
-              onChange={(event) => setField(key, event.target.value)}
-              className={inputClass}
-            />
-          </Field>,
-        );
     }
   }
 

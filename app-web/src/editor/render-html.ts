@@ -1,5 +1,4 @@
 import { Editor } from "@tiptap/core";
-import { generateHTML } from "@tiptap/html";
 import { buildExtensions } from "./extensions.js";
 
 /**

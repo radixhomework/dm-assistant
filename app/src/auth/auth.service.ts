@@ -62,8 +62,6 @@ export class AuthService {
       email: user.email,
       role: user.role,
     };
-
-    return { id: user.id, username: user.username, email: user.email, role: user.role };
   }
 
   /** Creates the administrator and the world in one transaction. */

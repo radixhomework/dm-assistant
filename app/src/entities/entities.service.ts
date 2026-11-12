@@ -94,9 +94,10 @@ export class EntitiesService {
       .where(eq(entities.id, existing.id))
       .returning();
     const body = input.body ?? existing.body;
+    // The JSONB column is typed unknown; it always holds an object here.
     const mentionSources: Record<string, unknown> = {
-      ...(existing.fields ?? {}),
-      ...(fields ?? {}),
+      ...(existing.fields as Record<string, unknown>),
+      ...fields,
     };
     await this.replaceMentions(row.id, body, mentionSources);
     return row;

@@ -8,7 +8,6 @@ import { RecordFormFields } from "../components/record-form-fields.js";
 import { classifyField } from "../components/field-classify.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
-import { ProseEditor } from "../editor/prose-editor.js";
 import { renderMarkdownToHtml } from "../editor/render-html.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
@@ -231,7 +230,7 @@ function RecordPage({
             const object = value as Record<string, unknown>;
             const parts = Object.entries(object)
               .filter(([, part]) => part !== undefined && part !== "")
-              .map(([, part]) => String(part));
+              .map((entry) => String(entry[1]));
             fieldRows.push({ key, label, node: parts.join(" — ") });
             continue;
           }

@@ -28,9 +28,8 @@ export function MentionView(props: Readonly<NodeViewProps>) {
   const dead = title === null;
   // Resolved mentions read as plain prose in reading mode (no @ prefix);
   // dead links keep the @ marker — the token no longer resolves.
-  const display = dead
-    ? `@${slug}`
-    : `${props.editor.isEditable ? "@" : ""}${title}`;
+  const atPrefix = props.editor.isEditable ? "@" : "";
+  const display = dead ? `@${slug}` : `${atPrefix}${title}`;
   return (
     <NodeViewWrapper
       as="span"
