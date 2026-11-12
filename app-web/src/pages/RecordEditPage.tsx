@@ -84,12 +84,12 @@ function RecordPage({ slug }: { readonly slug: string }) {
     setError(null);
     setSaved(false);
     const form = new FormData(event.currentTarget);
-    let fields: unknown;
+    let payloadFields: unknown;
     if (templateSchemaOf(data.type)) {
-      fields = fields ?? {};
+      payloadFields = fields ?? {};
     } else {
       try {
-        fields = JSON.parse(formString(form, "fields") || "{}");
+        payloadFields = JSON.parse(formString(form, "fields") || "{}");
       } catch {
         setError("Invalid JSON");
         return;
@@ -101,7 +101,7 @@ function RecordPage({ slug }: { readonly slug: string }) {
         body: {
           title: formString(form, "title"),
           tags: data.tags,
-          fields,
+          fields: payloadFields,
           body: body ?? "",
         },
       });

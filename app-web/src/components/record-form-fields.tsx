@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Field, inputClass } from "./form.js";
 import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
@@ -17,10 +17,21 @@ function ProseControl(props: {
   // No <label> wrapper: a label forwards clicks to the first control,
   // which here is the toolbar's Bold button — clicking the field label
   // would toggle bold.
+  //
+  // Only emit actual changes: TipTap normalizes the initial content and
+  // fires onUpdate once on mount, which would inject empty-string keys.
+  const lastEmitted = useRef(props.value);
   return (
     <div className="flex flex-col gap-1 text-sm">
       <span>{props.label}</span>
-      <ProseEditor markdown={props.value} onChange={props.onChange} />
+      <ProseEditor
+        markdown={props.value}
+        onChange={(markdown) => {
+          if (markdown === lastEmitted.current) return;
+          lastEmitted.current = markdown;
+          props.onChange(markdown);
+        }}
+      />
     </div>
   );
 }
@@ -393,6 +404,18 @@ export function RecordFormFields(props: {
         );
         break;
       case "asset":
+        controls.push(
+          <Field key={key} label={label}>
+            <input
+              name={key}
+              value={asString}
+              onChange={(event) => setField(key, event.target.value)}
+              className={inputClass}
+            />
+          </Field>,
+        );
+        break;
+      case "text":
         controls.push(
           <Field key={key} label={label}>
             <input

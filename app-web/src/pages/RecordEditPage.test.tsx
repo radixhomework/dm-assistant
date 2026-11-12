@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { RecordEditPage } from "./RecordEditPage";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -72,12 +72,14 @@ describe("RecordEditPage", () => {
     // The generated form renders the Places template fields (phase 4).
     const population = form.querySelector('input[name="population"]');
     if (!population) throw new Error("population missing");
-    (population as HTMLInputElement).value = "2M";
+    fireEvent.input(population, { target: { value: "2M" } });
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await vi.waitFor(() => {
       const calls = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>);
       const patch = calls.find(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "PATCH");
       expect(patch).toBeDefined();
+      const payload = JSON.parse(String(patch![1].body)) as { fields: Record<string, unknown> };
+      expect(payload.fields).toEqual({ population: "2M" });
     });
   });
 
