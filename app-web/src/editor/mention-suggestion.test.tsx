@@ -1,7 +1,14 @@
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createRef } from "react";
 import { Editor } from "@tiptap/core";
 import { buildExtensions } from "./extensions.js";
-import { mentionSuggestion } from "./mention-suggestion.js";
+import {
+  MentionList,
+  mentionSuggestion,
+  type MentionListHandle,
+} from "./mention-suggestion.js";
+import { renderWithProviders } from "../testing/render.js";
 
 vi.mock("@tiptap/react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tiptap/react")>();
@@ -77,5 +84,55 @@ describe("mentionSuggestion", () => {
     const handled = lifecycle.onKeyDown!({ event: new KeyboardEvent("keydown", { key: "Escape" }) } as never);
     expect(handled).toBe(true);
     expect(document.querySelector(".mention-list")).toBeNull();
+  });
+});
+
+describe("MentionList", () => {
+  const twoItems = [
+    { slug: "osgwirond", title: "Osgwirond", type: "places" },
+    { slug: "city-of-glass", title: "City of Glass", type: "places" },
+  ];
+
+  it("renders the empty state when no record matches", () => {
+    renderWithProviders(<MentionList items={[]} command={() => undefined} />);
+    expect(screen.getByText("No matching record")).toBeDefined();
+  });
+
+  it("renders candidates and inserts on click", () => {
+    const command = vi.fn();
+    renderWithProviders(<MentionList items={twoItems} command={command} />);
+    expect(screen.getByText("Osgwirond")).toBeDefined();
+    expect(document.querySelector(".mention-list-item")?.className).toContain("selected");
+    fireEvent.click(screen.getByText("Osgwirond"));
+    expect(command).toHaveBeenCalledWith(expect.objectContaining({ slug: "osgwirond" }));
+  });
+
+  it("navigates with arrows and inserts on Enter through the imperative handle", () => {
+    const command = vi.fn();
+    const ref = createRef<MentionListHandle>();
+    renderWithProviders(<MentionList ref={ref} items={twoItems} command={command} />);
+    expect(ref.current).not.toBeNull();
+    act(() => {
+      expect(ref.current!.onKeyDown(new KeyboardEvent("keydown", { key: "ArrowDown" }))).toBe(true);
+    });
+    expect(document.querySelectorAll(".mention-list-item")[1].className).toContain("selected");
+    act(() => {
+      expect(ref.current!.onKeyDown(new KeyboardEvent("keydown", { key: "ArrowUp" }))).toBe(true);
+    });
+    expect(document.querySelectorAll(".mention-list-item")[0].className).toContain("selected");
+    act(() => {
+      expect(ref.current!.onKeyDown(new KeyboardEvent("keydown", { key: "Enter" }))).toBe(true);
+    });
+    expect(command).toHaveBeenCalledWith(twoItems[0]);
+  });
+
+  it("reports Enter on an empty list as handled without inserting", () => {
+    const command = vi.fn();
+    const ref = createRef<MentionListHandle>();
+    renderWithProviders(<MentionList ref={ref} items={[]} command={command} />);
+    act(() => {
+      expect(ref.current!.onKeyDown(new KeyboardEvent("keydown", { key: "Enter" }))).toBe(true);
+    });
+    expect(command).not.toHaveBeenCalled();
   });
 });

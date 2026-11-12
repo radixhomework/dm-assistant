@@ -117,7 +117,7 @@ export function LorePage() {
             <select name="type" className={inputClass}>
               {worldTemplates.map((template) => (
                 <option key={template} value={template}>
-                  {template}
+                  {t(`lore.categories.${template}`)}
                 </option>
               ))}
             </select>

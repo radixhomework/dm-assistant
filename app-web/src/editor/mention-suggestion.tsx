@@ -14,11 +14,11 @@ type MentionCandidate = {
   type: string;
 };
 
-type MentionListHandle = {
+export type MentionListHandle = {
   onKeyDown: (event: KeyboardEvent) => boolean;
 };
 
-const MentionList = forwardRef<MentionListHandle, { readonly items: MentionCandidate[]; readonly command: (item: MentionCandidate) => void }>(
+export const MentionList = forwardRef<MentionListHandle, { readonly items: MentionCandidate[]; readonly command: (item: MentionCandidate) => void }>(
   function MentionList(props, ref) {
     const { t } = useTranslation();
     const [selectedIndex, setSelectedIndex] = useState(0);

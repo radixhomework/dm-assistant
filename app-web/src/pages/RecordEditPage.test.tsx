@@ -1,64 +1,81 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { RecordEditPage } from "./RecordEditPage";
 import { renderWithProviders } from "../testing/render.js";
 
-vi.mock("@tanstack/react-router", () => ({
-  useParams: () => ({ slug: "city-of-glass" }),
-  useNavigate: () => ({ to: vi.fn() }),
-  useRouterState: (opts?: { select?: (s: unknown) => unknown }) =>
-    opts?.select
-      ? opts.select({ location: { pathname: "/records/city-of-glass", search: {} } })
-      : { location: { pathname: "/records/city-of-glass", search: {} } },
-}));
+// Mutable search state the mocked router hook exposes; tests set the edit
+// flag to simulate navigation straight from a creation form.
+const searchState: { edit?: string | boolean } = {};
 
-describe("RecordEditPage", () => {
-  beforeEach(() => {
-    document.documentElement.lang = "en";
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string) => {
-        if (input === "/api/auth/me") {
-          return {
-            ok: true,
-            json: async () => ({
-              id: "1",
-              email: "a@b.c",
-              displayName: "DM",
-              role: "admin",
-            }),
-          };
-        }
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    useParams: () => ({ slug: "city-of-glass" }),
+    useNavigate: () => ({ to: vi.fn() }),
+    useRouterState: (opts?: { select?: (s: unknown) => unknown }) => {
+      const state = {
+        location: { pathname: "/records/city-of-glass", search: searchState },
+      };
+      return opts?.select ? opts.select(state) : state;
+    },
+    // The reading view renders references through Link; a plain anchor
+    // keeps the assertion independent of the router tree.
+    Link: (props: { params?: { slug?: string }; children?: ReactNode }) => (
+      <a href={`#${props.params?.slug ?? ""}`}>{props.children}</a>
+    ),
+  };
+});
+
+function recordOf(
+  fields: Record<string, unknown>,
+  references: Record<string, Array<{ slug: string; title: string }>> = {},
+) {
+  return {
+    id: "1",
+    slug: "city-of-glass",
+    type: "places",
+    perimeter: "world",
+    title: "City of Glass",
+    tags: [],
+    fields,
+    body: "A city of towers.",
+    references,
+  };
+}
+
+function stubFetch(record: unknown): ReturnType<typeof vi.fn> {
+  return vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string) => {
+      if (input === "/api/auth/me") {
         return {
           ok: true,
           json: async () => ({
             id: "1",
-            slug: "city-of-glass",
-            type: "places",
-            perimeter: "world",
-            title: "City of Glass",
-            tags: ["capital"],
-            fields: { population: "1M" },
-            body: "A city of towers.",
+            email: "a@b.c",
+            displayName: "DM",
+            role: "admin",
           }),
         };
-      }),
-    );
+      }
+      return { ok: true, json: async () => record };
+    }),
+  );
+}
+
+describe("RecordEditPage", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "en";
+    searchState.edit = undefined;
+    stubFetch(recordOf({ population: "1M" }));
   });
 
   it("renders the edit form pre-filled and saves via PATCH", async () => {
     const fetchMock = vi.fn(async (_input: string) => ({
       ok: true,
-      json: async () => ({
-        id: "1",
-        slug: "city-of-glass",
-        type: "places",
-        perimeter: "world",
-        title: "City of Glass",
-        tags: ["capital"],
-        fields: { population: "1M" },
-        body: "A city of towers.",
-      }),
+      json: async () => recordOf({ population: "1M" }),
     }));
     vi.stubGlobal("fetch", fetchMock);
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
@@ -88,22 +105,6 @@ describe("RecordEditPage", () => {
   });
 
   it("shows a success confirmation after saving", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (_input: string) => ({
-        ok: true,
-        json: async () => ({
-          id: "1",
-          slug: "city-of-glass",
-          type: "places",
-          perimeter: "world",
-          title: "City of Glass",
-          tags: [],
-          fields: {},
-          body: "A city of towers.",
-        }),
-      })),
-    );
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
@@ -124,5 +125,57 @@ describe("RecordEditPage", () => {
     expect(document.querySelector("form")).toBeNull();
     expect(screen.getByText("Edit")).toBeDefined();
     expect(screen.getByText("Delete")).toBeDefined();
+  });
+
+  it("opens straight into edit mode from a creation redirect", async () => {
+    // validateSearch normalizes edit=1 to the boolean true; the raw string
+    // must keep working too.
+    searchState.edit = true;
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
+
+    searchState.edit = "1";
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
+  });
+
+  it("translates enum values in the reading view", async () => {
+    stubFetch(recordOf({ place_type: "intangible_place", population: "1M" }));
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("Intangible place")).toBeDefined(),
+    );
+    // The raw enum key never reaches the reader.
+    expect(screen.queryByText("intangible_place")).toBeNull();
+  });
+
+  it("renders prose fields and the body through the readonly editor", async () => {
+    stubFetch(recordOf({ public_description: "Sunlit **towers**." }));
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll(".ProseMirror").length).toBeGreaterThanOrEqual(2),
+    );
+    // Markdown renders (bold stays bold), no editing toolbar in reading mode.
+    expect(document.querySelector("strong")?.textContent).toBe("towers");
+    expect(document.querySelector('[role="toolbar"]')).toBeNull();
+    expect(screen.getByText("A city of towers.")).toBeDefined();
+  });
+
+  it("renders references as links to the referenced records", async () => {
+    stubFetch(
+      recordOf(
+        { population: "1M" },
+        { region: [{ slug: "the-glass-region", title: "The Glass Region" }] },
+      ),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("The Glass Region")).toBeDefined(),
+    );
+    const link = screen.getByText("The Glass Region").closest("a");
+    expect(link?.getAttribute("href")).toBe("#the-glass-region");
   });
 });

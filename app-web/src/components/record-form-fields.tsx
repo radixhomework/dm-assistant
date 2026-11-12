@@ -310,7 +310,7 @@ function StatisticsControl(props: {
               <option value="">—</option>
               {["tiny", "small", "medium", "large", "huge", "gargantuan"].map((size) => (
                 <option key={size} value={size}>
-                  {size}
+                  {t(`enums.size.${size}`)}
                 </option>
               ))}
             </select>

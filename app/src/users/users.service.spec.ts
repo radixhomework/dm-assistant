@@ -1,8 +1,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import type { CreateUserInput } from "@dm/schemas";
 import { resetTables, testDb } from "../testing/test-db.js";
-import { entities } from "../database/schema.js";
+import { entities, users } from "../database/schema.js";
 import { UsersService } from "./users.service.js";
 
 describe("UsersService", () => {
@@ -79,5 +80,49 @@ describe("UsersService", () => {
   it("refuses self-deletion", async () => {
     const acting = await service.create(input());
     await expect(service.deleteUser(acting.id, acting.id)).rejects.toThrow(/own account/);
+  });
+
+  it("returns null for unknown ids and emails", async () => {
+    expect(await service.findById(randomUUID())).toBeNull();
+    expect(await service.findByEmail(`${randomUUID()}@example.com`)).toBeNull();
+  });
+
+  it("rejects a duplicate email with a stable conflict", async () => {
+    const same = input();
+    await service.create(same);
+    await expect(service.create(same)).rejects.toThrow(/already used/);
+  });
+
+  it("projects the UI locale through the safe user (fr, en, other)", async () => {
+    const created = await service.create(input());
+    for (const locale of ["fr", "en", "es"] as const) {
+      await testDb.update(users).set({ uiLocale: locale }).where(eq(users.id, created.id));
+      const rows = await service.list();
+      const projected = rows.find((row) => row.id === created.id)?.uiLocale;
+      expect(projected).toBe(locale === "es" ? null : locale);
+    }
+  });
+
+  it("resets the password and verifies it", async () => {
+    const created = await service.create(input());
+    const updated = await service.setPassword(created.id, "another-long-passphrase");
+    expect(updated?.status).toBe("active");
+    const row = await service.findByEmail(created.email);
+    if (!row) throw new Error("row missing");
+    expect(await service.verifyPassword(row.passwordHash, "another-long-passphrase")).toBe(true);
+    expect(await service.verifyPassword(row.passwordHash, "nope-nope-nope")).toBe(false);
+  });
+
+  it("returns null when setting a password for an unknown user", async () => {
+    expect(await service.setPassword(randomUUID(), "another-long-passphrase")).toBeNull();
+  });
+
+  it("projects rows through safeOf without exposing the hash", async () => {
+    const created = await service.create(input());
+    const row = await service.findByEmail(created.email);
+    if (!row) throw new Error("row missing");
+    const safe = service.safeOf(row);
+    expect(safe.email).toBe(created.email);
+    expect(safe.passwordHash).toBeUndefined();
   });
 });

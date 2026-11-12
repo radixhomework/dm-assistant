@@ -8,7 +8,7 @@ import { RecordFormFields } from "../components/record-form-fields.js";
 import { classifyField } from "../components/field-classify.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
-import { renderMarkdownToHtml } from "../editor/render-html.js";
+import { ProseEditor } from "../editor/prose-editor.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -20,7 +20,11 @@ import type { Entity } from "../types.js";
  */
 export function RecordEditPage() {
   const { slug } = useParams({ from: "/records/$slug" });
-  const initialEdit = useRouterState({ select: (s) => s.location.search?.edit === "1" });
+  // validateSearch normalizes the edit=1 query flag to the boolean true;
+  // accept both spellings so the creation forms' edit intent survives.
+  const initialEdit = useRouterState({
+    select: (s) => s.location.search?.edit === "1" || s.location.search?.edit === true,
+  });
   // Remount per record: navigating slug → slug resets mode, body and
   // flags through the component lifecycle instead of competing effects.
   // state.edit = true when navigating straight from a creation form.
@@ -58,8 +62,6 @@ function RecordPage({
       setFields(record.data.fields);
     }
   }, [record.data]);
-
-  const renderedBodyHtml = renderMarkdownToHtml(body ?? "");
 
   // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
   useEffect(() => {
@@ -210,16 +212,33 @@ function RecordPage({
           ? (template.fields as unknown as { shape: Record<string, unknown> }).shape
           : {};
         const fieldRows: Array<{ key: string; label: string; node: React.ReactNode }> = [];
-        for (const [key, value] of Object.entries(data.fields ?? {})) {
+        // Field values are JSON primitives or nested structured objects
+        // (money, dates, hp…) — primitives render as text, objects flatten
+        // into a readable line.
+        const entries = Object.entries(data.fields ?? {}) as Array<
+          [string, string | number | boolean | object | null | undefined]
+        >;
+        for (const [key, value] of entries) {
           if (!(key in shape) || value === undefined || value === "" || value === null) continue;
           const kind = classifyField(key, shape[key]);
           const label = t(`fields.${key}`);
           if (kind === "statistics") continue; // rendered by the bespoke sheet
           if (kind === "enum") {
-            const translated = t(`enums.${key}.${String(value)}`, {
-              defaultValue: String(value).replaceAll("_", " "),
+            const raw = value as string; // enum fields always store a string
+            const translated = t(`enums.${key}.${raw}`, {
+              defaultValue: raw.replaceAll("_", " "),
             });
             fieldRows.push({ key, label, node: translated });
+            continue;
+          }
+          if (kind === "prose") {
+            // The readonly editor renders markdown and resolves mention
+            // links (title display, click opens the record in a new tab).
+            fieldRows.push({
+              key,
+              label,
+              node: <ProseEditor markdown={value as string} readonly />,
+            });
             continue;
           }
           if (typeof value === "number") {
@@ -272,12 +291,7 @@ function RecordPage({
                 ))}
               </dl>
             )}
-            {body !== "" && (
-              <div
-                className="prose-render"
-                dangerouslySetInnerHTML={{ __html: renderedBodyHtml }}
-              />
-            )}
+            {body !== "" && <ProseEditor markdown={body} readonly />}
           </div>
         );
       })()}

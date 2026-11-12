@@ -142,7 +142,9 @@ export class EntitiesService {
       .where(eq(relationships.fromId, record.id));
     const grouped: Record<string, Array<{ slug: string; title: string }>> = {};
     for (const row of rows) {
-      (grouped[row.kind] ??= []).push({ slug: row.slug, title: row.title });
+      const targets = grouped[row.kind] ?? [];
+      targets.push({ slug: row.slug, title: row.title });
+      grouped[row.kind] = targets;
     }
     return grouped;
   }

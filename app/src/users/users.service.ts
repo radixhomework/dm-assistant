@@ -62,11 +62,13 @@ export class UsersService {
         .returning();
       return safeUserOf(row);
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        (error as { code?: string }).code === "23505"
-      ) {
+      // Drizzle wraps driver errors: the constraint code may sit on the
+      // error itself or on its cause.
+      const codes = [
+        (error as { code?: string }).code,
+        (error as { cause?: { code?: string } }).cause?.code,
+      ];
+      if (codes.includes("23505")) {
         throw new ConflictException("Username or email already used");
       }
       throw error;
