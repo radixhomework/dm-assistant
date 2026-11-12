@@ -5,6 +5,10 @@ import { renderWithProviders } from "../testing/render.js";
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ slug: "city-of-glass" }),
   useNavigate: () => ({ to: vi.fn() }),
+  useRouterState: (opts?: { select?: (s: unknown) => unknown }) =>
+    opts?.select
+      ? opts.select({ location: { pathname: "/records/city-of-glass", search: {} } })
+      : { location: { pathname: "/records/city-of-glass", search: {} } },
 }));
 
 describe("RecordEditPage delete", () => {

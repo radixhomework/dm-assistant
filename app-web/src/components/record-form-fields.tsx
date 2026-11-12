@@ -258,11 +258,15 @@ function StatisticsControl(props: {
           <Field label={t("stats.hpAverage")}>
             <input
               type="number"
-              value={numberPart("hpAverage")}
+              value={
+                typeof (props.value.hp as { average?: number } | undefined)?.average === "number"
+                  ? (props.value.hp as { average: number }).average
+                  : ""
+              }
               onChange={(event) =>
                 setPart("hp", {
+                  ...(props.value.hp as Fields | undefined),
                   average: event.target.value === "" ? undefined : Number(event.target.value),
-                  formula: String((props.value.hp as Fields | undefined)?.formula ?? ""),
                 })
               }
               className={inputClass}
@@ -273,7 +277,7 @@ function StatisticsControl(props: {
               value={String((props.value.hp as Fields | undefined)?.formula ?? "")}
               onChange={(event) =>
                 setPart("hp", {
-                  average: Number((props.value.hp as Fields | undefined)?.average ?? 0),
+                  ...(props.value.hp as Fields | undefined),
                   formula: event.target.value,
                 })
               }

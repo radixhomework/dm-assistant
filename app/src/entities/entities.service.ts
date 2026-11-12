@@ -15,7 +15,7 @@ import {
 } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
-import { entities, mentions } from "../database/schema.js";
+import { entities, mentions, relationships } from "../database/schema.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
 export type EntityRow = typeof entities.$inferSelect;
@@ -120,6 +120,30 @@ export class EntitiesService {
     if (slugs.length > 0) {
       await this.db.insert(mentions).values(slugs.map((slug) => ({ entityId, targetSlug: slug })));
     }
+  }
+
+  /**
+   * Outgoing references of a record, grouped by relationship kind (the
+   * reference field key), each target carrying its slug and current title.
+   */
+  async referencesOf(
+    slug: string,
+  ): Promise<Record<string, Array<{ slug: string; title: string }>>> {
+    const record = await this.getBySlug(slug);
+    const rows = await this.db
+      .select({
+        kind: relationships.kind,
+        slug: entities.slug,
+        title: entities.title,
+      })
+      .from(relationships)
+      .innerJoin(entities, eq(relationships.toId, entities.id))
+      .where(eq(relationships.fromId, record.id));
+    const grouped: Record<string, Array<{ slug: string; title: string }>> = {};
+    for (const row of rows) {
+      (grouped[row.kind] ??= []).push({ slug: row.slug, title: row.title });
+    }
+    return grouped;
   }
 
   async delete(slug: string): Promise<void> {

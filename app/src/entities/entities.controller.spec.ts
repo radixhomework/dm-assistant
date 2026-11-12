@@ -11,6 +11,7 @@ function makeService(): vi.Mocked<EntitiesService> {
     update: vi.fn(),
     delete: vi.fn(),
     tracking: vi.fn(),
+    referencesOf: vi.fn(async () => ({ leaders: [{ slug: "the-king", title: "The King" }] })),
     statusOf: vi.fn(),
   } as unknown as vi.Mocked<EntitiesService>;
 }

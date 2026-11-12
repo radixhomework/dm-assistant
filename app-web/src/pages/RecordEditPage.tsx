@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { formString } from "../forms.js";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
+import { classifyField } from "../components/field-classify.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
+import { ProseEditor } from "../editor/prose-editor.js";
+import { renderMarkdownToHtml } from "../editor/render-html.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -18,16 +21,24 @@ import type { Entity } from "../types.js";
  */
 export function RecordEditPage() {
   const { slug } = useParams({ from: "/records/$slug" });
+  const initialEdit = useRouterState({ select: (s) => s.location.search?.edit === "1" });
   // Remount per record: navigating slug → slug resets mode, body and
   // flags through the component lifecycle instead of competing effects.
-  return <RecordPage key={slug} slug={slug} />;
+  // state.edit = true when navigating straight from a creation form.
+  return <RecordPage key={slug} slug={slug} initialEdit={initialEdit} />;
 }
 
-function RecordPage({ slug }: { readonly slug: string }) {
+function RecordPage({
+  slug,
+  initialEdit,
+}: {
+  readonly slug: string;
+  readonly initialEdit: boolean;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
-  const [mode, setMode] = useState<"read" | "edit">("read");
+  const [mode, setMode] = useState<"read" | "edit">(initialEdit ? "edit" : "read");
   const [error, setError] = useState<string | null>(null);
   const [body, setBody] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
@@ -48,6 +59,8 @@ function RecordPage({ slug }: { readonly slug: string }) {
       setFields(record.data.fields);
     }
   }, [record.data]);
+
+  const renderedBodyHtml = renderMarkdownToHtml(body ?? "");
 
   // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
   useEffect(() => {
@@ -191,29 +204,42 @@ function RecordPage({ slug }: { readonly slug: string }) {
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}
       {(() => {
         // Interim reading sheet (phase 9 delivers the bespoke sheets):
-        // filled template fields only (empty means hidden), then the body.
+        // filled template fields (empty means hidden), reference links,
+        // then the rendered body.
         const template = templateSchemaOf(data.type);
-        let fieldRows: Array<{ key: string; label: string; value: string }> = [];
-        if (template) {
-          const shape = (template.fields as unknown as {
-            shape: Record<string, unknown>;
-          }).shape;
-          fieldRows = Object.entries(data.fields ?? {})
-            .filter(([key, value]) => key in shape && value !== undefined && value !== "" && value !== null)
-            .map(([key, value]) => {
-              let rendered: string;
-              if (typeof value === "boolean") rendered = value ? "✓" : "✗";
-              else if (typeof value === "number") rendered = String(value);
-              else if (typeof value === "object" && value !== null) {
-                const object = value as Record<string, unknown>;
-                rendered = Object.values(object)
-                  .filter((part) => part !== undefined && part !== "")
-                  .map((part) => String(part))
-                  .join(" ");
-              } else rendered = String(value);
-              return { key, label: t(`fields.${key}`), value: rendered };
+        const shape = template
+          ? (template.fields as unknown as { shape: Record<string, unknown> }).shape
+          : {};
+        const fieldRows: Array<{ key: string; label: string; node: React.ReactNode }> = [];
+        for (const [key, value] of Object.entries(data.fields ?? {})) {
+          if (!(key in shape) || value === undefined || value === "" || value === null) continue;
+          const kind = classifyField(key, shape[key]);
+          const label = t(`fields.${key}`);
+          if (kind === "statistics") continue; // rendered by the bespoke sheet
+          if (kind === "enum") {
+            const translated = t(`enums.${key}.${String(value)}`, {
+              defaultValue: String(value).replaceAll("_", " "),
             });
+            fieldRows.push({ key, label, node: translated });
+            continue;
+          }
+          if (typeof value === "number") {
+            fieldRows.push({ key, label, node: String(value) });
+            continue;
+          }
+          if (typeof value === "object" && value !== null) {
+            const object = value as Record<string, unknown>;
+            const parts = Object.entries(object)
+              .filter(([, part]) => part !== undefined && part !== "")
+              .map(([, part]) => String(part));
+            fieldRows.push({ key, label, node: parts.join(" — ") });
+            continue;
+          }
+          fieldRows.push({ key, label, node: String(value) });
         }
+        const referenceEntries = Object.entries(data.references ?? {}).filter(
+          ([, targets]) => (targets as Array<{ slug: string }>).length > 0,
+        );
         return (
           <div className="mt-6 flex flex-col gap-6">
             {fieldRows.length > 0 && (
@@ -221,10 +247,37 @@ function RecordPage({ slug }: { readonly slug: string }) {
                 {fieldRows.map((row) => (
                   <div key={row.key} className="record-read-field">
                     <dt>{row.label}</dt>
-                    <dd>{row.value}</dd>
+                    <dd>{row.node}</dd>
                   </div>
                 ))}
               </dl>
+            )}
+            {referenceEntries.length > 0 && (
+              <dl className="record-read-fields">
+                {referenceEntries.map(([fieldKey, targets]) => (
+                  <div key={fieldKey} className="record-read-field">
+                    <dt>{t(`fields.${fieldKey}`)}</dt>
+                    <dd>
+                      {(targets as Array<{ slug: string; title: string }>).map((target) => (
+                        <Link
+                          key={target.slug}
+                          to="/records/$slug"
+                          params={{ slug: target.slug }}
+                          className="text-accent hover:underline"
+                        >
+                          {target.title}
+                        </Link>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {body !== "" && (
+              <div
+                className="prose-render"
+                dangerouslySetInnerHTML={{ __html: renderedBodyHtml }}
+              />
             )}
           </div>
         );

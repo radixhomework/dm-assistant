@@ -48,7 +48,8 @@ export class EntitiesController {
   async getBySlug(@Param("slug") slug: string) {
     const record = await this.entitiesService.getBySlug(slug);
     const tracking = await this.entitiesService.tracking(slug);
-    return { ...record, tracking };
+    const references = await this.entitiesService.referencesOf(slug);
+    return { ...record, tracking, references };
   }
 
   @Post()

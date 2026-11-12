@@ -8,6 +8,7 @@ export type Entity = {
   fields: Record<string, unknown>;
   body: string;
   tracking?: { slug: string; status: string; children: ChildView[] };
+  references?: Record<string, Array<{ slug: string; title: string }>>;
 };
 
 export type ChildView = {

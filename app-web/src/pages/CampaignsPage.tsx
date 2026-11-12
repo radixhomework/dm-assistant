@@ -57,7 +57,11 @@ export function CampaignsPage() {
           title: formString(form, "title"),
         },
       });
-      void navigate({ to: "/records/$slug", params: { slug: formString(form, "slug") } });
+      void navigate({
+        to: "/records/$slug",
+        params: { slug: formString(form, "slug") },
+        search: { edit: "1" },
+      });
       await campaigns.refetch();
     } catch (submitError) {
       setError(String(submitError));

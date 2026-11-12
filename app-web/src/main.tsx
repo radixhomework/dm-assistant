@@ -56,6 +56,9 @@ const recordEditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/records/$slug",
   component: RecordEditPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: search.edit === "1" ? true : undefined,
+  }),
 });
 const campaignViewRoute = createRoute({
   getParentRoute: () => rootRoute,

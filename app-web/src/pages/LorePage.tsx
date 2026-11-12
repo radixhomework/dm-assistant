@@ -82,7 +82,11 @@ export function LorePage() {
       slugFields.reset();
       await records.refetch();
       // Straight into editing the freshly created record.
-      void navigate({ to: "/records/$slug", params: { slug: formString(form, "slug") } });
+      void navigate({
+        to: "/records/$slug",
+        params: { slug: formString(form, "slug") },
+        search: { edit: "1" },
+      });
     } catch (submitError) {
       setError(String(submitError));
     }
