@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
 import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -41,6 +41,7 @@ import {
 
 export function LorePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
   const records = useQuery({
@@ -78,7 +79,10 @@ export function LorePage() {
         },
       });
       setCreating(false);
+      slugFields.reset();
       await records.refetch();
+      // Straight into editing the freshly created record.
+      void navigate({ to: "/records/$slug", params: { slug: formString(form, "slug") } });
     } catch (submitError) {
       setError(String(submitError));
     }

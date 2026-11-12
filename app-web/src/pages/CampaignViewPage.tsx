@@ -82,6 +82,8 @@ export function CampaignViewPage() {
         method: "POST",
         body: { parentSlug: parentForNew, kind: childType },
       });
+      // Straight into editing the freshly created chapter/scene.
+      void navigate({ to: "/records/$slug", params: { slug: formString(form, "slug") } });
       setCreating(null);
       setParentForNew(null);
       await campaign.refetch();

@@ -105,10 +105,7 @@ function RecordPage({ slug }: { readonly slug: string }) {
         method: "PATCH",
         body: {
           title: formString(form, "title"),
-          tags: formString(form, "tags")
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
+          tags: data.tags,
           fields,
           body: body ?? "",
         },
@@ -142,10 +139,6 @@ function RecordPage({ slug }: { readonly slug: string }) {
           <label className="flex flex-col gap-1 text-sm">
             {t("common.fields.title")}
             <input name="title" defaultValue={data.title} className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("lore.tags")}
-            <input name="tags" defaultValue={data.tags.join(", ")} className="rounded-md border border-border bg-background px-3 py-2" />
           </label>
           {templateSchemaOf(data.type) ? (
             <RecordFormFields
@@ -209,9 +202,47 @@ function RecordPage({ slug }: { readonly slug: string }) {
       </div>
       {saved && <p className="mt-3 text-sm text-primary">{t("lore.saved")}</p>}
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}
-      <div className="mt-6">
-        <ProseEditor markdown={body} readonly />
-      </div>
+      {(() => {
+        // Interim reading sheet (phase 9 delivers the bespoke sheets):
+        // filled template fields only (empty means hidden), then the body.
+        const template = templateSchemaOf(data.type);
+        let fieldRows: Array<{ key: string; label: string; value: string }> = [];
+        if (template) {
+          const shape = (template.fields as unknown as {
+            shape: Record<string, unknown>;
+          }).shape;
+          fieldRows = Object.entries(data.fields ?? {})
+            .filter(([key, value]) => key in shape && value !== undefined && value !== "" && value !== null)
+            .map(([key, value]) => {
+              let rendered: string;
+              if (typeof value === "boolean") rendered = value ? "✓" : "✗";
+              else if (typeof value === "number") rendered = String(value);
+              else if (typeof value === "object" && value !== null) {
+                const object = value as Record<string, unknown>;
+                rendered = Object.values(object)
+                  .filter((part) => part !== undefined && part !== "")
+                  .map((part) => String(part))
+                  .join(" ");
+              } else rendered = String(value);
+              return { key, label: t(`fields.${key}`), value: rendered };
+            });
+        }
+        return (
+          <div className="mt-6 flex flex-col gap-6">
+            {fieldRows.length > 0 && (
+              <dl className="record-read-fields">
+                {fieldRows.map((row) => (
+                  <div key={row.key} className="record-read-field">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <ProseEditor markdown={body} readonly />
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -1,12 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Field, inputClass } from "./form.js";
-import { classifyField, enumOptions } from "./field-classify.js";
+import { classifyField, enumKeyOf, enumOptions } from "./field-classify.js";
+import { ProseEditor } from "../editor/prose-editor.js";
 import type { TemplateSchema } from "@dm/schemas";
 
 type FieldValue = unknown;
 type Fields = Record<string, FieldValue>;
 
+/** Prose fields use the full rich-text editor (toolbar + mentions). */
 function ProseControl(props: {
   readonly label: string;
   readonly value: string;
@@ -14,12 +16,7 @@ function ProseControl(props: {
 }) {
   return (
     <Field label={props.label}>
-      <textarea
-        rows={4}
-        value={props.value}
-        onChange={(event) => props.onChange(event.target.value)}
-        className="rounded-md border border-border bg-background px-3 py-2"
-      />
+      <ProseEditor markdown={props.value} onChange={props.onChange} />
     </Field>
   );
 }
@@ -354,6 +351,7 @@ export function RecordFormFields(props: {
         break;
       case "enum": {
         const options = enumOptions(schema) ?? [];
+        const enumKey = enumKeyOf(schema);
         controls.push(
           <Field key={key} label={label}>
             <select
@@ -365,7 +363,9 @@ export function RecordFormFields(props: {
               <option value="">—</option>
               {options.map((option) => (
                 <option key={option} value={option}>
-                  {option.replaceAll("_", " ")}
+                  {t(`enums.${enumKeyOf(schema)}.${option}`, {
+                    defaultValue: option.replaceAll("_", " "),
+                  })}
                 </option>
               ))}
             </select>

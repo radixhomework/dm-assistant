@@ -84,3 +84,13 @@ export function enumOptions(schema: unknown): string[] | null {
 }
 
 export { statisticsSchema };
+
+/**
+ * The i18n enum registry key for an enum field: the first entry name of
+ * the enum (place_type, gender, political_system, size, rarity...).
+ */
+export function enumKeyOf(schema: unknown): string {
+  const def = (unwrap(schema) as { def?: { entries?: Record<string, unknown> } }).def;
+  const first = def?.entries ? Object.keys(def.entries)[0] : undefined;
+  return first ?? "";
+}

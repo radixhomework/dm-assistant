@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
 import { formString } from "../forms.js";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -15,6 +15,7 @@ type CampaignWithTracking = Omit<Entity, "tracking"> & {
 
 export function CampaignsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function CampaignsPage() {
           title: formString(form, "title"),
         },
       });
+      void navigate({ to: "/records/$slug", params: { slug: formString(form, "slug") } });
       await campaigns.refetch();
     } catch (submitError) {
       setError(String(submitError));

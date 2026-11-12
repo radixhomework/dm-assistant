@@ -159,36 +159,6 @@
   "record": {
     "edit": "Éditer"
   },
-  "forms": {
-    "money": {
-      "gp": "GP",
-      "sp": "SP",
-      "cp": "CP"
-    },
-    "recurrence": {
-      "weeks": "semaines",
-      "months": "mois",
-      "years": "années"
-    },
-    "stats": {
-      "strength": "Force",
-      "dexterity": "Dextérité",
-      "constitution": "Constitution",
-      "intelligence": "Intelligence",
-      "wisdom": "Sagesse",
-      "charisma": "Charisme",
-      "ac": "CA",
-      "passivePerception": "Perception passive",
-      "initiative": "Initiative",
-      "darkvision": "Vision dans le noir",
-      "hpAverage": "PV (moyenne)",
-      "hpFormula": "Formule de PV",
-      "alignment": "Alignement",
-      "creatureType": "Type",
-      "size": "Taille"
-    },
-    "fields": {}
-  },
   "fields": {
     "illustration": "Illustration",
     "gender": "Gender",
@@ -235,5 +205,79 @@
     "running_notes": "Running notes",
     "play_status": "Play status",
     "order": "Order"
+  },
+  "enums": {
+    "place_type": {
+      "intangible_place": "Lieu immatériel",
+      "locality": "Localité",
+      "city": "Cité"
+    },
+    "gender": {
+      "male": "Masculin",
+      "female": "Féminin",
+      "nonbinary": "Non binaire"
+    },
+    "political_system": {
+      "anarchy": "Anarchie",
+      "aristocracy": "Aristocratie",
+      "autocracy": "Autocratie",
+      "confederation": "Confédération",
+      "diarchy": "Diarchie",
+      "empire": "Empire",
+      "matriarchy": "Matriarcat",
+      "militocracy": "Militocratie",
+      "monarchy": "Monarchie",
+      "oligarchy": "Oligarchie",
+      "patriarchy": "Patriarcat",
+      "republic": "République",
+      "tribal_system": "Système tribal",
+      "theocracy": "Théocratie",
+      "timocracy": "Timocratie",
+      "triarchy": "Triarchie"
+    },
+    "size": {
+      "tiny": "Minuscule",
+      "small": "Petite",
+      "medium": "Moyenne",
+      "large": "Grande",
+      "huge": "Énorme",
+      "gargantuan": "Gigantesque"
+    },
+    "rarity": {
+      "common": "Commun",
+      "uncommon": "Peu commun",
+      "rare": "Rare",
+      "very_rare": "Très rare",
+      "epic": "Épique",
+      "legendary": "Légendaire",
+      "unique": "Unique"
+    }
+  },
+  "money": {
+    "gp": "GP",
+    "sp": "SP",
+    "cp": "CP"
+  },
+  "recurrence": {
+    "weeks": "semaines",
+    "months": "mois",
+    "years": "années"
+  },
+  "stats": {
+    "strength": "Force",
+    "dexterity": "Dextérité",
+    "constitution": "Constitution",
+    "intelligence": "Intelligence",
+    "wisdom": "Sagesse",
+    "charisma": "Charisme",
+    "ac": "CA",
+    "passivePerception": "Perception passive",
+    "initiative": "Initiative",
+    "darkvision": "Vision dans le noir",
+    "hpAverage": "PV (moyenne)",
+    "hpFormula": "Formule de PV",
+    "alignment": "Alignement",
+    "creatureType": "Type",
+    "size": "Taille"
   }
 }

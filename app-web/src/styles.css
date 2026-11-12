@@ -167,3 +167,61 @@ body {
   color: #8a5e61;
   text-decoration: line-through wavy;
 }
+
+/* Reading view: template fields + rendered body */
+.record-read-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.record-read-field {
+  display: flex;
+  flex-direction: column;
+}
+.record-read-field dt {
+  font-size: 0.875rem;
+  color: #76604e;
+}
+.record-read-field dd {
+  margin: 0;
+}
+.prose-render p {
+  margin: 0.5rem 0;
+}
+.prose-render table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+.prose-render th,
+.prose-render td {
+  border: 1px solid rgba(30, 33, 28, 0.2);
+  padding: 0.25rem 0.5rem;
+}
+.prose-render blockquote {
+  border-left: 3px solid #9a7656;
+  margin: 1rem 0;
+  padding-left: 0.75rem;
+  color: #76604e;
+}
+.prose-render pre {
+  background: rgba(30, 33, 28, 0.06);
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+.prose-render [data-typed-block] {
+  border-left: 3px solid #9a7656;
+  background: rgba(154, 118, 86, 0.08);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+}
+.prose-render [data-typed-block="mechanics"] {
+  border-left-color: #8a5e61;
+  background: rgba(138, 94, 97, 0.08);
+}
+.prose-render .mention {
+  color: #4d5947;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
