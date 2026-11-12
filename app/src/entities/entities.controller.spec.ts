@@ -77,7 +77,6 @@ describe("EntitiesController", () => {
       title: "North",
       tags: [],
       fields: {},
-      body: "",
       createdAt: new Date(),
       updatedAt: new Date(),
     });

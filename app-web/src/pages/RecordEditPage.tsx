@@ -16,7 +16,7 @@ import type { Entity } from "../types.js";
  * Record page: opens in reading mode (PRE-SPEC.md §5 rule 10 flow) and an
  * explicit Edit action leads to the edit form; saving or cancelling
  * returns to the reading view. The bespoke per-template sheet replaces
- * the interim reading body at phase 9.
+ * the interim field rows at phase 9.
  */
 export function RecordEditPage() {
   const { slug } = useParams({ from: "/records/$slug" });
@@ -25,8 +25,8 @@ export function RecordEditPage() {
   const initialEdit = useRouterState({
     select: (s) => s.location.search?.edit === "1" || s.location.search?.edit === true,
   });
-  // Remount per record: navigating slug → slug resets mode, body and
-  // flags through the component lifecycle instead of competing effects.
+  // Remount per record: navigating slug → slug resets mode and flags
+  // through the component lifecycle instead of competing effects.
   // state.edit = true when navigating straight from a creation form.
   return <RecordPage key={slug} slug={slug} initialEdit={initialEdit} />;
 }
@@ -43,7 +43,6 @@ function RecordPage({
   const { ready } = useRequireAuth();
   const [mode, setMode] = useState<"read" | "edit">(initialEdit ? "edit" : "read");
   const [error, setError] = useState<string | null>(null);
-  const [body, setBody] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
   const record = useQuery({
@@ -53,12 +52,11 @@ function RecordPage({
     retry: false,
   });
 
-  // The editor owns the body once the record is loaded; changes flow
-  // through onChange instead of FormData (one markdown source of truth).
-  // Hooks stay above the early returns.
+  // Field values flow through onChange instead of FormData once the
+  // record is loaded (one state source of truth per control). Hooks stay
+  // above the early returns.
   useEffect(() => {
     if (record.data) {
-      setBody(record.data.body);
       setFields(record.data.fields);
     }
   }, [record.data]);
@@ -79,10 +77,10 @@ function RecordPage({
     return <p className="text-muted">{t("common.loading")}</p>;
   if (record.isError || !record.data)
     return <p className="text-radish">{t("common.error")}</p>;
-  // The read view mounts its editor only once the body is known: TipTap
-  // ignores content prop changes after mount, so mounting with "" would
-  // show an empty record.
-  if (body === null) return <p className="text-muted">{t("common.loading")}</p>;
+  // The reading view mounts its editors only once the field values are
+  // known: TipTap ignores content prop changes after mount, so mounting
+  // with "" would show empty prose fields.
+  if (fields === null) return <p className="text-muted">{t("common.loading")}</p>;
 
   const data = record.data;
   const fieldsJson = JSON.stringify(data.fields, null, 2);
@@ -116,7 +114,6 @@ function RecordPage({
           title: formString(form, "title"),
           tags: data.tags,
           fields: payloadFields,
-          body: body ?? "",
         },
       });
       setSaved(true);
@@ -161,10 +158,6 @@ function RecordPage({
               <textarea name="fields" rows={8} defaultValue={fieldsJson} className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm" />
             </label>
           )}
-          <div className="flex flex-col gap-1 text-sm">
-            <span>{t("lore.body")}</span>
-            <ProseEditor markdown={body ?? ""} onChange={setBody} />
-          </div>
           {error && <p className="text-sm text-radish">{error}</p>}
           <div className="flex gap-3">
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
@@ -209,8 +202,8 @@ function RecordPage({
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}
       {(() => {
         // Interim reading sheet (phase 9 delivers the bespoke sheets):
-        // filled template fields (empty means hidden), reference links,
-        // then the rendered body.
+        // filled template fields (empty means hidden), then reference
+        // links.
         const template = templateSchemaOf(data.type);
         const shape = template
           ? (template.fields as unknown as { shape: Record<string, unknown> }).shape
@@ -295,7 +288,6 @@ function RecordPage({
                 ))}
               </dl>
             )}
-            {body !== "" && <ProseEditor markdown={body} readonly />}
           </div>
         );
       })()}

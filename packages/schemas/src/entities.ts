@@ -14,14 +14,12 @@ export const createEntitySchema = z.object({
   title: z.string().min(1).max(200),
   tags: z.array(z.string().min(1).max(60)).default([]),
   fields: z.record(z.string(), z.unknown()).default({}),
-  body: z.string().default(""),
 });
 
 export const updateEntitySchema = z.object({
   title: z.string().min(1).max(200).optional(),
   tags: z.array(z.string().min(1).max(60)).optional(),
   fields: z.record(z.string(), z.unknown()).optional(),
-  body: z.string().optional(),
 });
 
 export const parentSchema = z.object({

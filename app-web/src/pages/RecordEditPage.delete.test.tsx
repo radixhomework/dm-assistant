@@ -38,7 +38,6 @@ describe("RecordEditPage delete", () => {
             title: "City of Glass",
             tags: [],
             fields: {},
-            body: "",
           }),
         };
       }),
@@ -68,7 +67,6 @@ describe("RecordEditPage delete", () => {
           title: "City of Glass",
           tags: [],
           fields: {},
-          body: "",
         }),
       };
     });

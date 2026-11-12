@@ -16,7 +16,7 @@ The round-trip spike retired risk #1 and left a validated editor stack (TipTap +
 - **Typed relationships & backlinks**: reference fields write `relationships` rows keyed by field; backlinks section at the end of each sheet (reverse references + incoming mentions).
 - **Version history**: `entity_versions` snapshot on every save, per-record list, read-only version view, restore as a new save.
 - **Play order**: explicit `Order` field on Chapter and Scene (`templates/` updated); children listed in play order with move up/down on the parent sheet.
-- **Record sheets in read mode**: opening a record shows the reading view (fields by template, body rendered), an Edit action leads to the form; saving returns to the reading view.
+- **Record sheets in read mode**: opening a record shows the reading view (fields by template), an Edit action leads to the form; saving returns to the reading view. No generic body exists — the templates define every field.
 - **Recorded decisions carried in**: bespoke sheet components in code, worked template by template with the DM (PRE-SPEC §5 rule 10) — the change ships the sheet mechanism plus a representative first template, with the remaining sheets as explicit task batches.
 
 ## Capabilities

@@ -67,7 +67,6 @@
     "create": "Create",
     "open": "Open",
     "delete": "Delete",
-    "body": "Body (markdown)",
     "tags": "Tags (comma-separated)",
     "fields": "Fields (JSON)",
     "save": "Save",

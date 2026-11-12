@@ -5,11 +5,16 @@ Defines the editing experience of a record: the TipTap prose editor with its too
 ## ADDED Requirements
 
 ### Requirement: Prose editor with toolbar
-The record form SHALL edit the body through a TipTap rich-text editor offering: bold, italic, strikethrough, headings, inline code, fenced code, hard breaks, ordered/unordered/nested lists, blockquotes, GFM tables, links, images, and horizontal rules. The editor SHALL load the stored markdown and serialize back on save through the same parse → serialize contract the round-trip suite gates; every construct the toolbar offers SHALL be covered by the corpus.
+Prose fields declared by the record's template SHALL be edited through a TipTap rich-text editor offering: bold, italic, strikethrough, headings, inline code, fenced code, hard breaks, ordered/unordered/nested lists, blockquotes, GFM tables, links, images, and horizontal rules. The editor SHALL load the stored markdown and serialize back on save through the same parse → serialize contract the round-trip suite gates; every construct the toolbar offers SHALL be covered by the corpus. The record form SHALL NOT offer a generic body field — the templates define every field of a record, and none declares a body.
 
-#### Scenario: Body round-trips through the editor
-- **WHEN** a body is loaded into the editor and saved without edits
+#### Scenario: Prose round-trips through the editor
+- **WHEN** a prose field is loaded into the editor and saved without edits
 - **THEN** the stored markdown is unchanged apart from the canonical form (byte-for-byte)
+
+#### Scenario: No generic body field
+- **WHEN** any record edit form or reading view is rendered
+- **THEN** no body field or body editor appears — only template-declared fields
+
 
 #### Scenario: Toolbar constructs stay covered
 - **WHEN** a new construct is added to the toolbar or as a custom node
@@ -31,7 +36,7 @@ Typing `@` at a word start (preceded by space, punctuation or line start) SHALL 
 - **THEN** the mention renders as an explicit dead link rather than plain text or a broken link
 
 #### Scenario: Emails are not mentions
-- **WHEN** the body contains an email address
+- **WHEN** a prose field contains an email address
 - **THEN** no mention is parsed from it
 
 ### Requirement: Typed blocks
@@ -42,7 +47,7 @@ The editor SHALL offer `:::attention` and `:::mechanics` fenced-container blocks
 - **THEN** the stored markdown is byte-identical (canonical form)
 
 ### Requirement: Record sheets in read mode
-Opening a record SHALL show a reading view: fields rendered per the record's template (empty fields hidden, filled fields displayed including `[TO BE SPECIFIED: …]` markers), the body rendered, and the system sections (children, backlinks) at the end. An explicit Edit action SHALL lead to the edit form; saving SHALL return to the reading view of the record.
+Opening a record SHALL show a reading view: fields rendered per the record's template (empty fields hidden, filled fields displayed including `[TO BE SPECIFIED: …]` markers) and the system sections (children, backlinks) at the end. An explicit Edit action SHALL lead to the edit form; saving SHALL return to the reading view of the record.
 
 #### Scenario: Open lands in reading view
 - **WHEN** a record is opened

@@ -81,7 +81,7 @@ describe("EntitiesService", () => {
     await service.create(campaign);
     const updated = await service.update("north-realm", {
       title: "Renamed",
-      body: "Body text",
+      fields: {},
     });
     expect(updated.title).toBe("Renamed");
     expect(updated.slug).toBe("north-realm");
@@ -163,8 +163,9 @@ describe("EntitiesService edge cases", () => {
       type: "places",
       perimeter: "world",
       title: "Mentioning Place",
-      fields: {},
-      body: "Below @north-realm, above @chapter-one.",
+      fields: {
+        public_description: "Below @north-realm, above @chapter-one.",
+      },
     });
     const [owner] = await testDb
       .select({ id: entities.id })
@@ -173,7 +174,9 @@ describe("EntitiesService edge cases", () => {
     let rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
     expect(rows.map((r) => r.targetSlug).sort()).toEqual(["chapter-one", "north-realm"]);
 
-    await service.update("mentioning-place", { body: "Now only @north-realm." });
+    await service.update("mentioning-place", {
+      fields: { public_description: "Now only @north-realm." },
+    });
     rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
     expect(rows.map((r) => r.targetSlug)).toEqual(["north-realm"]);
   });
@@ -184,8 +187,7 @@ describe("EntitiesService edge cases", () => {
       type: "places",
       perimeter: "world",
       title: "Ghost Place",
-      fields: {},
-      body: "A dead @vanished-place.",
+      fields: { public_description: "A dead @vanished-place." },
     });
     const [owner] = await testDb
       .select({ id: entities.id })

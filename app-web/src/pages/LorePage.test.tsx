@@ -40,7 +40,6 @@ describe("LorePage", () => {
                 title: "City of Glass",
                 tags: [],
                 fields: {},
-                body: "",
               },
             ],
           };

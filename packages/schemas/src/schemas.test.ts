@@ -18,7 +18,6 @@ describe("entity schemas", () => {
     });
     expect(parsed.tags).toEqual([]);
     expect(parsed.fields).toEqual({});
-    expect(parsed.body).toBe("");
   });
 
   it("rejects an invalid slug", () => {

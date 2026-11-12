@@ -67,7 +67,6 @@
     "create": "Créer",
     "open": "Ouvrir",
     "delete": "Supprimer",
-    "body": "Corps (markdown)",
     "tags": "Tags (séparés par des virgules)",
     "fields": "Champs (JSON)",
     "save": "Enregistrer",

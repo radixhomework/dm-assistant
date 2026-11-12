@@ -40,7 +40,7 @@ export class EntitiesService {
         .insert(entities)
         .values({ ...input, fields, createdBy: createdBy ?? null })
         .returning();
-      await this.replaceMentions(row.id, row.body, fields);
+      await this.replaceMentions(row.id, fields);
       return row;
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -88,35 +88,32 @@ export class EntitiesService {
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.tags !== undefined ? { tags: input.tags } : {}),
         ...(fields !== undefined ? { fields } : {}),
-        ...(input.body !== undefined ? { body: input.body } : {}),
         updatedAt: new Date(),
       })
       .where(eq(entities.id, existing.id))
       .returning();
-    const body = input.body ?? existing.body;
     // The JSONB column is typed unknown; it always holds an object here.
     const mentionSources: Record<string, unknown> = {
       ...(existing.fields as Record<string, unknown>),
       ...fields,
     };
-    await this.replaceMentions(row.id, body, mentionSources);
+    await this.replaceMentions(row.id, mentionSources);
     return row;
   }
 
   /**
    * Replace-all: the mention set of a record is exactly the mentions of
-   * its body plus its prose field values (descriptions, running notes…).
+   * its prose field values (descriptions, running notes…).
    */
   private async replaceMentions(
     entityId: string,
-    body: string,
     fields: Record<string, unknown>,
   ): Promise<void> {
     const proseText = Object.entries(fields)
       .filter(([key, value]) => proseFieldKeys.has(key) && typeof value === "string")
       .map(([, value]) => value as string)
       .join("\n");
-    const slugs = parseMentionSlugs(`${body}\n${proseText}`);
+    const slugs = parseMentionSlugs(proseText);
     await this.db.delete(mentions).where(eq(mentions.entityId, entityId));
     if (slugs.length > 0) {
       await this.db.insert(mentions).values(slugs.map((slug) => ({ entityId, targetSlug: slug })));
@@ -237,14 +234,14 @@ function childKindOf(type: string): "chapter" | "scene" | null {
  * Reference fields live in the relationships table, never in fields.
  */
 /**
- * Extracts @slug mentions from a markdown body (PRE-SPEC.md §6): the @
+ * Extracts @slug mentions from prose text (PRE-SPEC.md §6): the @
  * must start a word (preceded by space, punctuation or line start — an
  * email like user@example.com never triggers) and the slug follows the
  * slug charset until a separator. Deduplicated, order-preserved.
  */
-export function parseMentionSlugs(body: string): string[] {
+export function parseMentionSlugs(text: string): string[] {
   const found: string[] = [];
-  for (const [, slug] of body.matchAll(/(?:^|[^a-z0-9-])@([a-z0-9-]+)(?=$|[^a-z0-9-])/g)) {
+  for (const [, slug] of text.matchAll(/(?:^|[^a-z0-9-])@([a-z0-9-]+)(?=$|[^a-z0-9-])/g)) {
     if (!found.includes(slug)) found.push(slug);
   }
   return found;

@@ -6,7 +6,6 @@ export type Entity = {
   title: string;
   tags: string[];
   fields: Record<string, unknown>;
-  body: string;
   tracking?: { slug: string; status: string; children: ChildView[] };
   references?: Record<string, Array<{ slug: string; title: string }>>;
 };

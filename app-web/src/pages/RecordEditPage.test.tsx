@@ -40,7 +40,6 @@ function recordOf(
     title: "City of Glass",
     tags: [],
     fields,
-    body: "A city of towers.",
     references,
   };
 }
@@ -152,16 +151,15 @@ describe("RecordEditPage", () => {
     expect(screen.queryByText("intangible_place")).toBeNull();
   });
 
-  it("renders prose fields and the body through the readonly editor", async () => {
+  it("renders prose fields through the readonly editor", async () => {
     stubFetch(recordOf({ public_description: "Sunlit **towers**." }));
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() =>
-      expect(document.querySelectorAll(".ProseMirror").length).toBeGreaterThanOrEqual(2),
+      expect(document.querySelectorAll(".ProseMirror").length).toBe(1),
     );
     // Markdown renders (bold stays bold), no editing toolbar in reading mode.
     expect(document.querySelector("strong")?.textContent).toBe("towers");
     expect(document.querySelector('[role="toolbar"]')).toBeNull();
-    expect(screen.getByText("A city of towers.")).toBeDefined();
   });
 
   it("renders references as links to the referenced records", async () => {

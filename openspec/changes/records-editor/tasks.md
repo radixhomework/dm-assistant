@@ -55,7 +55,7 @@
 
 ## 9. Sheets
 
-- [ ] 9.1 Reading-view scaffold: template-shaped fields (empty-means-hidden), rendered body, children + backlinks + versions at the end; open = read mode, save returns to read mode with confirmation
+- [ ] 9.1 Reading-view scaffold: template-shaped fields (empty-means-hidden), children + backlinks + versions at the end; open = read mode, save returns to read mode with confirmation
 - [ ] 9.2 First bespoke sheet: Characters and entities (statistics, references, public/private prose, self-references) — DM review gate before batching
 - [ ] 9.3 Remaining sheets in batches (12 world templates, 2 campaign, 8 catalogs — 22 after the first), each through the impeccable skills and DM review
 - [ ] 9.4 i18n: every new interface label in fr+en, parity test green
