@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Field, inputClass } from "./form.js";
 import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
+import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import type { TemplateSchema } from "@dm/schemas";
 
 type Fields = Record<string, unknown>;
@@ -72,44 +73,72 @@ function MoneyControl(props: {
 }
 
 /**
- * Structured calendar date (era, signed year without year 0, month, day).
- * The calendar-aware picker arrives with the world-calendar controls.
+ * Structured calendar date (era, signed year without year 0, month, day),
+ * fed by the world calendar definition when one exists: the month becomes
+ * a named select and the day input caps at the month's length. Without a
+ * definition it falls back to numeric month/day inputs.
  */
 function DateControl(props: {
   readonly label: string;
   readonly value: { era?: string; year?: number; month?: number; day?: number };
   readonly onChange: (value: Fields) => void;
 }) {
+  const { t } = useTranslation();
+  const { definition } = useCalendarDefinition();
   const value = props.value;
   const set = (patch: Fields) => props.onChange({ ...value, ...patch });
+  const monthLength =
+    definition && value.month
+      ? definition.months[value.month - 1]?.days
+      : undefined;
   return (
     <Field label={props.label}>
       <div className="flex flex-wrap gap-2">
         <input
-          placeholder="era"
+          placeholder={t("record.era")}
           value={value.era ?? ""}
           onChange={(event) => set({ era: event.target.value === "" ? undefined : event.target.value })}
           className={`${inputClass} w-28`}
         />
         <input
           type="number"
-          placeholder="year"
+          placeholder={t("record.year")}
           value={value.year ?? ""}
-          onChange={(event) => set({ year: event.target.value === "" ? undefined : Number(event.target.value) })}
+          onChange={(event) => set({ year: event.target.value === "" ? undefined : Number(event.target.value) })
+          }
           className={inputClass}
         />
+        {definition ? (
+          <select
+            aria-label={t("record.month")}
+            value={value.month ?? ""}
+            onChange={(event) =>
+              set({ month: event.target.value === "" ? undefined : Number(event.target.value) })
+            }
+            className={inputClass}
+          >
+            <option value="">—</option>
+            {definition.months.map((month, index) => (
+              <option key={month.name} value={index + 1}>
+                {month.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="number"
+            placeholder={t("record.month")}
+            min={1}
+            value={value.month ?? ""}
+            onChange={(event) => set({ month: event.target.value === "" ? undefined : Number(event.target.value) })}
+            className={`${inputClass} w-20`}
+          />
+        )}
         <input
           type="number"
-          placeholder="month"
+          placeholder={t("record.day")}
           min={1}
-          value={value.month ?? ""}
-          onChange={(event) => set({ month: event.target.value === "" ? undefined : Number(event.target.value) })}
-          className={`${inputClass} w-20`}
-        />
-        <input
-          type="number"
-          placeholder="day"
-          min={1}
+          max={monthLength}
           value={value.day ?? ""}
           onChange={(event) => set({ day: event.target.value === "" ? undefined : Number(event.target.value) })}
           className={`${inputClass} w-20`}

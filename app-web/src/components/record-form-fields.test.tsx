@@ -69,19 +69,19 @@ describe("RecordFormFields", () => {
     renderWithProviders(
       <RecordFormFields schema={templateSchemaOf("events")!} fields={{}} onChange={onChange} />,
     );
-    fireEvent.input(document.querySelector('input[placeholder="era"]')!, {
+    fireEvent.input(document.querySelector('input[placeholder="Era"]')!, {
       target: { value: "Age of Wolves" },
     });
     expect(lastFields(onChange).start).toMatchObject({ era: "Age of Wolves" });
-    fireEvent.input(document.querySelector('input[placeholder="year"]')!, {
+    fireEvent.input(document.querySelector('input[placeholder="Year"]')!, {
       target: { value: "842" },
     });
     expect(lastFields(onChange).start).toMatchObject({ year: 842 });
-    fireEvent.input(document.querySelector('input[placeholder="month"]')!, {
+    fireEvent.input(document.querySelector('input[placeholder="Month"]')!, {
       target: { value: "3" },
     });
     expect(lastFields(onChange).start).toMatchObject({ month: 3 });
-    fireEvent.input(document.querySelector('input[placeholder="day"]')!, {
+    fireEvent.input(document.querySelector('input[placeholder="Day"]')!, {
       target: { value: "12" },
     });
     expect(lastFields(onChange).start).toMatchObject({ day: 12 });

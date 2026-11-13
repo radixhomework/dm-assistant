@@ -19,7 +19,9 @@
     "attention": "Point d'attention",
     "mechanics": "Mécanique DM",
     "mentionNoResults": "Aucune fiche correspondante",
-    "highlightToolbar": "Blocs de mise en exergue"
+    "highlightToolbar": "Blocs de mise en exergue",
+    "date": "Date",
+    "datePrompt": "Date (année-mois-jour, ex. 842-03-12 ; mois et jour optionnels)"
   },
   "app": {
     "title": "DM Assistant",
@@ -33,7 +35,8 @@
     "campaigns": "Campagnes",
     "admin": "Admin",
     "logout": "Se déconnecter",
-    "sidebar": "Fiches"
+    "sidebar": "Fiches",
+    "calendar": "Calendrier"
   },
   "common": {
     "loading": "Chargement…",
@@ -43,7 +46,8 @@
       "title": "Titre",
       "slug": "Slug"
     },
-    "close": "Fermer"
+    "close": "Fermer",
+    "remove": "Retirer"
   },
   "setup": {
     "title": "Bienvenue sur votre instance",
@@ -149,7 +153,22 @@
     "passwordReset": "Mot de passe mis à jour.",
     "save": "Enregistrer",
     "saved": "Enregistré.",
-    "username": "Nom d'utilisateur"
+    "username": "Nom d'utilisateur",
+    "calendar": {
+      "title": "Calendrier du monde",
+      "months": "Mois",
+      "addMonth": "Ajouter un mois",
+      "monthName": "Nom",
+      "monthDays": "Jours",
+      "week": "Semaine",
+      "weekDays": "Jours par semaine",
+      "dayNames": "Noms des jours",
+      "moon": "Lune",
+      "moonName": "Nom",
+      "moonCycle": "Cycle (jours)",
+      "saved": "Calendrier enregistré.",
+      "save": "Enregistrer"
+    }
   },
   "health": {
     "title": "État de l'API",
@@ -158,7 +177,11 @@
     "error": "Hors ligne — vérifiez que le serveur applicatif tourne"
   },
   "record": {
-    "edit": "Éditer"
+    "edit": "Éditer",
+    "era": "Ère",
+    "year": "Année",
+    "month": "Mois",
+    "day": "Jour"
   },
   "fields": {
     "illustration": "Illustration",
@@ -280,5 +303,14 @@
     "alignment": "Alignement",
     "creatureType": "Type",
     "size": "Taille"
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "previous": "Année précédente",
+    "next": "Année suivante",
+    "notDefined": "Le calendrier du monde n'est pas encore défini.",
+    "defineHint": "Définis-le dans l'administration.",
+    "dayHeading": "{{day}} {{month}} {{year}}",
+    "emptyDay": "Aucun événement ce jour-là."
   }
 }

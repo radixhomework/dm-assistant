@@ -19,7 +19,9 @@
     "attention": "Attention point",
     "mechanics": "DM mechanics",
     "mentionNoResults": "No matching record",
-    "highlightToolbar": "Highlight blocks"
+    "highlightToolbar": "Highlight blocks",
+    "date": "Date",
+    "datePrompt": "Date (year-month-day, e.g. 842-03-12; month and day optional)"
   },
   "app": {
     "title": "DM Assistant",
@@ -33,7 +35,8 @@
     "campaigns": "Campaigns",
     "admin": "Admin",
     "logout": "Log out",
-    "sidebar": "Records"
+    "sidebar": "Records",
+    "calendar": "Calendar"
   },
   "common": {
     "loading": "Loading…",
@@ -43,7 +46,8 @@
       "title": "Title",
       "slug": "Slug"
     },
-    "close": "Close"
+    "close": "Close",
+    "remove": "Remove"
   },
   "setup": {
     "title": "Welcome to your instance",
@@ -149,7 +153,22 @@
     "passwordReset": "Password updated.",
     "save": "Save",
     "saved": "Saved.",
-    "username": "Username"
+    "username": "Username",
+    "calendar": {
+      "title": "World calendar",
+      "months": "Months",
+      "addMonth": "Add a month",
+      "monthName": "Name",
+      "monthDays": "Days",
+      "week": "Week",
+      "weekDays": "Days per week",
+      "dayNames": "Day names",
+      "moon": "Moon",
+      "moonName": "Name",
+      "moonCycle": "Cycle (days)",
+      "saved": "Calendar saved.",
+      "save": "Save"
+    }
   },
   "health": {
     "title": "API status",
@@ -158,7 +177,11 @@
     "error": "Offline — check that the app server is running"
   },
   "record": {
-    "edit": "Edit"
+    "edit": "Edit",
+    "era": "Era",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day"
   },
   "fields": {
     "illustration": "Illustration",
@@ -280,5 +303,14 @@
     "alignment": "Alignment",
     "creatureType": "Type",
     "size": "Size"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "previous": "Previous year",
+    "next": "Next year",
+    "notDefined": "The world calendar is not defined yet.",
+    "defineHint": "Define it in the admin panel.",
+    "dayHeading": "{{month}} {{day}}, {{year}}",
+    "emptyDay": "No events on this day."
   }
 }

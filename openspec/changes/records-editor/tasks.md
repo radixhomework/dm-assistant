@@ -28,12 +28,12 @@
 
 ## 5. Calendar
 
-- [ ] 5.1 Calendar date semantics (era, signed year, no year 0, partial): shared validation in `packages/schemas`, unit tests
-- [ ] 5.2 Admin calendar editor (months/week/day names/moon) in the admin panel, admin-gated; settings.calendar persistence
-- [ ] 5.3 Date picker fed by the definition; date node in the editor with canonical markdown form + corpus fixture; suite green
-- [ ] 5.4 Events template fields (start/end/recurrence) validated as data
-- [ ] 5.5 Event occurrence computation (punctual, inclusive periods, recurrence expansion clamped to the queried year, calendar-aware month lengths) — pure service + unit tests, including partial-date and period edge cases
-- [ ] 5.6 Year overview page: 12-month responsive grid, previous/next year navigation, day indicators, click → day's event list below with links to the sheets; navigation entry; empty state before definition; component tests
+- [x] 5.1 Calendar date semantics (era, signed year, no year 0, partial): shared validation in `packages/schemas`, unit tests
+- [x] 5.2 Admin calendar editor (months/week/day names/moon) in the admin panel, admin-gated; settings.calendar persistence
+- [x] 5.3 Date picker fed by the definition; date node in the editor with canonical markdown form + corpus fixture; suite green
+- [x] 5.4 Events template fields (start/end/recurrence) validated as data
+- [x] 5.5 Event occurrence computation (punctual, inclusive periods, recurrence expansion clamped to the queried year, calendar-aware month lengths) — pure service + unit tests, including partial-date and period edge cases
+- [x] 5.6 Year overview page: 12-month responsive grid, previous/next year navigation, day indicators, click → day's event list below with links to the sheets; navigation entry; empty state before definition; component tests
 
 ## 6. Relationships and backlinks
 

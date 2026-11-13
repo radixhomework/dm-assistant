@@ -41,4 +41,27 @@ describe("SettingsService", () => {
     const all = await service.getAll();
     expect(all.distanceUnit).toBe("m");
   });
+
+  it("round-trips the calendar definition and rejects an invalid one", async () => {
+    expect(await service.getCalendar()).toBeNull();
+    const definition = {
+      months: [
+        { name: "M1", days: 30 },
+        { name: "M2", days: 31 },
+      ],
+      week: { days: 8 },
+      dayNames: ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"],
+      moon: { name: "Lune", cycleDays: 29 },
+    };
+    const saved = await service.updateCalendar(definition);
+    expect(saved).toEqual(definition);
+    expect(await service.getCalendar()).toEqual(definition);
+
+    // Day names must fill the week.
+    await testDb
+      .insert(settings)
+      .values({ key: "calendar", value: { ...definition, dayNames: ["d1"] } })
+      .onConflictDoUpdate({ target: settings.key, set: { value: { ...definition, dayNames: ["d1"] } } });
+    expect(await service.getCalendar()).toBeNull();
+  });
 });

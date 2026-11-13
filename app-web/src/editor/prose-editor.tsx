@@ -136,6 +136,20 @@ export function ProseEditor({
               const src = window.prompt(t("editor.imagePrompt"));
               if (src) cmd().setImage({ src }).run();
             }} />
+            <ToolButton editor={editor} active={false} label="📅" title={t("editor.date")} action={() => {
+              const raw = window.prompt(t("editor.datePrompt"));
+              if (!raw) return;
+              const match = /^(-?\d{1,6})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/.exec(raw.trim());
+              if (!match) return;
+              editor.chain().focus().insertContent({
+                type: "calendarDate",
+                attrs: {
+                  year: Number(match[1]),
+                  month: match[2] === undefined ? null : Number(match[2]),
+                  day: match[3] === undefined ? null : Number(match[3]),
+                },
+              }).run();
+            }} />
           </div>
           <div
             className="flex flex-wrap items-center gap-1"

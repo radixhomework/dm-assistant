@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Menu, Shield, Swords, X } from "lucide-react";
+import { BookOpen, CalendarDays, Menu, Shield, Swords, X } from "lucide-react";
 import { AppSidebar } from "../components/app-sidebar.js";
 import { CampaignSidebar } from "../components/campaign-sidebar.js";
 import { api } from "../api/client.js";
@@ -117,6 +117,10 @@ export function RootLayout() {
                 <Link to="/campaigns" className={navItemClass(campaignsActive)}>
                   <Swords className="size-4" aria-hidden />
                   {t("nav.campaigns")}
+                </Link>
+                <Link to="/calendar" className={navItemClass(pathname === "/calendar")}>
+                  <CalendarDays className="size-4" aria-hidden />
+                  {t("nav.calendar")}
                 </Link>
                 {user?.role === "admin" && (
                   <Link to="/admin" className={navItemClass(pathname === "/admin")}>

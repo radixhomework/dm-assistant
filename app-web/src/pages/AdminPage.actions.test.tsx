@@ -171,8 +171,10 @@ describe("AdminPage actions", () => {
     const captured: Array<[string, RequestInit]> = [];
     mockInstance(captured);
     renderWithProviders(<AdminPage />, "/admin");
-    await vi.waitFor(() => expect(screen.getByText("Save")).toBeDefined());
-    screen.getByText("Save").click();
+    // Two Save buttons render (unit settings + calendar editor); the
+    // first belongs to the instance settings form.
+    await vi.waitFor(() => expect(screen.getAllByText("Save").length).toBeGreaterThanOrEqual(2));
+    screen.getAllByText("Save")[0].click();
     await vi.waitFor(() => {
       const patch = captured.find(
         ([path, init]) => path === "/api/admin/settings" && init?.method === "PATCH",

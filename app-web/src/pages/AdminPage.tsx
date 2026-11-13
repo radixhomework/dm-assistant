@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { adminDeleteUser, adminResetPassword } from "../api/auth.js";
+import { CalendarAdminEditor } from "../components/calendar-admin-editor.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { SafeUserLike } from "../types.js";
 
@@ -269,6 +270,7 @@ export function AdminPage() {
         </form>
         )}
       </section>
+      <CalendarAdminEditor />
     </div>
   );
 }

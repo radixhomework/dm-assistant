@@ -4,6 +4,7 @@ import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table
 import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
 import { AttentionPoint, Mechanics } from "./typed-blocks.js";
+import { CalendarDateNode } from "./date-node.js";
 import { RecordMention } from "./mention-node.js";
 import { mentionSuggestion } from "./mention-suggestion.js";
 
@@ -29,5 +30,6 @@ export function buildExtensions(): AnyExtension[] {
     AttentionPoint,
     Mechanics,
     RecordMention.configure({ suggestion: mentionSuggestion }),
+    CalendarDateNode,
   ];
 }

@@ -14,6 +14,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { LorePage } from "./pages/LorePage";
 import { CampaignsPage } from "./pages/CampaignsPage";
 import { CampaignViewPage } from "./pages/CampaignViewPage";
+import { CalendarPage } from "./pages/CalendarPage";
 import { AdminPage } from "./pages/AdminPage";
 import { AccountPage } from "./pages/AccountPage";
 import { RecordEditPage } from "./pages/RecordEditPage";
@@ -65,6 +66,11 @@ const campaignViewRoute = createRoute({
   path: "/campaigns/$slug",
   component: CampaignViewPage,
 });
+const calendarRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/calendar",
+  component: CalendarPage,
+});
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin",
@@ -91,6 +97,7 @@ const router = createRouter({
     recordEditRoute,
     campaignsRoute,
     campaignViewRoute,
+    calendarRoute,
     adminRoute,
     accountRoute,
     loginRoute,
