@@ -111,14 +111,11 @@ describe("CalendarPage", () => {
     await vi.waitFor(() => expect(screen.getByText("Naissance")).toBeDefined());
     // Previous from year 1 lands on −1 (year 0 does not exist); the
     // event's day is now empty.
+    const yearInput = screen.getByRole("spinbutton", { name: "Go to year" }) as HTMLInputElement;
     fireEvent.click(screen.getByRole("button", { name: "Previous year" }));
-    await vi.waitFor(() =>
-      expect(document.querySelector("span.font-display.text-2xl")?.textContent).toBe("-1"),
-    );
+    await vi.waitFor(() => expect(yearInput.value).toBe("-1"));
     expect(screen.queryByText("Naissance")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Next year" }));
-    await vi.waitFor(() =>
-      expect(document.querySelector("span.font-display.text-2xl")?.textContent).toBe("1"),
-    );
+    await vi.waitFor(() => expect(yearInput.value).toBe("1"));
   });
 });

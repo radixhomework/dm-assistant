@@ -155,7 +155,7 @@ describe("RecordEditPage", () => {
     stubFetch(recordOf({ public_description: "Sunlit **towers**." }));
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() =>
-      expect(document.querySelectorAll(".ProseMirror").length).toBe(1),
+      expect(document.querySelectorAll(".ProseMirror")).toHaveLength(1),
     );
     // Markdown renders (bold stays bold), no editing toolbar in reading mode.
     expect(document.querySelector("strong")?.textContent).toBe("towers");

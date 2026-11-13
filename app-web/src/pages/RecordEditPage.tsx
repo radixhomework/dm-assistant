@@ -6,11 +6,37 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
 import { classifyField } from "../components/field-classify.js";
-import { templateSchemaOf } from "@dm/schemas";
+import { useCalendarDefinition } from "../calendar/use-calendar.js";
+import { templateSchemaOf, type CalendarDate } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
+
+/**
+ * A structured calendar date rendered for the reading sheet: the day and
+ * the month name from the world definition (fr: "12 M1 842"; en:
+ * "M1 12, 842"), degrading to partial forms (month + year, year only).
+ */
+function CalendarDateText(props: { readonly value: CalendarDate }) {
+  const { t } = useTranslation();
+  const { definition } = useCalendarDefinition();
+  const monthName =
+    definition && props.value.month
+      ? definition.months[props.value.month - 1]?.name
+      : undefined;
+  const params: Record<string, string | number> = { year: props.value.year };
+  if (props.value.day !== undefined && monthName) params.day = props.value.day;
+  if (monthName) params.month = monthName;
+  else if (props.value.month !== undefined) params.month = props.value.month;
+  const key =
+    params.day !== undefined && params.month !== undefined
+      ? "calendar.formatDay"
+      : params.month !== undefined
+        ? "calendar.formatMonth"
+        : "calendar.formatYear";
+  return <>{t(key, params)}</>;
+}
 
 /**
  * Record page: opens in reading mode (PRE-SPEC.md §5 rule 10 flow) and an
@@ -220,6 +246,15 @@ function RecordPage({
           const kind = classifyField(key, shape[key]);
           const label = t(`fields.${key}`);
           if (kind === "statistics") continue; // rendered by the bespoke sheet
+          if (kind === "calendarDate") {
+            // Dates render intelligibly via the world calendar definition.
+            fieldRows.push({
+              key,
+              label,
+              node: <CalendarDateText value={value as CalendarDate} />,
+            });
+            continue;
+          }
           if (kind === "enum") {
             const raw = value as string; // enum fields always store a string
             const translated = t(`enums.${key}.${raw}`, {

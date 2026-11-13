@@ -9,22 +9,22 @@ import type { ChildView, Entity } from "../types.js";
 const activeClass = "bg-accent text-background";
 const idleClass = "text-ink hover:bg-surface";
 
+function statusColor(status: string): string {
+  if (status === "played") return "text-primary";
+  if (status === "in_progress") return "text-accent";
+  return "text-muted";
+}
+
 /** Play-status marker: dashed empty circle (not played), half-filled
  * circle (in progress), filled circle (played). */
 function StatusDot(props: { readonly status: string }) {
   const { t } = useTranslation();
-  const color =
-    props.status === "played"
-      ? "text-primary"
-      : props.status === "in_progress"
-        ? "text-accent"
-        : "text-muted";
   return (
     <span
       role="img"
       aria-label={t(`campaigns.status.${props.status}`)}
       title={t(`campaigns.status.${props.status}`)}
-      className={`inline-flex shrink-0 ${color}`}
+      className={`inline-flex shrink-0 ${statusColor(props.status)}`}
     >
       <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden fill="none">
         {props.status === "played" ? (

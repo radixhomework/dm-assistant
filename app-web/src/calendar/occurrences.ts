@@ -39,6 +39,17 @@ function absoluteDay(point: Point, calendar: CalendarSettings): number {
   return yearCoord(point.year) * yearLength(calendar) + monthsBefore + point.day;
 }
 
+/** Absolute day number of a full date — exposed for the moon cycle
+ * display in the year overview. */
+export function absoluteDayIndex(
+  year: number,
+  month: number,
+  day: number,
+  calendar: CalendarSettings,
+): number {
+  return absoluteDay({ year, month, day }, calendar);
+}
+
 function addDays(point: Point, days: number, calendar: CalendarSettings): Point {
   const yLen = yearLength(calendar);
   const abs = absoluteDay(point, calendar) + days;
@@ -111,6 +122,55 @@ export type EventInput = {
   };
 };
 
+/** One event's occurrences, added day by day through the add callback. */
+function collectEvent(
+  event: EventInput,
+  calendar: CalendarSettings,
+  window: { startAbs: number; endAbs: number },
+  add: (point: Point, ref: EventRef) => void,
+): void {
+  const ref: EventRef = { slug: event.slug, title: event.title };
+  const start = event.fields.start
+    ? dateToPoint(event.fields.start, calendar)
+    : null;
+  if (!start) return;
+  const end = event.fields.end ? dateToPoint(event.fields.end, calendar) : null;
+  const span = end ? Math.max(0, absoluteDay(end, calendar) - absoluteDay(start, calendar)) : 0;
+  const recurrence = event.fields.recurrence;
+  if (!recurrence || recurrence.unit === undefined) {
+    addRange(start, span, ref, calendar, add);
+    return;
+  }
+  // Anchored on the start, stepping forward; an occurrence counts when
+  // its span intersects the queried year.
+  let occurrence = start;
+  for (let step = 0; step < 10_000; step += 1) {
+    const occurrenceStart = absoluteDay(occurrence, calendar);
+    if (occurrenceStart > window.endAbs) break;
+    if (occurrenceStart + span >= window.startAbs) {
+      addRange(occurrence, span, ref, calendar, add);
+    }
+    occurrence = advance(
+      occurrence,
+      recurrence.unit,
+      recurrence.interval,
+      calendar,
+    );
+  }
+}
+
+function addRange(
+  from: Point,
+  spanDays: number,
+  ref: EventRef,
+  calendar: CalendarSettings,
+  add: (point: Point, ref: EventRef) => void,
+): void {
+  for (let offset = 0; offset <= spanDays; offset += 1) {
+    add(addDays(from, offset, calendar), ref);
+  }
+}
+
 /**
  * Days of the queried year that carry at least one event occurrence,
  * keyed "month-day" (1-based). Periods mark their inclusive day span,
@@ -123,12 +183,14 @@ export function dayOccurrences(
   year: number,
 ): Map<string, EventRef[]> {
   const result = new Map<string, EventRef[]>();
-  const yearStartAbs = absoluteDay({ year, month: 1, day: 1 }, calendar);
   const lastMonth = calendar.months.length;
-  const yearEndAbs = absoluteDay(
-    { year, month: lastMonth, day: monthDays(calendar, lastMonth) },
-    calendar,
-  );
+  const window = {
+    startAbs: absoluteDay({ year, month: 1, day: 1 }, calendar),
+    endAbs: absoluteDay(
+      { year, month: lastMonth, day: monthDays(calendar, lastMonth) },
+      calendar,
+    ),
+  };
   const add = (point: Point, ref: EventRef): void => {
     if (point.year !== year) return; // clamp: only the queried year's days
     const key = `${point.month}-${point.day}`;
@@ -136,41 +198,8 @@ export function dayOccurrences(
     if (!list.some((entry) => entry.slug === ref.slug)) list.push(ref);
     result.set(key, list);
   };
-  const addRange = (from: Point, spanDays: number, ref: EventRef): void => {
-    for (let offset = 0; offset <= spanDays; offset += 1) {
-      add(addDays(from, offset, calendar), ref);
-    }
-  };
-
   for (const event of events) {
-    const start = event.fields.start
-      ? dateToPoint(event.fields.start, calendar)
-      : null;
-    if (!start) continue;
-    const ref: EventRef = { slug: event.slug, title: event.title };
-    const end = event.fields.end ? dateToPoint(event.fields.end, calendar) : null;
-    const span = end ? Math.max(0, absoluteDay(end, calendar) - absoluteDay(start, calendar)) : 0;
-    const recurrence = event.fields.recurrence;
-    if (!recurrence) {
-      addRange(start, span, ref);
-      continue;
-    }
-    // Anchored on the start, stepping forward; an occurrence counts when
-    // its span intersects the queried year.
-    let occurrence = start;
-    for (let step = 0; step < 10_000; step += 1) {
-      const occurrenceStart = absoluteDay(occurrence, calendar);
-      if (occurrenceStart > yearEndAbs) break;
-      if (occurrenceStart + span >= yearStartAbs) {
-        addRange(occurrence, span, ref);
-      }
-      occurrence = advance(
-        occurrence,
-        recurrence.unit,
-        recurrence.interval,
-        calendar,
-      );
-    }
+    collectEvent(event, calendar, window, add);
   }
   return result;
 }

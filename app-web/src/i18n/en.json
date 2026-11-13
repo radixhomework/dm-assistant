@@ -182,7 +182,8 @@
     "era": "Era",
     "year": "Year",
     "month": "Month",
-    "day": "Day"
+    "day": "Day",
+    "recurring": "Recurring event"
   },
   "fields": {
     "illustration": "Illustration",
@@ -286,7 +287,9 @@
   "recurrence": {
     "weeks": "weeks",
     "months": "months",
-    "years": "years"
+    "years": "years",
+    "unit": "Unit",
+    "interval": "Interval"
   },
   "stats": {
     "strength": "Strength",
@@ -312,6 +315,20 @@
     "notDefined": "The world calendar is not defined yet.",
     "defineHint": "Define it in the admin panel.",
     "dayHeading": "{{month}} {{day}}, {{year}}",
-    "emptyDay": "No events on this day."
+    "emptyDay": "No events on this day.",
+    "goToYear": "Go to year",
+    "newEvent": "New event on this day",
+    "create": "Create",
+    "moonLegend": "Moon cycle:",
+    "moon": {
+      "new": "New moon",
+      "waxing": "Waxing half",
+      "full": "Full moon",
+      "waning": "Waning half"
+    },
+    "format": "{{month}} {{day}}, {{year}}",
+    "formatDay": "{{month}} {{day}}, {{year}}",
+    "formatMonth": "{{month}} {{year}}",
+    "formatYear": "{{year}}"
   }
 }

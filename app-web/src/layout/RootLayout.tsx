@@ -119,13 +119,13 @@ export function RootLayout() {
                   <BookOpen className="size-4" aria-hidden />
                   {t("nav.lore")}
                 </Link>
-                <Link to="/campaigns" className={navItemClass(campaignsActive)}>
-                  <Swords className="size-4" aria-hidden />
-                  {t("nav.campaigns")}
-                </Link>
                 <Link to="/calendar" className={navItemClass(pathname === "/calendar")}>
                   <CalendarDays className="size-4" aria-hidden />
                   {t("nav.calendar")}
+                </Link>
+                <Link to="/campaigns" className={navItemClass(campaignsActive)}>
+                  <Swords className="size-4" aria-hidden />
+                  {t("nav.campaigns")}
                 </Link>
                 {user?.role === "admin" && (
                   <Link to="/admin" className={navItemClass(pathname === "/admin")}>

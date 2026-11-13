@@ -91,9 +91,9 @@ describe("CampaignSidebar", () => {
       expect(screen.getByText("Chapter One")).toBeDefined(),
     );
     // chapter-one is in progress; scene-two played; the rest not played.
-    expect(screen.getAllByRole("img", { name: "In progress" }).length).toBe(1);
-    expect(screen.getAllByRole("img", { name: "Played" }).length).toBe(1);
-    expect(screen.getAllByRole("img", { name: "Not played" }).length).toBe(2);
+    expect(screen.getAllByRole("img", { name: "In progress" })).toHaveLength(1);
+    expect(screen.getAllByRole("img", { name: "Played" })).toHaveLength(1);
+    expect(screen.getAllByRole("img", { name: "Not played" })).toHaveLength(2);
   });
 
   it("folds a chapter's scenes behind its chevron", async () => {

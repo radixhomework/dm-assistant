@@ -1,8 +1,28 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
+import { useState } from "react";
 import { RecordFormFields } from "./record-form-fields.js";
 import { renderWithProviders } from "../testing/render.js";
-import { templateSchemaOf } from "@dm/schemas";
+import { templateSchemaOf, type TemplateSchema } from "@dm/schemas";
+
+/** Stateful wrapper: the form's onChange feeds back into its fields so
+ * conditional controls (the recurrence checkbox) re-render. */
+function StatefulRecordFormFields(props: {
+  readonly schema: TemplateSchema;
+  readonly onFields: (fields: Record<string, unknown>) => void;
+}) {
+  const [fields, setFields] = useState<Record<string, unknown>>({});
+  return (
+    <RecordFormFields
+      schema={props.schema}
+      fields={fields}
+      onChange={(next) => {
+        setFields(next);
+        props.onFields(next);
+      }}
+    />
+  );
+}
 
 /** The fields object carried by the last onChange call. */
 function lastFields(onChange: ReturnType<typeof vi.fn>): Record<string, unknown> {
@@ -89,17 +109,32 @@ describe("RecordFormFields", () => {
 });
 
 describe("RecordFormFields — recurrence", () => {
-  it("renders unit select + interval and propagates edits", () => {
+  it("has no recurrence by default; the checkbox reveals unit and interval", () => {
     const onChange = vi.fn();
     renderWithProviders(
-      <RecordFormFields schema={templateSchemaOf("events")!} fields={{}} onChange={onChange} />,
+      <StatefulRecordFormFields schema={templateSchemaOf("events")!} onFields={onChange} />,
     );
+    const checkbox = screen.getByRole("checkbox", { name: "Recurring event" }) as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+    // No unit select before checking: no recurrence by default.
+    expect(document.querySelectorAll("select").length).toBe(0);
+
+    fireEvent.click(checkbox);
+    expect(lastFields(onChange).recurrence).toMatchObject({ unit: "week", interval: 1 });
+
     const unit = selectWithValue("week");
     fireEvent.change(unit, { target: { value: "month" } });
     expect(lastFields(onChange).recurrence).toMatchObject({ unit: "month" });
-    const interval = unit.closest("label")!.querySelector("input")! as HTMLInputElement;
+    const interval = unit.parentElement!.querySelector('input[type="number"]')! as HTMLInputElement;
     fireEvent.input(interval, { target: { value: "3" } });
     expect(lastFields(onChange).recurrence).toMatchObject({ interval: 3 });
+
+    // Unchecking clears the recurrence entirely.
+    const clearCheckbox = screen.getByRole("checkbox", { name: "Recurring event" }) as HTMLInputElement;
+    fireEvent.click(clearCheckbox);
+    const cleared = lastFields(onChange).recurrence as { unit?: string; interval?: number };
+    expect(cleared.unit).toBeUndefined();
+    expect(cleared.interval).toBeUndefined();
   });
 });
 

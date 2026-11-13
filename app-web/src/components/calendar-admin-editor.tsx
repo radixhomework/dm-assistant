@@ -7,22 +7,35 @@ import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import { Field, inputClass } from "./form.js";
 import type { CalendarSettings } from "@dm/schemas";
 
-type MonthDraft = { name: string; days: string };
+type MonthRow = { rowId: string; name: string; days: string };
+type DaySlot = { slotId: string; name: string };
 
 type Draft = {
-  months: MonthDraft[];
+  months: MonthRow[];
   weekDays: string;
-  dayNames: string[];
+  dayNames: DaySlot[];
   moonName: string;
   moonCycle: string;
   currentYear: string;
 };
 
+/** Stable React keys for the editable rows (S6479): ids minted once per
+ * row, independent of list position. */
+let rowSequence = 0;
+function nextRowId(): string {
+  rowSequence += 1;
+  return `month-${rowSequence}`;
+}
+function nextSlotId(): string {
+  rowSequence += 1;
+  return `day-${rowSequence}`;
+}
+
 function blankDraft(): Draft {
   return {
-    months: [{ name: "", days: "30" }],
+    months: [{ rowId: nextRowId(), name: "", days: "30" }],
     weekDays: "7",
-    dayNames: Array.from({ length: 7 }, () => ""),
+    dayNames: Array.from({ length: 7 }, () => ({ slotId: nextSlotId(), name: "" })),
     moonName: "",
     moonCycle: "29",
     currentYear: "1",
@@ -32,11 +45,12 @@ function blankDraft(): Draft {
 function toDraft(definition: CalendarSettings): Draft {
   return {
     months: definition.months.map((month) => ({
+      rowId: nextRowId(),
       name: month.name,
       days: String(month.days),
     })),
     weekDays: String(definition.week.days),
-    dayNames: [...definition.dayNames],
+    dayNames: definition.dayNames.map((name) => ({ slotId: nextSlotId(), name })),
     moonName: definition.moon.name,
     moonCycle: String(definition.moon.cycleDays),
     currentYear: String(definition.currentYear),
@@ -75,7 +89,7 @@ export function CalendarAdminEditor() {
     setDraft((current) => {
       if (current === null) return current;
       const dayNames = [...current.dayNames];
-      while (dayNames.length < days) dayNames.push("");
+      while (dayNames.length < days) dayNames.push({ slotId: nextSlotId(), name: "" });
       while (dayNames.length > days) dayNames.pop();
       return { ...current, weekDays: String(days), dayNames };
     });
@@ -91,7 +105,7 @@ export function CalendarAdminEditor() {
         days: Number(month.days),
       })),
       week: { days: Number(draft.weekDays) },
-      dayNames: draft.dayNames,
+      dayNames: draft.dayNames.map((slot) => slot.name),
       moon: { name: draft.moonName, cycleDays: Number(draft.moonCycle) },
       currentYear: Number(draft.currentYear),
     };
@@ -115,7 +129,7 @@ export function CalendarAdminEditor() {
           <p className="text-sm font-medium text-ink">{t("admin.calendar.months")}</p>
           <div className="mt-2 flex flex-col gap-2">
             {draft.months.map((month, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div key={month.rowId} className="flex items-center gap-2">
                 <input
                   aria-label={t("admin.calendar.monthName")}
                   placeholder={t("admin.calendar.monthName")}
@@ -170,7 +184,10 @@ export function CalendarAdminEditor() {
               onClick={() =>
                 setDraft((current) => {
                   if (current === null) return current;
-                  return { ...current, months: [...current.months, { name: "", days: "30" }] };
+                  return {
+                    ...current,
+                    months: [...current.months, { rowId: nextRowId(), name: "", days: "30" }],
+                  };
                 })
               }
               className="flex w-fit items-center gap-1 rounded-md border border-border px-2 py-1 text-sm text-muted transition-colors duration-200 hover:bg-surface"
@@ -195,16 +212,16 @@ export function CalendarAdminEditor() {
           <div>
             <p className="text-sm font-medium text-ink">{t("admin.calendar.dayNames")}</p>
             <div className="mt-1 flex flex-wrap gap-2">
-              {draft.dayNames.map((name, index) => (
+              {draft.dayNames.map((slot, index) => (
                 <input
-                  key={index}
+                  key={slot.slotId}
                   aria-label={`${t("admin.calendar.dayNames")} ${index + 1}`}
-                  value={name}
+                  value={slot.name}
                   onChange={(event) =>
                     setDraft((current) => {
                       if (current === null) return current;
                       const dayNames = [...current.dayNames];
-                      dayNames[index] = event.target.value;
+                      dayNames[index] = { ...slot, name: event.target.value };
                       return { ...current, dayNames };
                     })
                   }
@@ -215,47 +232,51 @@ export function CalendarAdminEditor() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-end gap-4">
-          <Field label={t("admin.calendar.moonName")}>
-            <input
-              value={draft.moonName}
-              onChange={(event) =>
-                setDraft((current) => {
-                  if (current === null) return current;
-                  return { ...current, moonName: event.target.value };
-                })
-              }
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("admin.calendar.moonCycle")}>
-            <input
-              type="number"
-              min={1}
-              value={draft.moonCycle}
-              onChange={(event) =>
-                setDraft((current) => {
-                  if (current === null) return current;
-                  return { ...current, moonCycle: event.target.value };
-                })
-              }
-              className={`${inputClass} w-24`}
-            />
-          </Field>
-          <Field label={t("admin.calendar.currentYear")}>
-            <input
-              type="number"
-              value={draft.currentYear}
-              onChange={(event) =>
-                setDraft((current) => {
-                  if (current === null) return current;
-                  return { ...current, currentYear: event.target.value };
-                })
-              }
-              className={`${inputClass} w-28`}
-            />
-          </Field>
+        <div>
+          <p className="text-sm font-medium text-ink">{t("admin.calendar.moon")}</p>
+          <div className="mt-1 flex flex-wrap items-end gap-4">
+            <Field label={t("admin.calendar.moonName")}>
+              <input
+                value={draft.moonName}
+                onChange={(event) =>
+                  setDraft((current) => {
+                    if (current === null) return current;
+                    return { ...current, moonName: event.target.value };
+                  })
+                }
+                className={inputClass}
+              />
+            </Field>
+            <Field label={t("admin.calendar.moonCycle")}>
+              <input
+                type="number"
+                min={1}
+                value={draft.moonCycle}
+                onChange={(event) =>
+                  setDraft((current) => {
+                    if (current === null) return current;
+                    return { ...current, moonCycle: event.target.value };
+                  })
+                }
+                className={`${inputClass} w-24`}
+              />
+            </Field>
+          </div>
         </div>
+
+        <Field label={t("admin.calendar.currentYear")}>
+          <input
+            type="number"
+            value={draft.currentYear}
+            onChange={(event) =>
+              setDraft((current) => {
+                if (current === null) return current;
+                return { ...current, currentYear: event.target.value };
+              })
+            }
+            className={`${inputClass} w-28`}
+          />
+        </Field>
 
         <button
           type="button"

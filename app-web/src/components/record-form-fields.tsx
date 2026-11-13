@@ -87,10 +87,11 @@ function DateControl(props: {
   const { definition } = useCalendarDefinition();
   const value = props.value;
   const set = (patch: Fields) => props.onChange({ ...value, ...patch });
-  const monthLength =
-    definition && value.month
+  const monthLength = definition
+    ? value.month
       ? definition.months[value.month - 1]?.days
-      : undefined;
+      : Math.max(...definition.months.map((month) => month.days))
+    : undefined;
   return (
     <Field label={props.label}>
       <div className="flex flex-wrap gap-2">
@@ -134,50 +135,94 @@ function DateControl(props: {
             className={`${inputClass} w-20`}
           />
         )}
-        <input
-          type="number"
-          placeholder={t("record.day")}
-          min={1}
-          max={monthLength}
-          value={value.day ?? ""}
-          onChange={(event) => set({ day: event.target.value === "" ? undefined : Number(event.target.value) })}
-          className={`${inputClass} w-20`}
-        />
+        {definition ? (
+          <select
+            aria-label={t("record.day")}
+            value={value.day ?? ""}
+            onChange={(event) =>
+              set({ day: event.target.value === "" ? undefined : Number(event.target.value) })
+            }
+            className={inputClass}
+          >
+            <option value="">—</option>
+            {Array.from({ length: monthLength ?? 1 }).map((_, index) => (
+              <option key={index + 1} value={index + 1}>
+                {index + 1}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="number"
+            placeholder={t("record.day")}
+            min={1}
+            value={value.day ?? ""}
+            onChange={(event) => set({ day: event.target.value === "" ? undefined : Number(event.target.value) })}
+            className={`${inputClass} w-20`}
+          />
+        )}
       </div>
     </Field>
   );
 }
 
-/** Recurrence: every N weeks / months / years, anchored on the start. */
+/**
+ * Recurrence: opt-in through the checkbox (none by default); when
+ * checked, the event repeats every N weeks / months / years, anchored
+ * on the start. Unchecking clears the recurrence value entirely (the
+ * undefined keys serialize out of the payload).
+ */
 function RecurrenceControl(props: {
   readonly label: string;
   readonly value: { unit?: string; interval?: number };
   readonly onChange: (value: Fields) => void;
 }) {
   const { t } = useTranslation();
+  const recurring = props.value.unit !== undefined || props.value.interval !== undefined;
+  // No <label> wrapper (Field nests labels): the checkbox keeps its own
+  // accessible name.
   return (
-    <Field label={props.label}>
-      <div className="flex gap-2">
-        <select
-          value={props.value.unit ?? "week"}
-          onChange={(event) => props.onChange({ ...props.value, unit: event.target.value })}
-          className={inputClass}
-        >
-          <option value="week">{t("recurrence.weeks")}</option>
-          <option value="month">{t("recurrence.months")}</option>
-          <option value="year">{t("recurrence.years")}</option>
-        </select>
+    <div className="flex flex-col gap-1 text-sm">
+      <span>{props.label}</span>
+      <label className="flex w-fit items-center gap-2 text-sm">
         <input
-          type="number"
-          min={1}
-          value={props.value.interval ?? 1}
+          type="checkbox"
+          checked={recurring}
           onChange={(event) =>
-            props.onChange({ ...props.value, interval: Number(event.target.value) || 1 })
+            props.onChange(
+              event.target.checked
+                ? { unit: "week", interval: 1 }
+                : { unit: undefined, interval: undefined },
+            )
           }
-          className={inputClass}
         />
-      </div>
-    </Field>
+        {t("record.recurring")}
+      </label>
+      {recurring && (
+        <div className="flex gap-2">
+          <select
+            aria-label={t("recurrence.unit")}
+            value={props.value.unit ?? "week"}
+            onChange={(event) => props.onChange({ ...props.value, unit: event.target.value })}
+            className={inputClass}
+          >
+            <option value="week">{t("recurrence.weeks")}</option>
+            <option value="month">{t("recurrence.months")}</option>
+            <option value="year">{t("recurrence.years")}</option>
+          </select>
+          <input
+            type="number"
+            aria-label={t("recurrence.interval")}
+            min={1}
+            value={props.value.interval ?? 1}
+            onChange={(event) =>
+              props.onChange({ ...props.value, interval: Number(event.target.value) || 1 })
+            }
+            className={inputClass}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
