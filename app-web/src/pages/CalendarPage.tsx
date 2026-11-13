@@ -7,7 +7,7 @@ import { api } from "../api/client.js";
 import { dayOccurrences, type EventRef } from "../calendar/occurrences.js";
 import { isCalendarDefinition } from "../calendar/use-calendar.js";
 import { useRequireAuth } from "./useRequireAuth.js";
-import type { CalendarDate, Recurrence } from "@dm/schemas";
+import type { CalendarDate, CalendarSettings, Recurrence } from "@dm/schemas";
 import type { Entity } from "../types.js";
 
 type EventFields = { start?: CalendarDate; end?: CalendarDate; recurrence?: Recurrence };

@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { api } from "../api/client.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import { Field, inputClass } from "./form.js";
+import type { CalendarSettings } from "@dm/schemas";
 
 type MonthDraft = { name: string; days: string };
 
@@ -62,7 +63,7 @@ export function CalendarAdminEditor() {
     }
   }, [calendar.calendar.isSuccess, calendar.definition, draft]);
 
-  if (calendar.isPending) return null;
+  if (calendar.calendar.isPending) return null;
 
   if (draft === null) return null;
 
