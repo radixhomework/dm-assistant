@@ -23,6 +23,7 @@ function ToolButton({
     <button
       type="button"
       title={title}
+      tabIndex={-1}
       disabled={active ? false : !editor.can().chain().focus().run()}
       onClick={action}
       className={
@@ -108,6 +109,10 @@ export function ProseEditor({
             className="flex flex-wrap items-center gap-1"
             role="toolbar"
             aria-label={t("editor.toolbar")}
+            // Toolbars stay out of the Tab order: Tab walks field to
+            // field through the form; formatting goes through shortcuts
+            // (Ctrl+B…) or the mouse.
+            tabIndex={-1}
           >
             <ToolButton editor={editor} active={editor.isActive("bold")} label="B" title={t("editor.bold")} action={() => cmd().toggleBold().run()} />
             <ToolButton editor={editor} active={editor.isActive("italic")} label="I" title={t("editor.italic")} action={() => cmd().toggleItalic().run()} />
@@ -136,6 +141,7 @@ export function ProseEditor({
             className="flex flex-wrap items-center gap-1"
             role="toolbar"
             aria-label={t("editor.highlightToolbar")}
+            tabIndex={-1}
           >
             <ToolButton editor={editor} active={editor.isActive("attention")} label={t("editor.attention")} title={t("editor.attention")} action={() => cmd().insertContent({ type: "attention", content: [{ type: "paragraph" }] }).run()} />
             <ToolButton editor={editor} active={editor.isActive("mechanics")} label={t("editor.mechanics")} title={t("editor.mechanics")} action={() => cmd().insertContent({ type: "mechanics", content: [{ type: "paragraph" }] }).run()} />

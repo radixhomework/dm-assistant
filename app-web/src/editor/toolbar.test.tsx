@@ -31,4 +31,14 @@ describe("ProseEditor toolbar", () => {
     link.click();
     expect(onChange.mock.calls.at(-1)![0] as string).toContain("https://example.com");
   });
+
+  it("keeps toolbars out of the Tab order", () => {
+    renderWithProviders(<ProseEditor markdown="" onChange={vi.fn()} />);
+    for (const toolbar of document.querySelectorAll('[role="toolbar"]')) {
+      expect(toolbar.getAttribute("tabindex")).toBe("-1");
+      for (const button of toolbar.querySelectorAll("button")) {
+        expect(button.getAttribute("tabindex")).toBe("-1");
+      }
+    }
+  });
 });
