@@ -96,7 +96,7 @@ describe("CalendarPage", () => {
     renderWithProviders(<CalendarPage />);
     await vi.waitFor(() => expect(screen.getByText("M1")).toBeDefined());
     // One moon glyph per day cell (30 + 31 days) and the four-phase legend.
-    expect(document.querySelectorAll('svg[class*="size-2.5"]').length).toBe(65);
+    expect(document.querySelectorAll('svg[class*="size-2.5"]')).toHaveLength(65);
     expect(screen.getByText("New moon")).toBeDefined();
     expect(screen.getByText("Full moon")).toBeDefined();
   });
