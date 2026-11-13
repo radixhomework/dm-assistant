@@ -15,6 +15,27 @@ function statusColor(status: string): string {
   return "text-muted";
 }
 
+/** The status glyph shapes, looked up instead of nested ternaries. */
+const statusShapes: Record<string, React.ReactNode> = {
+  played: <circle cx="8" cy="8" r="5.5" fill="currentColor" />,
+  in_progress: (
+    <>
+      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 3.5 A4.5 4.5 0 0 0 8 12.5 Z" fill="currentColor" />
+    </>
+  ),
+  not_played: (
+    <circle
+      cx="8"
+      cy="8"
+      r="5.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeDasharray="2.4 2.4"
+    />
+  ),
+};
+
 /** Play-status marker: dashed empty circle (not played), half-filled
  * circle (in progress), filled circle (played). */
 function StatusDot(props: { readonly status: string }) {
@@ -27,23 +48,7 @@ function StatusDot(props: { readonly status: string }) {
       className={`inline-flex shrink-0 ${statusColor(props.status)}`}
     >
       <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden fill="none">
-        {props.status === "played" ? (
-          <circle cx="8" cy="8" r="5.5" fill="currentColor" />
-        ) : props.status === "in_progress" ? (
-          <>
-            <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M8 3.5 A4.5 4.5 0 0 0 8 12.5 Z" fill="currentColor" />
-          </>
-        ) : (
-          <circle
-            cx="8"
-            cy="8"
-            r="5.5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeDasharray="2.4 2.4"
-          />
-        )}
+        {statusShapes[props.status] ?? statusShapes.not_played}
       </svg>
     </span>
   );

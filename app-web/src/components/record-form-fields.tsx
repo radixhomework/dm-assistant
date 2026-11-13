@@ -4,7 +4,7 @@ import { Field, inputClass } from "./form.js";
 import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
-import type { TemplateSchema } from "@dm/schemas";
+import type { CalendarSettings, TemplateSchema } from "@dm/schemas";
 
 type Fields = Record<string, unknown>;
 
@@ -72,6 +72,18 @@ function MoneyControl(props: {
   );
 }
 
+/** Length of the selected month; without a selection, the longest month
+ * keeps the day select meaningful. */
+function monthLengthOf(
+  definition: CalendarSettings,
+  month: number | undefined,
+): number {
+  if (month !== undefined) {
+    return definition.months[month - 1]?.days ?? 1;
+  }
+  return Math.max(...definition.months.map((entry) => entry.days));
+}
+
 /**
  * Structured calendar date (era, signed year without year 0, month, day),
  * fed by the world calendar definition when one exists: the month becomes
@@ -88,9 +100,7 @@ function DateControl(props: {
   const value = props.value;
   const set = (patch: Fields) => props.onChange({ ...value, ...patch });
   const monthLength = definition
-    ? value.month
-      ? definition.months[value.month - 1]?.days
-      : Math.max(...definition.months.map((month) => month.days))
+    ? monthLengthOf(definition, value.month)
     : undefined;
   return (
     <Field label={props.label}>

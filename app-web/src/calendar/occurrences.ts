@@ -137,7 +137,7 @@ function collectEvent(
   const end = event.fields.end ? dateToPoint(event.fields.end, calendar) : null;
   const span = end ? Math.max(0, absoluteDay(end, calendar) - absoluteDay(start, calendar)) : 0;
   const recurrence = event.fields.recurrence;
-  if (!recurrence || recurrence.unit === undefined) {
+  if (recurrence?.unit === undefined) {
     addRange(start, span, ref, calendar, add);
     return;
   }

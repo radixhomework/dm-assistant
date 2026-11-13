@@ -151,6 +151,39 @@ describe("RecordEditPage", () => {
     expect(screen.queryByText("intangible_place")).toBeNull();
   });
 
+  it("renders calendar dates through the world definition", async () => {
+    // The events template carries the start date field.
+    const eventRecord = { ...recordOf({}), type: "events", fields: { start: { year: 842, month: 1, day: 5 } } };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input === "/api/settings/calendar") {
+          return {
+            ok: true,
+            json: async () => ({
+              months: [{ name: "M1", days: 30 }, { name: "M2", days: 31 }],
+              week: { days: 8 },
+              dayNames: ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"],
+              moon: { name: "Lune", cycleDays: 29 },
+              currentYear: 842,
+            }),
+          };
+        }
+        if (input.startsWith("/api/records/city-of-glass")) {
+          return { ok: true, json: async () => eventRecord };
+        }
+        return { ok: true, status: 204, json: async () => ({}) };
+      }),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("M1 5, 842")).toBeDefined(),
+    );
+  });
+
   it("renders prose fields through the readonly editor", async () => {
     stubFetch(recordOf({ public_description: "Sunlit **towers**." }));
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");

@@ -29,13 +29,61 @@ function CalendarDateText(props: { readonly value: CalendarDate }) {
   if (props.value.day !== undefined && monthName) params.day = props.value.day;
   if (monthName) params.month = monthName;
   else if (props.value.month !== undefined) params.month = props.value.month;
-  const key =
-    params.day !== undefined && params.month !== undefined
-      ? "calendar.formatDay"
-      : params.month !== undefined
-        ? "calendar.formatMonth"
-        : "calendar.formatYear";
-  return <>{t(key, params)}</>;
+  return <>{t(dateFormatKey(params), params)}</>;
+}
+
+/** The format key matching the parts the date carries. */
+function dateFormatKey(params: Record<string, string | number>): string {
+  if (params.day !== undefined && params.month !== undefined) return "calendar.formatDay";
+  if (params.month !== undefined) return "calendar.formatMonth";
+  return "calendar.formatYear";
+}
+
+type FieldRow = { key: string; label: string; node: React.ReactNode };
+
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+/** Builds the reading-sheet row of one template field: empty means
+ * hidden, statistics belongs to the bespoke sheet, dates render through
+ * the world definition, enums through their catalog, prose through the
+ * readonly editor, objects flatten into one line. */
+function buildFieldRow(args: {
+  readonly key: string;
+  readonly value: string | number | boolean | object | null | undefined;
+  readonly shape: Record<string, unknown>;
+  readonly label: string;
+  readonly translate: Translate;
+}): FieldRow | null {
+  const { key, value, shape, label, translate } = args;
+  if (!(key in shape) || value === undefined || value === "" || value === null) return null;
+  const kind = classifyField(key, shape[key]);
+  if (kind === "statistics") return null; // rendered by the bespoke sheet
+  if (kind === "calendarDate") {
+    // Dates render intelligibly via the world calendar definition.
+    return { key, label, node: <CalendarDateText value={value as CalendarDate} /> };
+  }
+  if (kind === "enum") {
+    const raw = value as string; // enum fields always store a string
+    const translated = translate(`enums.${key}.${raw}`, {
+      defaultValue: raw.replaceAll("_", " "),
+    });
+    return { key, label, node: translated };
+  }
+  if (kind === "prose") {
+    // The readonly editor renders markdown and resolves mention links
+    // (title display, click opens the record in a new tab).
+    return { key, label, node: <ProseEditor markdown={value as string} readonly /> };
+  }
+  if (typeof value === "number") {
+    return { key, label, node: String(value) };
+  }
+  if (typeof value === "object") {
+    const parts = Object.entries(value as Record<string, unknown>)
+      .filter(([, part]) => part !== undefined && part !== "")
+      .map((entry) => String(entry[1]));
+    return { key, label, node: parts.join(" — ") };
+  }
+  return { key, label, node: String(value) };
 }
 
 /**
@@ -234,59 +282,23 @@ function RecordPage({
         const shape = template
           ? (template.fields as unknown as { shape: Record<string, unknown> }).shape
           : {};
-        const fieldRows: Array<{ key: string; label: string; node: React.ReactNode }> = [];
         // Field values are JSON primitives or nested structured objects
         // (money, dates, hp…) — primitives render as text, objects flatten
         // into a readable line.
         const entries = Object.entries(data.fields ?? {}) as Array<
           [string, string | number | boolean | object | null | undefined]
         >;
-        for (const [key, value] of entries) {
-          if (!(key in shape) || value === undefined || value === "" || value === null) continue;
-          const kind = classifyField(key, shape[key]);
-          const label = t(`fields.${key}`);
-          if (kind === "statistics") continue; // rendered by the bespoke sheet
-          if (kind === "calendarDate") {
-            // Dates render intelligibly via the world calendar definition.
-            fieldRows.push({
+        const fieldRows = entries
+          .map(([key, value]) =>
+            buildFieldRow({
               key,
-              label,
-              node: <CalendarDateText value={value as CalendarDate} />,
-            });
-            continue;
-          }
-          if (kind === "enum") {
-            const raw = value as string; // enum fields always store a string
-            const translated = t(`enums.${key}.${raw}`, {
-              defaultValue: raw.replaceAll("_", " "),
-            });
-            fieldRows.push({ key, label, node: translated });
-            continue;
-          }
-          if (kind === "prose") {
-            // The readonly editor renders markdown and resolves mention
-            // links (title display, click opens the record in a new tab).
-            fieldRows.push({
-              key,
-              label,
-              node: <ProseEditor markdown={value as string} readonly />,
-            });
-            continue;
-          }
-          if (typeof value === "number") {
-            fieldRows.push({ key, label, node: String(value) });
-            continue;
-          }
-          if (typeof value === "object" && value !== null) {
-            const object = value as Record<string, unknown>;
-            const parts = Object.entries(object)
-              .filter(([, part]) => part !== undefined && part !== "")
-              .map((entry) => String(entry[1]));
-            fieldRows.push({ key, label, node: parts.join(" — ") });
-            continue;
-          }
-          fieldRows.push({ key, label, node: String(value) });
-        }
+              value,
+              shape,
+              label: t(`fields.${key}`),
+              translate: t as unknown as Translate,
+            }),
+          )
+          .filter((row) => row !== null);
         const referenceEntries = Object.entries(data.references ?? {}).filter(
           ([, targets]) => (targets as Array<{ slug: string }>).length > 0,
         );

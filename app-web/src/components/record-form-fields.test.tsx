@@ -117,7 +117,7 @@ describe("RecordFormFields — recurrence", () => {
     const checkbox = screen.getByRole("checkbox", { name: "Recurring event" }) as HTMLInputElement;
     expect(checkbox.checked).toBe(false);
     // No unit select before checking: no recurrence by default.
-    expect(document.querySelectorAll("select").length).toBe(0);
+    expect(document.querySelectorAll("select")).toHaveLength(0);
 
     fireEvent.click(checkbox);
     expect(lastFields(onChange).recurrence).toMatchObject({ unit: "week", interval: 1 });

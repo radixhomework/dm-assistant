@@ -20,6 +20,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   return {
     ...actual,
     Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
+    useNavigate: () => vi.fn(),
   };
 });
 
@@ -88,6 +89,58 @@ describe("CalendarPage", () => {
     await vi.waitFor(() =>
       expect(screen.getByText("Fête du marché")).toBeDefined(),
     );
+  });
+
+  it("shows the moon cycle per day with its legend", async () => {
+    stubFetch({ definition, events });
+    renderWithProviders(<CalendarPage />);
+    await vi.waitFor(() => expect(screen.getByText("M1")).toBeDefined());
+    // One moon glyph per day cell (30 + 31 days) and the four-phase legend.
+    expect(document.querySelectorAll('svg[class*="size-2.5"]').length).toBe(65);
+    expect(screen.getByText("New moon")).toBeDefined();
+    expect(screen.getByText("Full moon")).toBeDefined();
+  });
+
+  it("jumps to a typed year", async () => {
+    stubFetch({ definition, events });
+    renderWithProviders(<CalendarPage />);
+    await vi.waitFor(() => expect(screen.getByText("M1")).toBeDefined());
+    const yearInput = screen.getByRole("spinbutton", { name: "Go to year" }) as HTMLInputElement;
+    fireEvent.change(yearInput, { target: { value: "500" } });
+    fireEvent.submit(yearInput.closest("form")!);
+    await vi.waitFor(() => expect(yearInput.value).toBe("500"));
+  });
+
+  it("creates an event from the day's section with the day as start", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input === "/api/settings/calendar") return { ok: true, json: async () => definition };
+        if (input === "/api/records?type=events&perimeter=world") return { ok: true, json: async () => events };
+        if (input === "/api/records" && init?.method === "POST") {
+          captured.push([input, init]);
+          return { ok: true, json: async () => ({ slug: "nouveau" }) };
+        }
+        return { ok: true, status: 204, json: async () => ({}) };
+      }),
+    );
+    renderWithProviders(<CalendarPage />);
+    await vi.waitFor(() => expect(screen.getByText("M1")).toBeDefined());
+    fireEvent.click(screen.getAllByTitle("5 M1")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "New event on this day" }));
+    await vi.waitFor(() => expect(screen.getByRole("textbox", { name: "Title" })).toBeDefined());
+    fireEvent.input(screen.getByRole("textbox", { name: "Title" }), { target: { value: "Fête du jour" } });
+    fireEvent.submit(screen.getByRole("textbox", { name: "Title" }).closest("form")!);
+    await vi.waitFor(() => {
+      const post = captured.find(([path, init]) => init?.method === "POST");
+      expect(post).toBeDefined();
+      const payload = JSON.parse(String(post![1].body)) as { fields: { start: { year: number; month: number; day: number } } };
+      expect(payload.fields.start).toEqual({ year: 842, month: 1, day: 5 });
+    });
   });
 
   it("navigates years and skips the missing year 0", async () => {
