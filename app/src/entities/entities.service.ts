@@ -23,7 +23,7 @@ export type EntityRow = typeof entities.$inferSelect;
 export type TrackingView = {
   slug: string;
   status: PlayStatus;
-  children: Array<{ slug: string; title: string; status: PlayStatus }>;
+  children: TrackingView[];
 };
 
 @Injectable()
@@ -223,12 +223,10 @@ export class EntitiesService {
     }
 
     const children = await this.relationships.listChildren(slug, childKind);
+    // Full recursive subtree: chapters carry their scenes (the campaign
+    // tree sidebar renders down to the scenes level).
     const childViews = await Promise.all(
-      children.map(async (child) => ({
-        slug: child.slug,
-        title: child.title,
-        status: (await this.tracking(child.slug, seen)).status,
-      })),
+      children.map((child) => this.tracking(child.slug, seen)),
     );
     return {
       slug,

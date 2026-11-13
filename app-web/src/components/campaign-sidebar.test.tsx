@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { CampaignSidebar } from "./campaign-sidebar.js";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -81,5 +81,23 @@ describe("CampaignSidebar", () => {
     );
     const link = screen.getByText("Scene One").closest("a");
     expect(link?.className).toContain("bg-accent");
+  });
+
+  it("folds a chapter's scenes behind its chevron", async () => {
+    renderWithProviders(
+      <CampaignSidebar campaignSlug="war-of-embers" activeSlug={null} />,
+    );
+    await vi.waitFor(() =>
+      expect(screen.getByText("Scene One")).toBeDefined(),
+    );
+    // Scenes of Chapter One are visible by default; the chevron folds them.
+    const chevrons = screen.getAllByRole("button", { name: "Chapter One" });
+    expect(chevrons[0].getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(chevrons[0]);
+    expect(chevrons[0].getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText("Scene One")).toBeNull();
+    expect(screen.queryByText("Scene Two")).toBeNull();
+    fireEvent.click(chevrons[0]);
+    expect(screen.getByText("Scene One")).toBeDefined();
   });
 });

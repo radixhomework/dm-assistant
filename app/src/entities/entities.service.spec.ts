@@ -171,6 +171,10 @@ describe("EntitiesService", () => {
     expect(after.status).toBe("played");
     const campaignAfter = await service.tracking("north-realm");
     expect(campaignAfter.status).toBe("played");
+    // The tree is fully recursive: scenes nest under their chapter.
+    expect(
+      campaignAfter.children[0]?.children.map((scene) => scene.slug),
+    ).toEqual(["scene-one"]);
   });
 });
 
