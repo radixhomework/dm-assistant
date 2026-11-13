@@ -251,13 +251,14 @@ export class EntitiesService {
 }
 
 /**
- * Three-state fold: any in-progress child means in progress; all children
- * played means played; otherwise not played (PRE-SPEC.md §5, rule 9).
+ * Three-state fold: all children played means played; any child played
+ * or in progress means in progress (work has started); otherwise not
+ * played (PRE-SPEC.md §5, rule 9).
  */
 export function foldStatuses(statuses: PlayStatus[]): PlayStatus {
   if (statuses.length === 0) return "not_played";
-  if (statuses.includes("in_progress")) return "in_progress";
   if (statuses.every((status) => status === "played")) return "played";
+  if (statuses.some((status) => status !== "not_played")) return "in_progress";
   return "not_played";
 }
 

@@ -11,10 +11,18 @@ describe("foldStatuses (pure)", () => {
   });
   it("returns in progress when any child is in progress", () => {
     expect(foldStatuses(["played", "in_progress"])).toBe("in_progress");
+    expect(foldStatuses(["in_progress", "not_played"])).toBe("in_progress");
+  });
+  it("returns in progress when a child is played (work started)", () => {
+    expect(foldStatuses(["played", "not_played"])).toBe("in_progress");
+    expect(foldStatuses(["played", "not_played", "not_played"])).toBe("in_progress");
   });
   it("returns played only when all children are played", () => {
     expect(foldStatuses(["played", "played"])).toBe("played");
-    expect(foldStatuses(["played", "not_played"])).toBe("not_played");
+    expect(foldStatuses(["played"])).toBe("played");
+  });
+  it("returns not played while every child is untouched", () => {
+    expect(foldStatuses(["not_played", "not_played"])).toBe("not_played");
   });
 });
 
@@ -171,6 +179,20 @@ describe("EntitiesService", () => {
     expect(after.status).toBe("played");
     const campaignAfter = await service.tracking("north-realm");
     expect(campaignAfter.status).toBe("played");
+
+    // A played scene with an untouched sibling keeps the parent in
+    // progress: work has started, it is not finished.
+    await service.create({
+      slug: "scene-two",
+      type: "scene",
+      perimeter: "campaign",
+      title: "Scene Two",
+    });
+    await service.relationships.attach("scene-two", "chapter-one", "scene");
+    const restarted = await service.tracking("chapter-one");
+    expect(restarted.status).toBe("in_progress");
+    expect((await service.tracking("north-realm")).status).toBe("in_progress");
+
     // The tree is fully recursive: scenes nest under their chapter,
     // and every node carries its title.
     expect(campaignAfter.children[0]?.title).toBe("Chapter One");

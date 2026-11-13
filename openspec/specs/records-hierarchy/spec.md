@@ -37,11 +37,15 @@ The hierarchy SHALL be carried by child→parent references: a Chapter reference
 - **THEN** the second attachment is refused
 
 ### Requirement: Play tracking
-A Scene SHALL carry an explicit play status: not played, in progress, or played. A Chapter's status SHALL be derived from its Scenes and a Campaign's status from its Chapters: any in-progress child means in progress; all children played means played; otherwise not played. An empty status means not played.
+A Scene SHALL carry an explicit play status: not played, in progress, or played. A Chapter's status SHALL be derived from its Scenes and a Campaign's status from its Chapters: all children played means played; any child played or in progress means in progress (work has started); otherwise not played. An empty status means not played.
 
 #### Scenario: Explicit status on a Scene
 - **WHEN** an authenticated user sets a Scene's status to in progress
 - **THEN** the Scene reports in progress and its parent Chapter derives in progress
+
+#### Scenario: A played scene keeps the parent in progress
+- **WHEN** a Scene of a Chapter is played and no Scene of that Chapter is in progress
+- **THEN** the Chapter reports in progress, and the Campaign reports in progress unless all its Chapters are played
 
 #### Scenario: Aggregation upward
 - **WHEN** every Scene of a Chapter is played
