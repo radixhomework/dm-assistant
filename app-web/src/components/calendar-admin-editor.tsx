@@ -57,10 +57,10 @@ export function CalendarAdminEditor() {
   // Initialize the editable copy once the definition (or its absence)
   // is known; after a save the draft already matches what was stored.
   useEffect(() => {
-    if (calendar.calendar.data !== undefined && draft === null) {
+    if (calendar.calendar.isSuccess && draft === null) {
       setDraft(calendar.definition ? toDraft(calendar.definition) : blankDraft());
     }
-  }, [calendar.calendar.data, calendar.definition, draft]);
+  }, [calendar.calendar.isSuccess, calendar.definition, draft]);
 
   if (calendar.isPending) return null;
 

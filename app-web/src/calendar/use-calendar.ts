@@ -26,5 +26,9 @@ export function useCalendarDefinition(enabled = true) {
     queryFn: () => api<CalendarSettings | null>("/api/settings/calendar"),
     enabled,
   });
-  return { calendar, definition: isCalendarDefinition(calendar.data) ? calendar.data : null };
+  // The api client answers undefined on an empty 200 body (no definition
+  // yet): normalize it to null so consumers see one "absent" shape.
+  const data =
+    calendar.isSuccess && calendar.data === undefined ? null : calendar.data;
+  return { calendar, definition: isCalendarDefinition(data) ? data : null };
 }
