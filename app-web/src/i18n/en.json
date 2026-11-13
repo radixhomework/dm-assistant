@@ -32,7 +32,8 @@
     "lore": "Lore",
     "campaigns": "Campaigns",
     "admin": "Admin",
-    "logout": "Log out"
+    "logout": "Log out",
+    "sidebar": "Records"
   },
   "common": {
     "loading": "Loading…",
@@ -41,7 +42,8 @@
     "fields": {
       "title": "Title",
       "slug": "Slug"
-    }
+    },
+    "close": "Close"
   },
   "setup": {
     "title": "Welcome to your instance",

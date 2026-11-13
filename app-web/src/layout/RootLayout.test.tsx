@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { RootLayout } from "./RootLayout";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -53,5 +53,33 @@ describe("RootLayout navigation", () => {
     renderWithProviders(<RootLayout />);
     expect(screen.getAllByText("Lore").length).toBeGreaterThan(0);
     expect(screen.queryByText("Admin")).toBeNull();
+  });
+
+  it("renders the records sidebar with collapsed categories", async () => {
+    mockSession("admin");
+    renderWithProviders(<RootLayout />);
+    await vi.waitFor(() =>
+      expect(screen.getByRole("navigation", { name: "Records" })).toBeDefined(),
+    );
+    // Category headers exist and start collapsed (no record entries).
+    expect(screen.getByRole("button", { name: /Places/ })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Monsters/ })).toBeDefined();
+    expect(screen.queryByRole("link", { name: "City of Glass" })).toBeNull();
+  });
+
+  it("toggles the narrow-screen drawer with the header button", async () => {
+    mockSession("admin");
+    renderWithProviders(<RootLayout />);
+    await vi.waitFor(() =>
+      expect(screen.getByRole("button", { name: "Records" })).toBeDefined(),
+    );
+    const toggle = screen.getByRole("button", { name: "Records" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    // The drawer shows its close button while open.
+    expect(screen.getByRole("button", { name: "Close" })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
   });
 });

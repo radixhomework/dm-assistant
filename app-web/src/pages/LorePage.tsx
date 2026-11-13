@@ -7,37 +7,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { useSlugAutoFill } from "../slug.js";
-
-
-const categoryIcons: Record<string, LucideIcon> = {
-  "characters-and-entities": Users,
-  places: MapPin,
-  organizations: Landmark,
-  monsters: Skull,
-  nations: Landmark,
-  "natural-landmarks": Mountain,
-  works: ScrollText,
-  events: CalendarDays,
-  "equipment-and-items": Sword,
-  "beliefs-myths-and-customs": Sparkles,
-  "knowledge-and-technologies": Lightbulb,
-  "game-rules": Scale,
-};import { useRequireAuth } from "./useRequireAuth.js";
+import { categoryIcons } from "../categories.js";
+import { useRequireAuth } from "./useRequireAuth.js";
 import { worldTemplates, type Entity } from "../types.js";
-import {
-  CalendarDays,
-  Skull,
-  Landmark,
-  Lightbulb,
-  MapPin,
-  Mountain,
-  Scale,
-  ScrollText,
-  Sparkles,
-  Sword,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
 
 export function LorePage() {
   const { t } = useTranslation();

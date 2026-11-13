@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { Menu, X } from "lucide-react";
+import { AppSidebar } from "../components/app-sidebar.js";
 import { fetchMe, getWorldName, logout } from "../api/auth.js";
 import { queryClient } from "../query-client.js";
 
@@ -17,6 +19,9 @@ export function RootLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSetupOrLogin = pathname === "/setup" || pathname === "/login";
+  // Narrow screens: the sidebar overlays as a drawer, dismissed on
+  // toggle, backdrop tap or navigation.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe, retry: false });
   const user = me.data;
@@ -41,6 +46,11 @@ export function RootLayout() {
     await logout();
     void navigate({ to: "/login" });
   }
+
+  // Navigation dismisses the narrow-screen drawer.
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   // Record pages descend from Lore (world perimeter) or Campaigns
   // (campaign perimeter): keep the section highlighted using the cached
@@ -69,7 +79,18 @@ export function RootLayout() {
       ) : (
         <>
           <header className="sticky top-0 z-40 border-b border-[#1e211c] bg-[#2e332b]">
-            <div className="mx-auto flex w-full max-w-[1100px] items-center gap-4 px-6 py-3">
+            <div className="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-6 py-3">
+              {user && (
+                <button
+                  type="button"
+                  aria-label={t("nav.sidebar")}
+                  aria-expanded={sidebarOpen}
+                  onClick={() => setSidebarOpen((open) => !open)}
+                  className="rounded-md p-1.5 text-background/75 transition-colors duration-200 hover:bg-[#1e211c] hover:text-background md:hidden"
+                >
+                  <Menu className="size-5" aria-hidden />
+                </button>
+              )}
               <Link to="/" className="font-display text-2xl font-semibold text-background">
                 {getWorldName() ?? t("app.title")}
               </Link>
@@ -102,9 +123,39 @@ export function RootLayout() {
               )}
             </div>
           </header>
-          <main className="mx-auto w-full max-w-[1100px] px-6 py-8">
-            <Outlet />
-          </main>
+          <div className="mx-auto flex w-full max-w-[1200px] items-start">
+            <aside
+              className={`${
+                sidebarOpen
+                  ? "fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto bg-surface shadow-xl"
+                  : "hidden"
+              } md:static md:z-auto md:block md:w-[260px] md:shrink-0 md:border-r md:border-border`}
+            >
+              <div className="flex items-center justify-end px-2 pt-3 md:hidden">
+                <button
+                  type="button"
+                  aria-label={t("common.close")}
+                  onClick={() => setSidebarOpen(false)}
+                  className="rounded-md p-1.5 text-muted transition-colors duration-200 hover:bg-surface hover:text-ink"
+                >
+                  <X className="size-5" aria-hidden />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-4">
+                <AppSidebar />
+              </div>
+            </aside>
+            {sidebarOpen && (
+              <div
+                aria-hidden
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 z-40 bg-black/40 md:hidden"
+              />
+            )}
+            <main className="min-w-0 flex-1 px-6 py-8">
+              <Outlet />
+            </main>
+          </div>
         </>
       )}
     </div>

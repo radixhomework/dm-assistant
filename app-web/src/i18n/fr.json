@@ -32,7 +32,8 @@
     "lore": "Lore",
     "campaigns": "Campagnes",
     "admin": "Admin",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "sidebar": "Fiches"
   },
   "common": {
     "loading": "Chargement…",
@@ -41,7 +42,8 @@
     "fields": {
       "title": "Titre",
       "slug": "Slug"
-    }
+    },
+    "close": "Fermer"
   },
   "setup": {
     "title": "Bienvenue sur votre instance",
