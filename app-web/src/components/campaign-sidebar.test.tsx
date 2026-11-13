@@ -83,6 +83,19 @@ describe("CampaignSidebar", () => {
     expect(link?.className).toContain("bg-accent");
   });
 
+  it("marks chapters and scenes with their play status", async () => {
+    renderWithProviders(
+      <CampaignSidebar campaignSlug="war-of-embers" activeSlug={null} />,
+    );
+    await vi.waitFor(() =>
+      expect(screen.getByText("Chapter One")).toBeDefined(),
+    );
+    // chapter-one is in progress; scene-two played; the rest not played.
+    expect(screen.getAllByRole("img", { name: "In progress" }).length).toBe(1);
+    expect(screen.getAllByRole("img", { name: "Played" }).length).toBe(1);
+    expect(screen.getAllByRole("img", { name: "Not played" }).length).toBe(2);
+  });
+
   it("folds a chapter's scenes behind its chevron", async () => {
     renderWithProviders(
       <CampaignSidebar campaignSlug="war-of-embers" activeSlug={null} />,
