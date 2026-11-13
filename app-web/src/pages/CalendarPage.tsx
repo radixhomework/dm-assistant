@@ -47,10 +47,8 @@ export function CalendarPage() {
     title: entity.title,
     fields: (entity.fields ?? {}) as EventFields,
   }));
-  // Default year: the first event's start year, else year 1.
-  const year =
-    chosenYear ??
-    eventInputs.find((event) => event.fields.start)?.fields.start?.year ?? 1;
+  // Default year: the world's current year from the definition.
+  const year = chosenYear ?? definition?.currentYear ?? 1;
 
   const occurrences = useMemo(
     () =>

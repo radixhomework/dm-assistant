@@ -130,7 +130,7 @@ describe("RootLayout navigation", () => {
 
   it("hides the sidebar on Admin, Account and the campaign list", () => {
     mockSession("admin");
-    for (const path of ["/admin", "/account", "/campaigns"]) {
+    for (const path of ["/admin", "/account", "/campaigns", "/calendar"]) {
       routerState.pathname = path;
       renderWithProviders(<RootLayout />);
       expect(screen.queryByRole("navigation", { name: "Records" })).toBeNull();

@@ -15,6 +15,7 @@ type Draft = {
   dayNames: string[];
   moonName: string;
   moonCycle: string;
+  currentYear: string;
 };
 
 function blankDraft(): Draft {
@@ -24,6 +25,7 @@ function blankDraft(): Draft {
     dayNames: Array.from({ length: 7 }, () => ""),
     moonName: "",
     moonCycle: "29",
+    currentYear: "1",
   };
 }
 
@@ -37,6 +39,7 @@ function toDraft(definition: CalendarSettings): Draft {
     dayNames: [...definition.dayNames],
     moonName: definition.moon.name,
     moonCycle: String(definition.moon.cycleDays),
+    currentYear: String(definition.currentYear),
   };
 }
 
@@ -90,6 +93,7 @@ export function CalendarAdminEditor() {
       week: { days: Number(draft.weekDays) },
       dayNames: draft.dayNames,
       moon: { name: draft.moonName, cycleDays: Number(draft.moonCycle) },
+      currentYear: Number(draft.currentYear),
     };
     try {
       await api("/api/admin/settings/calendar", { method: "PATCH", body: payload });
@@ -236,6 +240,19 @@ export function CalendarAdminEditor() {
                 })
               }
               className={`${inputClass} w-24`}
+            />
+          </Field>
+          <Field label={t("admin.calendar.currentYear")}>
+            <input
+              type="number"
+              value={draft.currentYear}
+              onChange={(event) =>
+                setDraft((current) => {
+                  if (current === null) return current;
+                  return { ...current, currentYear: event.target.value };
+                })
+              }
+              className={`${inputClass} w-28`}
             />
           </Field>
         </div>

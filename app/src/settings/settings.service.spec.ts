@@ -52,6 +52,7 @@ describe("SettingsService", () => {
       week: { days: 8 },
       dayNames: ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"],
       moon: { name: "Lune", cycleDays: 29 },
+      currentYear: 842,
     };
     const saved = await service.updateCalendar(definition);
     expect(saved).toEqual(definition);

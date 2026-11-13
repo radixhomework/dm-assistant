@@ -72,7 +72,12 @@ export function RootLayout() {
     | { kind: "campaign"; slug: string }
     | { kind: "none" };
   let mode: SidebarMode = { kind: "lore" };
-  if (pathname === "/admin" || pathname === "/account" || pathname === "/campaigns") {
+  if (
+    pathname === "/admin" ||
+    pathname === "/account" ||
+    pathname === "/campaigns" ||
+    pathname === "/calendar"
+  ) {
     mode = { kind: "none" };
   } else if (campaignViewMatch) {
     mode = { kind: "campaign", slug: decodeURIComponent(campaignViewMatch[1]) };

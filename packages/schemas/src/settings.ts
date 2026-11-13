@@ -38,6 +38,9 @@ export const calendarSettingsSchema = z
       name: z.string().min(1).max(80),
       cycleDays: z.number().int().min(1).max(1000),
     }),
+    /** The year the world is currently living in — the year overview's
+     * default view. */
+    currentYear: z.number().int(),
   })
   .refine((calendar) => calendar.dayNames.length === calendar.week.days, {
     message: "day names must fill the week",

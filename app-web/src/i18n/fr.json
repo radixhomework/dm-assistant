@@ -167,7 +167,8 @@
       "moonName": "Nom",
       "moonCycle": "Cycle (jours)",
       "saved": "Calendrier enregistré.",
-      "save": "Enregistrer"
+      "save": "Enregistrer",
+      "currentYear": "Année en cours"
     }
   },
   "health": {
