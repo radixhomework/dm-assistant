@@ -228,7 +228,9 @@ body {
 /* Inline calendar date node (editor + reading view): reads as a subtle
  * chip, and selection stays visible instead of relying on defaults. */
 .date-node {
-  background: rgba(77, 89, 71, 0.12);
+  /* Opaque light tone (12% of the ink green over white): contrast
+   * checkers evaluate the resolved color, not the alpha blend. */
+  background: #e9ece7;
   border-radius: 0.25rem;
   padding: 0 0.3rem;
   font-weight: 600;
