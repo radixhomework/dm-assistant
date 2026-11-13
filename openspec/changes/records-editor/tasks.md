@@ -22,8 +22,8 @@
 
 ## 4. Forms
 
-- [ ] 4.1 Generic form renderer: schema → controls (text, textarea, money, date, selects, order stepper, statistics block, reference autocomplete inputs); Field/SlugTitleFields integration
-- [ ] 4.2 Statistics block control: raw inputs with SRD modifiers displayed on leaving edit mode
+- [x] 4.1 Generic form renderer: schema → controls (text, money, calendar date, recurrence, selects, statistics block, asset); Field/SlugTitleFields integration — the order stepper ships with the play-order fields (8.x) and reference inputs with 4.3/6.3
+- [x] 4.2 Statistics block control: raw inputs with SRD modifiers displayed on leaving edit mode
 - [ ] 4.3 Reference controls: 0..1 replace + 0..n add/remove, autocomplete against the target template
 
 ## 5. Calendar
