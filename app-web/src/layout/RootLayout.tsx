@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, Menu, Shield, Swords, X } from "lucide-react";
 import { AppSidebar } from "../components/app-sidebar.js";
 import { CampaignSidebar } from "../components/campaign-sidebar.js";
+import { api } from "../api/client.js";
 import { fetchMe, getWorldName, logout } from "../api/auth.js";
-import { queryClient } from "../query-client.js";
 import type { Entity } from "../types.js";
 
 const navItemClass = (active: boolean) =>
@@ -54,15 +54,19 @@ export function RootLayout() {
     setSidebarOpen(false);
   }, [pathname]);
 
-  // Contextual sidebar, resolved from the route and the cached record
-  // metadata (perimeter + owning campaign). Unknown during load → the
-  // record page renders without a sidebar until the cache fills.
+  // Contextual sidebar, resolved from the route and the record metadata
+  // (perimeter + owning campaign). The record is read through the shared
+  // ["record", slug] query — reactive on direct loads, one cache entry
+  // shared with the record page.
   const recordMatch = /^\/records\/([^/]+)$/.exec(pathname);
   const campaignViewMatch = /^\/campaigns\/([^/]+)$/.exec(pathname);
   const decodedSlug = recordMatch ? decodeURIComponent(recordMatch[1]) : null;
-  const cached = recordMatch
-    ? queryClient.getQueryData<Entity>(["record", decodedSlug])
-    : undefined;
+  const recordMeta = useQuery({
+    queryKey: ["record", decodedSlug],
+    queryFn: () => api<Entity>(`/api/records/${decodedSlug}`),
+    enabled: decodedSlug !== null,
+    retry: false,
+  });
   type SidebarMode =
     | { kind: "lore" }
     | { kind: "campaign"; slug: string }
@@ -72,9 +76,11 @@ export function RootLayout() {
     mode = { kind: "none" };
   } else if (campaignViewMatch) {
     mode = { kind: "campaign", slug: decodeURIComponent(campaignViewMatch[1]) };
-  } else if (recordMatch && cached?.perimeter === "campaign") {
+  } else if (recordMatch && recordMeta.data?.perimeter === "campaign") {
     const campaignSlug =
-      cached.type === "campaign" ? cached.slug : cached.campaign?.slug ?? null;
+      recordMeta.data.type === "campaign"
+        ? recordMeta.data.slug
+        : recordMeta.data.campaign?.slug ?? null;
     mode = campaignSlug ? { kind: "campaign", slug: campaignSlug } : { kind: "none" };
   }
 

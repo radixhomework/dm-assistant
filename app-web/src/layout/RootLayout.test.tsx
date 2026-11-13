@@ -57,6 +57,20 @@ function mockSession(role: "admin" | "dm" | null) {
           }),
         };
       }
+      if (input === "/api/records/chapter-one") {
+        return {
+          ok: true,
+          json: async () => ({
+            slug: "chapter-one",
+            type: "chapter",
+            perimeter: "campaign",
+            title: "Chapter One",
+            tags: [],
+            fields: {},
+            campaign: { slug: "war-of-embers", title: "War of Embers" },
+          }),
+        };
+      }
       return { ok: true, status: 204, json: async () => ({}) };
     }),
   );
