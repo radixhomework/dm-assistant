@@ -83,6 +83,7 @@ describe("EntitiesController", () => {
     });
     service.tracking.mockResolvedValue({
       slug: "north-realm",
+      title: "North",
       status: "played",
       children: [],
     });

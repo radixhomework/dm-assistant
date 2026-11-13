@@ -22,6 +22,7 @@ export type EntityRow = typeof entities.$inferSelect;
 
 export type TrackingView = {
   slug: string;
+  title: string;
   status: PlayStatus;
   children: TrackingView[];
 };
@@ -213,13 +214,18 @@ export class EntitiesService {
    * statuses, which fold their Scenes — a leaf keeps its explicit status. */
   async tracking(slug: string, seen: Set<string> = new Set()): Promise<TrackingView> {
     if (seen.has(slug)) {
-      return { slug, status: "not_played", children: [] };
+      return { slug, title: "", status: "not_played", children: [] };
     }
     seen.add(slug);
     const record = await this.getBySlug(slug);
     const childKind = childKindOf(record.type);
     if (!childKind) {
-      return { slug, status: this.statusOf(record.fields), children: [] };
+      return {
+        slug,
+        title: record.title,
+        status: this.statusOf(record.fields),
+        children: [],
+      };
     }
 
     const children = await this.relationships.listChildren(slug, childKind);
@@ -230,6 +236,7 @@ export class EntitiesService {
     );
     return {
       slug,
+      title: record.title,
       status: foldStatuses(childViews.map((c) => c.status)),
       children: childViews,
     };
