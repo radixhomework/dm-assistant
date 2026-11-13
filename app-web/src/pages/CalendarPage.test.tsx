@@ -136,7 +136,7 @@ describe("CalendarPage", () => {
     fireEvent.input(screen.getByRole("textbox", { name: "Title" }), { target: { value: "Fête du jour" } });
     fireEvent.submit(screen.getByRole("textbox", { name: "Title" }).closest("form")!);
     await vi.waitFor(() => {
-      const post = captured.find(([path, init]) => init?.method === "POST");
+      const post = captured.find(([_path, init]) => init?.method === "POST");
       expect(post).toBeDefined();
       const payload = JSON.parse(String(post![1].body)) as { fields: { start: { year: number; month: number; day: number } } };
       expect(payload.fields.start).toEqual({ year: 842, month: 1, day: 5 });
