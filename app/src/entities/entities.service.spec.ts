@@ -120,6 +120,32 @@ describe("EntitiesService", () => {
     expect(children.map((c) => c.slug)).toEqual(["chapter-one"]);
   });
 
+  it("resolves the owning campaign through the parent chain", async () => {
+    await service.create(campaign);
+    await service.create(chapter);
+    await service.create(scene);
+    await service.relationships.attach(
+      "chapter-one",
+      "north-realm",
+      "chapter",
+    );
+    await service.relationships.attach("scene-one", "chapter-one", "scene");
+    const owned = { slug: "north-realm", title: "The North Realm" };
+    expect(await service.campaignOf(await service.getBySlug("north-realm"))).toEqual(owned);
+    expect(await service.campaignOf(await service.getBySlug("chapter-one"))).toEqual(owned);
+    expect(await service.campaignOf(await service.getBySlug("scene-one"))).toEqual(owned);
+  });
+
+  it("returns no owning campaign for a world record", async () => {
+    const place = await service.create({
+      slug: "lone-place",
+      type: "places",
+      perimeter: "world",
+      title: "Lone Place",
+    });
+    expect(await service.campaignOf(place)).toBeNull();
+  });
+
   it("aggregates play tracking upward", async () => {
     await service.create(campaign);
     await service.create(chapter);

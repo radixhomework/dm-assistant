@@ -36,3 +36,10 @@ Frontend-only, additive: no API, no schema, no route change. Rollback is reverti
 ## Open Questions
 
 None blocking.
+
+## DM review round (follow-up decisions)
+
+7. **Contextual sidebar, resolved in the shell** — `RootLayout` derives the mode from the route and the cached record metadata: Lore page and world-perimeter records → world sidebar; `/campaigns/$slug` and campaign-perimeter records (campaign, chapter, scene) → campaign tree; campaign list, Admin and Account → no sidebar. No route restructure; the cached record (react-query) already carries `perimeter` and now the owning `campaign`.
+8. **Owning campaign resolved server-side** — `GET /api/records/:slug` gains `campaign: { slug, title } | null` (the record itself for a campaign; otherwise the campaign found by walking the child→parent relationships, bounded walk). One small query per hop; the tree itself keeps coming from the existing recursive `tracking` endpoint, cached under the `["campaign-view", slug]` key the campaign view already fills — the sidebar reuses it, zero extra fetch on that path.
+9. **Shell aesthetics** — the header nav items gain lucide icons (Lore, Campagnes, Admin); the sidebar separator runs the full remaining page height (flex column, `min-h-screen`, stretched content row).
+

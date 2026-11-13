@@ -121,6 +121,40 @@ export class EntitiesService {
   }
 
   /**
+   * The campaign owning a record: the record itself for a campaign,
+   * otherwise the campaign found by walking the child→parent links
+   * (chapter → campaign, scene → chapter → campaign). Bounded walk;
+   * null for world-perimeter records or unattached ones.
+   */
+  async campaignOf(
+    record: EntityRow,
+  ): Promise<{ slug: string; title: string } | null> {
+    if (record.type === "campaign") {
+      return { slug: record.slug, title: record.title };
+    }
+    let current: { id: string } = record;
+    for (let depth = 0; depth < 4; depth += 1) {
+      const [parent] = await this.db
+        .select({
+          id: entities.id,
+          slug: entities.slug,
+          title: entities.title,
+          type: entities.type,
+        })
+        .from(relationships)
+        .innerJoin(entities, eq(relationships.toId, entities.id))
+        .where(eq(relationships.fromId, current.id))
+        .limit(1);
+      if (!parent) return null;
+      if (parent.type === "campaign") {
+        return { slug: parent.slug, title: parent.title };
+      }
+      current = parent;
+    }
+    return null;
+  }
+
+  /**
    * Outgoing references of a record, grouped by relationship kind (the
    * reference field key), each target carrying its slug and current title.
    */

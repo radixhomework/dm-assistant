@@ -12,6 +12,7 @@ function makeService(): vi.Mocked<EntitiesService> {
     delete: vi.fn(),
     tracking: vi.fn(),
     referencesOf: vi.fn(async () => ({ leaders: [{ slug: "the-king", title: "The King" }] })),
+    campaignOf: vi.fn(async () => null),
     statusOf: vi.fn(),
   } as unknown as vi.Mocked<EntitiesService>;
 }
@@ -68,7 +69,7 @@ describe("EntitiesController", () => {
     expect(service.delete).toHaveBeenCalledWith("city-of-glass");
   });
 
-  it("reads a record with its tracking", async () => {
+  it("reads a record with its tracking and owning campaign", async () => {
     service.getBySlug.mockResolvedValue({
       id: "1",
       slug: "north-realm",
@@ -85,8 +86,10 @@ describe("EntitiesController", () => {
       status: "played",
       children: [],
     });
+    service.campaignOf.mockResolvedValue({ slug: "north-realm", title: "North" });
     const result = await controller.getBySlug("north-realm");
     expect(result.tracking.status).toBe("played");
+    expect(result.campaign).toEqual({ slug: "north-realm", title: "North" });
   });
 
   it("attaches and detaches parents", async () => {

@@ -49,7 +49,8 @@ export class EntitiesController {
     const record = await this.entitiesService.getBySlug(slug);
     const tracking = await this.entitiesService.tracking(slug);
     const references = await this.entitiesService.referencesOf(slug);
-    return { ...record, tracking, references };
+    const campaign = await this.entitiesService.campaignOf(record);
+    return { ...record, tracking, references, campaign };
   }
 
   @Post()

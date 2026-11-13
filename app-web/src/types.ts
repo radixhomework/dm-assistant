@@ -8,12 +8,16 @@ export type Entity = {
   fields: Record<string, unknown>;
   tracking?: { slug: string; status: string; children: ChildView[] };
   references?: Record<string, Array<{ slug: string; title: string }>>;
+  /** The campaign owning this record (itself for a campaign); null on
+   * world-perimeter records. Resolved server-side on read. */
+  campaign?: { slug: string; title: string } | null;
 };
 
 export type ChildView = {
   slug: string;
   title: string;
   status: string;
+  children?: ChildView[];
 };
 
 export type WorldTemplate =
