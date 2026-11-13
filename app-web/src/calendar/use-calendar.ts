@@ -23,7 +23,13 @@ export function isCalendarDefinition(
 export function useCalendarDefinition(enabled = true) {
   const calendar = useQuery({
     queryKey: ["calendar-settings"],
-    queryFn: () => api<CalendarSettings | null>("/api/settings/calendar"),
+    // react-query v5 treats an undefined queryFn result as an error; the
+    // api client answers undefined on the empty 200 body (no definition
+    // yet) — normalize it to null.
+    queryFn: async () => {
+      const value = await api<CalendarSettings | null>("/api/settings/calendar");
+      return value ?? null;
+    },
     enabled,
   });
   // The api client answers undefined on an empty 200 body (no definition
