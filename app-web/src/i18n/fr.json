@@ -33,7 +33,13 @@
     "tagline": "Votre monde et vos campagnes, au même endroit"
   },
   "home": {
-    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui mérite attention."
+    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui mérite attention.",
+    "welcome": "Que souhaitez-vous ouvrir ?",
+    "lore": "Fiches du monde, groupées par type.",
+    "calendar": "L'année du monde en un coup d'œil : événements et cycle lunaire.",
+    "campaigns": "Vos campagnes, leurs chapitres et leurs scènes.",
+    "admin": "Utilisateurs et réglages de l'instance.",
+    "account": "Votre profil, votre langue, votre mot de passe."
   },
   "nav": {
     "lore": "Lore",

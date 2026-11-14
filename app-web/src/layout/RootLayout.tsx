@@ -73,6 +73,7 @@ export function RootLayout() {
     | { kind: "none" };
   let mode: SidebarMode = { kind: "lore" };
   if (
+    pathname === "/home" ||
     pathname === "/admin" ||
     pathname === "/account" ||
     pathname === "/campaigns" ||
@@ -111,7 +112,7 @@ export function RootLayout() {
                   <Menu className="size-5" aria-hidden />
                 </button>
               )}
-              <Link to="/" className="font-display text-2xl font-semibold text-background">
+              <Link to="/home" className="font-display text-2xl font-semibold text-background">
                 {getWorldName() ?? t("app.title")}
               </Link>
               <nav className="ml-4 flex items-center gap-2">

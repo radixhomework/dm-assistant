@@ -33,7 +33,13 @@
     "tagline": "Your world and campaigns, in one place"
   },
   "home": {
-    "intro": "Structured records for your lore, a coherence audit, and an assistant that creates nothing but flags what needs attention."
+    "intro": "Structured records for your lore, a coherence audit, and an assistant that creates nothing but flags what needs attention.",
+    "welcome": "Where would you like to go?",
+    "lore": "World records, grouped by template type.",
+    "calendar": "The world's year at a glance: events and moon cycle.",
+    "campaigns": "Your campaigns with their chapters and scenes.",
+    "admin": "Instance users and settings.",
+    "account": "Your profile, language and password."
   },
   "nav": {
     "lore": "Lore",
