@@ -1,0 +1,83 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, screen } from "@testing-library/react";
+import { CalendarAdminEditor } from "./calendar-admin-editor.js";
+import { renderWithProviders } from "../testing/render.js";
+import type { CalendarSettings } from "@dm/schemas";
+
+const definition: CalendarSettings = {
+  months: [
+    { name: "M1", days: 30 },
+    { name: "M2", days: 31 },
+  ],
+  week: { days: 8 },
+  dayNames: ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"],
+  moon: { name: "Lune", cycleDays: 29 },
+  currentYear: 842,
+};
+
+function stubFetch(captured: Array<[string, RequestInit]>) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string, init?: RequestInit) => {
+      if (input === "/api/settings/calendar") {
+        return { ok: true, json: async () => definition };
+      }
+      if (input === "/api/admin/settings/calendar" && init?.method === "PATCH") {
+        captured.push([input, init]);
+        return { ok: true, json: async () => definition };
+      }
+      return { ok: true, status: 204, json: async () => ({}) };
+    }),
+  );
+}
+
+describe("CalendarAdminEditor", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "en";
+  });
+
+  it("renders the saved definition for editing", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    stubFetch(captured);
+    renderWithProviders(<CalendarAdminEditor />);
+    await vi.waitFor(() => {
+      const names = screen.getAllByPlaceholderText("Name").map(
+        (input) => (input as HTMLInputElement).value,
+      );
+      expect(names).toEqual(["M1", "M2"]);
+    });
+    expect((screen.getByLabelText("Days per week") as HTMLInputElement).value).toBe("8");
+    // Week shortening trims the extra day-name inputs.
+    fireEvent.change(screen.getByLabelText("Days per week"), { target: { value: "5" } });
+    expect(screen.getAllByPlaceholderText("Name").length).toBe(2);
+  });
+
+  it("saves the edited definition through the admin endpoint", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    stubFetch(captured);
+    renderWithProviders(<CalendarAdminEditor />);
+    await vi.waitFor(() => {
+      const names = screen.getAllByPlaceholderText("Name").map(
+        (input) => (input as HTMLInputElement).value,
+      );
+      expect(names).toEqual(["M1", "M2"]);
+    });
+    fireEvent.change(screen.getByLabelText("Days per week"), { target: { value: "7" } });
+    fireEvent.click(screen.getByText("Save"));
+    await vi.waitFor(() => {
+      const patch = captured.find(([path, init]) => init?.method === "PATCH");
+      expect(patch).toBeDefined();
+      const payload = JSON.parse(String(patch![1].body)) as {
+        week: { days: number };
+        currentYear: number;
+        months: Array<{ name: string; days: number }>;
+      };
+      expect(payload.week.days).toBe(7);
+      expect(payload.months).toEqual([
+        { name: "M1", days: 30 },
+        { name: "M2", days: 31 },
+      ]);
+      expect(payload.currentYear).toBe(842);
+    });
+  });
+});

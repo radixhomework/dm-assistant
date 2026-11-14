@@ -47,8 +47,8 @@ describe("CharacterSheet", () => {
     expect(screen.getByText("STR")).toBeDefined();
     expect(screen.getByText("18")).toBeDefined();
     expect(screen.getAllByText("+4").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("MOD").length).toBe(3);
-    expect(screen.getAllByText("Save").length).toBe(3);
+    expect(screen.getAllByText("MOD")).toHaveLength(3);
+    expect(screen.getAllByText("Save")).toHaveLength(3);
   });
 
   it("renders the SRD-style stat block lines", () => {

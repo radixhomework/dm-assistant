@@ -67,7 +67,7 @@ export const templateTypes = Object.keys(templateSchemas) as TemplateType[];
  */
 export function templateSchemaOf(type: string): TemplateSchema | undefined {
   // Own-property check: inherited keys ("constructor") must not resolve.
-  return Object.prototype.hasOwnProperty.call(templateSchemas, type)
+  return Object.hasOwn(templateSchemas, type)
     ? templateSchemas[type as TemplateType]
     : undefined;
 }

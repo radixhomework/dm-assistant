@@ -59,7 +59,7 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
   }
 
   function saveOf(
-    key: keyof Statistics["savesMastery"] | (typeof abilities)[number][0],
+    key: keyof NonNullable<Statistics["savesMastery"]>,
     mod: number | null,
   ): number | null {
     if (mod === null) return null;
@@ -86,6 +86,12 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
           return `${value} m (${label})`;
         })
     : [];
+  const sizeLabels: Record<string, string> = Object.fromEntries(
+    ["tiny", "small", "medium", "large", "huge", "gargantuan"].map((size) => [
+      size,
+      t(`enums.size.${size}`),
+    ]),
+  );
   const senses: string[] = (
     [
       ["tremorsense", stats.senses?.tremorsense, " m"],
@@ -108,7 +114,7 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
           .filter(Boolean)
           .join(", ")}
         {stats.size !== undefined
-          ? ` · ${t("stats.size")} ${t(`enums.size.${stats.size}`)}`
+          ? ` · ${t("stats.size")} ${sizeLabels[stats.size]}`
           : ""}
       </p>
       <div className="mt-2 flex flex-col gap-1 rounded-md border border-border bg-surface p-3 text-sm">
@@ -157,7 +163,10 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
           ))}
           {abilities.map(([key, score]) => {
             const mod = modifierOf(score);
-            const save = saveOf(key, mod);
+            const save = saveOf(
+              key as keyof NonNullable<Statistics["savesMastery"]>,
+              mod,
+            );
             return (
               <Fragment key={key}>
                 <span className="font-semibold text-ink">
