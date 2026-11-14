@@ -9,7 +9,7 @@ import { Node, mergeAttributes } from "@tiptap/core";
  * product is DM-only, so there is no access model behind them.
  */
 
-export type TypedBlockName = "attention";
+export type TypedBlockName = "attention" | "paraphrase" | "develop";
 
 export function createTypedBlock(name: TypedBlockName): Node {
   const token = name;
@@ -63,3 +63,5 @@ export function createTypedBlock(name: TypedBlockName): Node {
 }
 
 export const AttentionPoint = createTypedBlock("attention");
+export const ParaphraseBlock = createTypedBlock("paraphrase");
+export const DevelopBlock = createTypedBlock("develop");

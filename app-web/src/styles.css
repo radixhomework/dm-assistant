@@ -80,9 +80,19 @@ body {
   padding: 0.5rem 0.75rem;
   margin: 0.75rem 0;
 }
-.prose-editor [data-typed-block="mechanics"] {
+/* DM color mapping: attention = red (radish), paraphrase = gray (muted),
+ * develop = yellow (gold). */
+.prose-editor [data-typed-block="attention"] {
   border-left-color: #8a5e61;
   background: rgba(138, 94, 97, 0.08);
+}
+.prose-editor [data-typed-block="paraphrase"] {
+  border-left-color: #76604e;
+  background: rgba(118, 96, 78, 0.08);
+}
+.prose-editor [data-typed-block="develop"] {
+  border-left-color: #c4943a;
+  background: rgba(196, 148, 58, 0.1);
 }
 
 .prose-editor .ProseMirror h2 {
@@ -214,9 +224,32 @@ body {
   padding: 0.5rem 0.75rem;
   margin: 0.75rem 0;
 }
-.prose-render [data-typed-block="mechanics"] {
+/* DM color mapping: attention = red (radish), paraphrase = gray (muted),
+ * develop = yellow (gold). */
+.prose-render [data-typed-block="attention"] {
   border-left-color: #8a5e61;
   background: rgba(138, 94, 97, 0.08);
+}
+.prose-render [data-typed-block="paraphrase"] {
+  border-left-color: #76604e;
+  background: rgba(118, 96, 78, 0.08);
+}
+.prose-render [data-typed-block="develop"] {
+  border-left-color: #c4943a;
+  background: rgba(196, 148, 58, 0.1);
+}
+/* The editor mirrors the reading styles. */
+.ProseMirror [data-typed-block="attention"] {
+  border-left-color: #8a5e61;
+  background: rgba(138, 94, 97, 0.08);
+}
+.ProseMirror [data-typed-block="paraphrase"] {
+  border-left-color: #76604e;
+  background: rgba(118, 96, 78, 0.08);
+}
+.ProseMirror [data-typed-block="develop"] {
+  border-left-color: #c4943a;
+  background: rgba(196, 148, 58, 0.1);
 }
 .prose-render .mention {
   color: #4d5947;
@@ -237,6 +270,15 @@ body {
   color: #2e332b;
   white-space: nowrap;
 }
+/* Dice node: blue, per the DM mapping. */
+.dice-node {
+  background: rgba(86, 122, 148, 0.12);
+  border-radius: 0.25rem;
+  padding: 0 0.3rem;
+  font-weight: 600;
+  color: #2e332b;
+  white-space: nowrap;
+}
 .ProseMirror .date-node.ProseMirror-selectednode,
 .ProseMirror-selectednode.date-node {
   outline: 2px solid #9a7656;
@@ -251,16 +293,4 @@ body {
   font-weight: 600;
   color: #2e332b;
   white-space: nowrap;
-}
-/* Editorial intent marks: persistent workflow markers on imported text
- * (paraphrase = yellow, develop = blue), visible in both modes. */
-.mark-paraphrase {
-  background: rgba(196, 148, 58, 0.25);
-  border-bottom: 2px dotted #9a7656;
-  color: #6b5227;
-}
-.mark-develop {
-  background: rgba(86, 122, 148, 0.18);
-  border-bottom: 2px dotted #567a94;
-  color: #3c5566;
 }

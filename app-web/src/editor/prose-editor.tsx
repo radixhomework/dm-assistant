@@ -1,13 +1,50 @@
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarDays } from "lucide-react";
+import {
+  CalendarDays,
+  Dices,
+  Feather,
+  MessageSquareQuote,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 import { buildExtensions } from "./extensions.js";
 import { DatePickerPanel } from "./date-picker.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
 
 const toolButton =
   "rounded-md border border-border px-2 py-0.5 text-sm text-ink transition-colors duration-200 hover:bg-surface";
+
+/** Icon-only highlight/insert button: the icon carries the assigned
+ * section color, the tooltip the action. */
+function IconToolButton({
+  icon: Icon,
+  color,
+  label,
+  title,
+  action,
+}: {
+  readonly icon: LucideIcon;
+  readonly color: string;
+  readonly label: string;
+  readonly title: string;
+  readonly action: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={label}
+      tabIndex={-1}
+      onClick={action}
+      className="rounded-md border border-border bg-surface px-2 py-1 transition-colors duration-200 hover:bg-background"
+      style={{ color }}
+    >
+      <Icon className="size-4" aria-hidden />
+    </button>
+  );
+}
 
 function ToolButton({
   editor,
@@ -142,34 +179,6 @@ export function ProseEditor({
               const src = window.prompt(t("editor.imagePrompt"));
               if (src) cmd().setImage({ src }).run();
             }} />
-            <ToolButton editor={editor} active={false} label="🎲" title={t("editor.dice")} action={() => {
-              const raw = window.prompt(t("editor.dicePrompt"));
-              if (!raw) return;
-              editor.chain().focus().insertContent({
-                type: "dice",
-                attrs: { formula: raw.trim() },
-              }).run();
-            }} />
-            <ToolButton editor={editor} active={editor.isActive("paraphrase")} label={t("editor.paraphrase")} title={t("editor.paraphrase")} action={() => cmd().toggleMark("paraphrase").run()} />
-            <ToolButton editor={editor} active={editor.isActive("develop")} label={t("editor.develop")} title={t("editor.develop")} action={() => cmd().toggleMark("develop").run()} />
-            <button
-              type="button"
-              title={t("editor.date")}
-              tabIndex={-1}
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                setDatePicker((open) =>
-                  open === null ? { x: rect.left, y: rect.bottom } : null,
-                );
-              }}
-              className={
-                datePicker !== null
-                  ? "rounded-md bg-primary px-2 py-0.5 text-sm text-background transition-colors duration-200"
-                  : toolButton
-              }
-            >
-              <CalendarDays className="size-3.5" aria-hidden />
-            </button>
             {datePicker !== null && (
               <DatePickerPanel
                 definition={definition}
@@ -199,7 +208,53 @@ export function ProseEditor({
             aria-label={t("editor.highlightToolbar")}
             tabIndex={-1}
           >
-            <ToolButton editor={editor} active={editor.isActive("attention")} label={t("editor.attention")} title={t("editor.attention")} action={() => cmd().insertContent({ type: "attention", content: [{ type: "paragraph" }] }).run()} />
+            <IconToolButton
+              icon={Dices}
+              color="#567a94"
+              label={t("editor.dice")}
+              title={t("editor.dice")}
+              action={() => {
+                const raw = window.prompt(t("editor.dicePrompt"));
+                if (!raw) return;
+                editor.chain().focus().insertContent({
+                  type: "dice",
+                  attrs: { formula: raw.trim() },
+                }).run();
+              }}
+            />
+            <IconToolButton
+              icon={CalendarDays}
+              color="#76604e"
+              label={t("editor.date")}
+              title={t("editor.date")}
+              action={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                setDatePicker((open) =>
+                  open === null ? { x: rect.left, y: rect.bottom } : null,
+                );
+              }}
+            />
+            <IconToolButton
+              icon={TriangleAlert}
+              color="#8a5e61"
+              label={t("editor.attention")}
+              title={t("editor.attention")}
+              action={() => cmd().insertContent({ type: "attention", content: [{ type: "paragraph" }] }).run()}
+            />
+            <IconToolButton
+              icon={MessageSquareQuote}
+              color="#76604e"
+              label={t("editor.paraphrase")}
+              title={t("editor.paraphrase")}
+              action={() => cmd().insertContent({ type: "paraphrase", content: [{ type: "paragraph" }] }).run()}
+            />
+            <IconToolButton
+              icon={Feather}
+              color="#c4943a"
+              label={t("editor.develop")}
+              title={t("editor.develop")}
+              action={() => cmd().insertContent({ type: "develop", content: [{ type: "paragraph" }] }).run()}
+            />
           </div>
         </>
       )}

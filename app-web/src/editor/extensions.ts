@@ -3,10 +3,9 @@ import Image from "@tiptap/extension-image";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
-import { AttentionPoint } from "./typed-blocks.js";
+import { AttentionPoint, DevelopBlock, ParaphraseBlock } from "./typed-blocks.js";
 import { CalendarDateNode } from "./date-node.js";
 import { DiceNode } from "./dice-node.js";
-import { DevelopMark, ParaphraseMark } from "./prose-marks.js";
 import { RecordMention } from "./mention-node.js";
 import { mentionSuggestion } from "./mention-suggestion.js";
 
@@ -31,8 +30,8 @@ export function buildExtensions(): AnyExtension[] {
     Image,
     AttentionPoint,
     RecordMention.configure({ suggestion: mentionSuggestion }),
-    ParaphraseMark,
-    DevelopMark,
+    ParaphraseBlock,
+    DevelopBlock,
     DiceNode,
     CalendarDateNode,
   ];

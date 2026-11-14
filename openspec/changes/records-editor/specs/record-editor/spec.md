@@ -46,15 +46,15 @@ The editor SHALL offer the `:::attention` fenced-container block (generalizing t
 - **WHEN** a document containing a `:::attention` block is loaded and saved without edits
 - **THEN** the stored markdown is byte-identical (canonical form)
 
-### Requirement: Editorial markers
-The editor SHALL offer the inline editorial markers the DM requested: a **dice node** storing a formula (`[[dice:3d6+2]]`) and rendered with its round-down stat-block average, and two intent marks — `==…==` for passages to paraphrase, `++…++` for passages to develop — visibly styled in both modes and round-tripping byte-for-byte.
+### Requirement: Editorial blocks
+The editor SHALL offer the editorial blocks the DM requested: a **dice node** storing a formula (`[[dice:3d6+2]]`) and rendered with its round-down stat-block average, plus the `:::paraphrase` and `:::develop` fenced-container blocks flagging imported passages to rephrase or expand. All of them SHALL be visibly styled per the DM's palette (dice blue, paraphrase gray, develop yellow, attention red) in both modes and SHALL round-trip byte-for-byte.
 
 #### Scenario: Dice node renders its average
 - **WHEN** the DM inserts the dice node `[[dice:3d6+2]]`
 - **THEN** the reading and editing views display the formula with its round-down average (12)
 
-#### Scenario: Intent marks round-trip
-- **WHEN** a document carrying `==…==` and `++…++` markers is loaded and saved without edits
+#### Scenario: Editorial blocks round-trip
+- **WHEN** a document carrying `:::paraphrase` and `:::develop` blocks is loaded and saved without edits
 - **THEN** the stored markdown is byte-identical (canonical form)
 
 ### Requirement: Record sheets in read mode
