@@ -49,7 +49,7 @@ describe("CalendarAdminEditor", () => {
     expect((screen.getByLabelText("Days per week") as HTMLInputElement).value).toBe("8");
     // Week shortening trims the extra day-name inputs.
     fireEvent.change(screen.getByLabelText("Days per week"), { target: { value: "5" } });
-    expect(screen.getAllByPlaceholderText("Name").length).toBe(2);
+    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
   });
 
   it("saves the edited definition through the admin endpoint", async () => {
