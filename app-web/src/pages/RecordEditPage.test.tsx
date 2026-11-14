@@ -207,13 +207,21 @@ describe("RecordEditPage", () => {
     stubFetch(
       recordOf(
         { population: "1M" },
-        { region: [{ slug: "the-glass-region", title: "The Glass Region" }] },
+        {
+          region: [
+            { slug: "the-glass-region", title: "The Glass Region" },
+            { slug: "alpha-isle", title: "Alpha Isle" },
+          ],
+        },
       ),
     );
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() =>
       expect(screen.getByText("The Glass Region")).toBeDefined(),
     );
+    // Title-sorted, comma-separated.
+    const dd = screen.getByText("The Glass Region").closest("dd")!;
+    expect(dd.textContent).toBe("Alpha Isle, The Glass Region");
     const link = screen.getByText("The Glass Region").closest("a");
     expect(link?.getAttribute("href")).toBe("#the-glass-region");
   });
