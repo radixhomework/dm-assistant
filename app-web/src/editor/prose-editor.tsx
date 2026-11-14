@@ -18,6 +18,41 @@ const toolButton =
 
 /** Icon-only highlight/insert button: the icon carries the assigned
  * section color, the tooltip the action. */
+const TYPED_BLOCK_TYPES = ["attention", "paraphrase", "develop"];
+
+/** Inserts a highlight block, escaping any typed-block container the
+ * caret sits in: the new block lands after the outermost container
+ * instead of nesting inside it. */
+function insertHighlightBlock(
+  editor: Editor,
+  type: (typeof TYPED_BLOCK_TYPES)[number],
+): void {
+  const { selection } = editor.state;
+  let afterOuter: number | null = null;
+  for (let depth = selection.$from.depth; depth > 0; depth -= 1) {
+    const node = selection.$from.node(depth);
+    if (TYPED_BLOCK_TYPES.includes(node.type.name)) {
+      afterOuter = selection.$from.after(depth);
+    }
+  }
+  if (afterOuter !== null) {
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(afterOuter, {
+        type,
+        content: [{ type: "paragraph" }],
+      })
+      .run();
+    return;
+  }
+  editor
+    .chain()
+    .focus()
+    .insertContent({ type, content: [{ type: "paragraph" }] })
+    .run();
+}
+
 function IconToolButton({
   icon: Icon,
   label,
@@ -237,19 +272,19 @@ export function ProseEditor({
               icon={TriangleAlert}
               label={t("editor.attention")}
               title={t("editor.attention")}
-              action={() => cmd().insertContent({ type: "attention", content: [{ type: "paragraph" }] }).run()}
+              action={() => insertHighlightBlock(editor, "attention")}
             />
             <IconToolButton
               icon={MessageSquareQuote}
               label={t("editor.paraphrase")}
               title={t("editor.paraphrase")}
-              action={() => cmd().insertContent({ type: "paraphrase", content: [{ type: "paragraph" }] }).run()}
+              action={() => insertHighlightBlock(editor, "paraphrase")}
             />
             <IconToolButton
               icon={Feather}
               label={t("editor.develop")}
               title={t("editor.develop")}
-              action={() => cmd().insertContent({ type: "develop", content: [{ type: "paragraph" }] }).run()}
+              action={() => insertHighlightBlock(editor, "develop")}
             />
           </div>
         </>
