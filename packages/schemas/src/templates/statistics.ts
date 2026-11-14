@@ -93,7 +93,16 @@ export const statisticsSchema = z.object({
   alignment: z.string().max(80).optional(),
   creatureType: z.string().max(80).optional(),
   size: z.enum(sizeValues).optional(),
-  darkvision: z.number().optional(),
+  /** Les cinq sens du bloc de stats SRD (la Perception passive est
+   * stockée à part). */
+  senses: z
+    .object({
+      tremorsense: z.number().optional(),
+      blindsight: z.number().optional(),
+      darkvision: z.number().optional(),
+      truesight: z.number().optional(),
+    })
+    .optional(),
   passivePerception: z.number().int().optional(),
   vulnerabilities: z.array(z.string()).default([]),
   resistances: z.array(z.string()).default([]),

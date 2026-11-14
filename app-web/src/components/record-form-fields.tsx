@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Field, inputClass } from "./form.js";
 import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
@@ -248,7 +248,6 @@ function StatisticsControl(props: {
   readonly onChange: (value: Fields) => void;
 }) {
   const { t } = useTranslation();
-  const [focusedAbility, setFocusedAbility] = useState<string | null>(null);
   const abilities = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"] as const;
   const abilityLabels: Record<string, string> = {
     strength: t("stats.strength"),
@@ -264,12 +263,6 @@ function StatisticsControl(props: {
       [ability]: raw === "" ? undefined : Number(raw),
     });
   };
-  const modifier = (ability: string) => {
-    const score = props.value[ability];
-    if (typeof score !== "number") return "";
-    return `(${Math.floor((score - 10) / 2) >= 0 ? "+" : ""}${Math.floor((score - 10) / 2)})`;
-  };
-
   const setPart = (key: string, value: unknown) => props.onChange({ ...props.value, [key]: value });
   const numberPart = (key: string) => {
     const value = props.value[key];
@@ -296,6 +289,19 @@ function StatisticsControl(props: {
     name?: string;
     modifier?: number;
   }>;
+  const damageList = (key: "resistances" | "vulnerabilities" | "immunities") =>
+    ((props.value[key] ?? []) as string[]).join(", ");
+  const setDamageList = (
+    key: "resistances" | "vulnerabilities" | "immunities",
+    raw: string,
+  ): void => {
+    setPart(
+      key,
+      raw.trim() === ""
+        ? []
+        : raw.split(",").map((entry) => entry.trim()).filter(Boolean),
+    );
+  };
   const setSkill = (
     index: number,
     skill: { name?: string; modifier?: number },
@@ -308,60 +314,49 @@ function StatisticsControl(props: {
   return (
     <Field label={props.label}>
       <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-3">
-        {/* Row 1: ability score values */}
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {/* Pseudo-table: characteristics / values / check mastery / save
+         * mastery, all aligned on the same six columns. */}
+        <div className="grid grid-cols-7 items-center gap-x-2 gap-y-1 text-sm">
+          <span className="text-muted">{t("stats.characteristics")}</span>
           {abilities.map((ability) => (
-            <label key={ability} className="flex flex-col gap-1 text-sm">
-              <span className="text-xs uppercase tracking-wide text-muted">
-                {t(`stats.abbr.${ability}`)}
-              </span>
+            <span key={`label-${ability}`} className="text-center text-xs uppercase tracking-wide text-muted">
+              {t(`stats.abbr.${ability}`)}
+            </span>
+          ))}
+          <span className="text-muted">{t("stats.values")}</span>
+          {abilities.map((ability) => (
+            <input
+              key={`score-${ability}`}
+              type="number"
+              aria-label={abilityLabels[ability]}
+              value={typeof props.value[ability] === "number" ? props.value[ability] : ""}
+              onChange={(event) => setAbility(ability, event.target.value)}
+              className={`${inputClass} w-full px-2 py-1 text-center`}
+            />
+          ))}
+          <span className="text-muted">{t("stats.checksMastery")}</span>
+          {abilities.map((ability) => (
+            <label key={`check-${ability}`} className="flex justify-center">
               <input
-                type="number"
-                aria-label={abilityLabels[ability]}
-                value={typeof props.value[ability] === "number" ? props.value[ability] : ""}
-                onFocus={() => setFocusedAbility(ability)}
-                onBlur={() => setFocusedAbility(null)}
-                onChange={(event) => setAbility(ability, event.target.value)}
-                className={inputClass}
+                type="checkbox"
+                aria-label={`${t("stats.abilityChecks")} ${abilityLabels[ability]}`}
+                checked={masteryFlag("checksMastery", ability)}
+                onChange={(event) => setMastery("checksMastery", ability, event.target.checked)}
               />
-              {focusedAbility !== ability && modifier(ability) && (
-                <span className="text-xs text-muted">{modifier(ability)}</span>
-              )}
+            </label>
+          ))}
+          <span className="text-muted">{t("stats.savesMastery")}</span>
+          {abilities.map((ability) => (
+            <label key={`save-${ability}`} className="flex justify-center">
+              <input
+                type="checkbox"
+                aria-label={`${t("stats.savesMastery")} ${abilityLabels[ability]}`}
+                checked={masteryFlag("savesMastery", ability)}
+                onChange={(event) => setMastery("savesMastery", ability, event.target.checked)}
+              />
             </label>
           ))}
         </div>
-        {/* Row 2: check mastery */}
-        <Field label={t("stats.checksMastery")}>
-          <div className="flex flex-wrap gap-2">
-            {abilities.map((ability) => (
-              <label key={ability} className="flex items-center gap-1 text-sm">
-                <input
-                  type="checkbox"
-                  aria-label={`${t("stats.abilityChecks")} ${abilityLabels[ability]}`}
-                  checked={masteryFlag("checksMastery", ability)}
-                  onChange={(event) => setMastery("checksMastery", ability, event.target.checked)}
-                />
-                {t(`stats.abbr.${ability}`)}
-              </label>
-            ))}
-          </div>
-        </Field>
-        {/* Row 3: saving throw mastery */}
-        <Field label={t("stats.savesMastery")}>
-          <div className="flex flex-wrap gap-2">
-            {abilities.map((ability) => (
-              <label key={ability} className="flex items-center gap-1 text-sm">
-                <input
-                  type="checkbox"
-                  aria-label={`${t("stats.savesMastery")} ${abilityLabels[ability]}`}
-                  checked={masteryFlag("savesMastery", ability)}
-                  onChange={(event) => setMastery("savesMastery", ability, event.target.checked)}
-                />
-                {t(`stats.abbr.${ability}`)}
-              </label>
-            ))}
-          </div>
-        </Field>
         {/* AC, passive perception, initiative, proficiency bonus */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Field label={t("stats.ac")}>
@@ -457,18 +452,42 @@ function StatisticsControl(props: {
             </Field>
           );
         })()}
-        {/* Darkvision, alignment, creature type, size */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Field label={t("stats.darkvision")}>
-            <input
-              type="number"
-              value={numberPart("darkvision")}
-              onChange={(event) =>
-                setPart("darkvision", event.target.value === "" ? undefined : Number(event.target.value))
-              }
-              className={`${inputClass} w-20`}
-            />
-          </Field>
+        {/* Senses */}
+        {(() => {
+          const senses = (props.value.senses ?? {}) as Record<string, number | undefined>;
+          const senseInputs: Array<readonly [string, string]> = [
+            ["tremorsense", t("stats.tremorsense")],
+            ["blindsight", t("stats.blindsight")],
+            ["darkvision", t("stats.darkvision")],
+            ["truesight", t("stats.truesight")],
+          ];
+          const setSense = (key: string, raw: string): void => {
+            setPart("senses", {
+              ...senses,
+              [key]: raw === "" ? undefined : Number(raw),
+            });
+          };
+          return (
+            <Field label={t("stats.senses")}>
+              <div className="flex flex-wrap gap-2">
+                {senseInputs.map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-1 text-sm">
+                    <span className="text-muted">{label}</span>
+                    <input
+                      type="number"
+                      aria-label={`${t("stats.senses")} ${label}`}
+                      value={typeof senses[key] === "number" ? senses[key] : ""}
+                      onChange={(event) => setSense(key, event.target.value)}
+                      className={`${inputClass} w-20`}
+                    />
+                  </label>
+                ))}
+              </div>
+            </Field>
+          );
+        })()}
+        {/* Alignment, creature type, size */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Field label={t("stats.alignment")}>
             <input
               value={textPart("alignment")}
@@ -536,6 +555,19 @@ function StatisticsControl(props: {
             </button>
           </div>
         </Field>
+        {([
+          ["resistances", t("stats.resistances")],
+          ["vulnerabilities", t("stats.vulnerabilities")],
+          ["immunities", t("stats.immunities")],
+        ] as const).map(([key, label]) => (
+          <Field key={key} label={label}>
+            <input
+              value={damageList(key)}
+              onChange={(event) => setDamageList(key, event.target.value)}
+              className={inputClass}
+            />
+          </Field>
+        ))}
       </div>
     </Field>
   );

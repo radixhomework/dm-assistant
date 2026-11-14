@@ -360,7 +360,14 @@
     "hpShort": "Pv",
     "modHeader": "MOD",
     "saveHeader": "JS",
-    "senses": "Sens"
+    "senses": "Sens",
+    "tremorsense": "Perception des vibrations",
+    "blindsight": "Vision aveugle",
+    "truesight": "Vision lucide",
+    "carHeader": "CAR",
+    "valueHeader": "Valeur",
+    "characteristics": "Caractéristiques",
+    "values": "Valeurs"
   },
   "calendar": {
     "title": "Calendrier",

@@ -360,7 +360,14 @@
     "hpShort": "HP",
     "modHeader": "MOD",
     "saveHeader": "Save",
-    "senses": "Senses"
+    "senses": "Senses",
+    "tremorsense": "Tremorsense",
+    "blindsight": "Blindsight",
+    "truesight": "Truesight",
+    "carHeader": "Ability",
+    "valueHeader": "Score",
+    "characteristics": "Abilities",
+    "values": "Scores"
   },
   "calendar": {
     "title": "Calendar",

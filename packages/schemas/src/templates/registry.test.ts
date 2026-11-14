@@ -12,7 +12,7 @@ import { calendarDateSchema, moneySchema, recurrenceSchema } from "./vocabulary.
 const expectedKeys: Record<string, { fields: string[]; references: string[] }> = {
   "characters-and-entities": {
     fields: ["illustration", "gender", "physical_traits", "statistics", "public_description", "private_description"],
-    references: ["origin", "species", "classes", "languages", "characters", "beliefs", "organizations", "knowledge", "works"],
+    references: ["origins", "species", "classes", "languages", "characters", "beliefs", "organizations", "knowledge", "works"],
   },
   places: {
     fields: ["illustration", "place_type", "population", "public_description", "private_description"],
@@ -188,7 +188,7 @@ describe("statisticsSchema", () => {
     speed: { walk: 9, fly: 18 },
     initiative: 2,
     size: "large",
-    darkvision: 18,
+    senses: { darkvision: 18, tremorsense: 3 },
     passivePerception: 13,
     vulnerabilities: ["fire"],
     resistances: ["cold"],

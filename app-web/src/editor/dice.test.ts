@@ -15,12 +15,12 @@ describe("dice formulas", () => {
     expect(parseDice("d")).toBeNull();
   });
 
-  it("computes the average: ceil((1+faces)/2 × dice) + fixed", () => {
+  it("computes the average: floor((1+faces)/2 × dice) + fixed", () => {
     expect(diceAverage("4d8")).toBe(18);
-    expect(diceAverage("3d6+12")).toBe(23);
-    expect(diceAverage("3d6+2")).toBe(13);
-    expect(diceAverage("1d20")).toBe(11);
-    expect(diceAverage("1d20-1")).toBe(10);
+    expect(diceAverage("3d6+12")).toBe(22);
+    expect(diceAverage("3d6+2")).toBe(12);
+    expect(diceAverage("1d20")).toBe(10);
+    expect(diceAverage("1d20-1")).toBe(9);
     expect(diceAverage("banana")).toBeNull();
   });
 });

@@ -150,7 +150,7 @@ describe("RecordFormFields — statistics block", () => {
     // The PV formula computes its average automatically (17d6 avg 59 + 22).
     fireEvent.input(inputOfLabel("HP formula"), { target: { value: "17d6 + 22" } });
     expect(lastFields(onChange).statistics).toMatchObject({
-      hp: { formula: "17d6 + 22", average: 82 },
+      hp: { formula: "17d6 + 22", average: 81 },
     });
 
     fireEvent.input(inputOfLabel("Alignment"), { target: { value: "chaotic neutral" } });
@@ -161,25 +161,6 @@ describe("RecordFormFields — statistics block", () => {
 
     fireEvent.change(selectWithValue("gargantuan"), { target: { value: "large" } });
     expect(lastFields(onChange).statistics).toMatchObject({ size: "large" });
-  });
-
-  it("shows the SRD ability modifier outside of editing", () => {
-    renderWithProviders(
-      <RecordFormFields
-        schema={templateSchemaOf("monsters")!}
-        fields={{ statistics: { strength: 18 } }}
-        onChange={vi.fn()}
-      />,
-    );
-    expect(screen.getByText("(+4)")).toBeDefined();
-    // While the input is focused the modifier hides (no echo while typing).
-    const strength = screen
-      .getAllByLabelText("Strength", { exact: true })
-      .find((el): el is HTMLInputElement => (el as HTMLInputElement).type === "number")!;
-    fireEvent.focus(strength);
-    expect(screen.queryByText("(+4)")).toBeNull();
-    fireEvent.blur(strength);
-    expect(screen.getByText("(+4)")).toBeDefined();
   });
 
   it("translates size options", () => {

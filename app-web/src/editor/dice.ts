@@ -24,11 +24,11 @@ export function parseDice(formula: string): {
 }
 
 /** The average: ((1 + faces) / 2 × dice count) + fixed value, rounded
- * up ("4d8" → 18; "3d6+12" → 23). */
+ * down ("4d8" → 18; "3d6+12" → 22). */
 export function diceAverage(formula: string): number | null {
   const parsed = parseDice(formula);
   if (!parsed) return null;
   return (
-    Math.ceil((parsed.count * (parsed.faces + 1)) / 2) + parsed.modifier
+    Math.floor((parsed.count * (parsed.faces + 1)) / 2) + parsed.modifier
   );
 }

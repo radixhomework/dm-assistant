@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { abilityModifier } from "@dm/schemas";
 import { ProseEditor } from "../editor/prose-editor.js";
@@ -71,14 +72,17 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => `${value} m (${t(`stats.${key}`)})`)
     : [];
-  const senses: string[] = [
-    stats.darkvision !== undefined
-      ? `${t("stats.darkvision")} ${stats.darkvision} m`
-      : "",
-    stats.passivePerception !== undefined
-      ? `${t("stats.passivePerception")} ${stats.passivePerception}`
-      : "",
-  ].filter(Boolean);
+  const senses: string[] = (
+    [
+      ["tremorsense", stats.senses?.tremorsense, " m"],
+      ["blindsight", stats.senses?.blindsight, " m"],
+      ["darkvision", stats.senses?.darkvision, " m"],
+      ["truesight", stats.senses?.truesight, " m"],
+      ["passivePerception", stats.passivePerception, ""],
+    ] as const
+  )
+    .filter((pair) => pair[1] !== undefined)
+    .map(([key, value, unit]) => `${t(`stats.${key}`)} ${value}${unit}`);
 
   return (
     <section className="mt-8">
@@ -115,32 +119,42 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
             {speedParts.join(", ")}
           </p>
         )}
-        <table className="mt-1 w-full max-w-xl border-collapse text-center">
-          <thead>
-            <tr className="text-xs uppercase text-muted">
-              <th />
-              <th>{t("stats.modHeader")}</th>
-              <th>{t("stats.saveHeader")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {abilities.map(([key, score]) => {
-              const mod = modifierOf(score);
-              const save = saveOf(key, mod);
-              return (
-                <tr key={key} className="border-t border-border">
-                  <th scope="row" className="text-left font-semibold text-ink">
-                    {t(`stats.abbr.${key}`)} {score ?? "—"}
-                  </th>
-                  <td className="text-ink">{mod === null ? "—" : `+${mod}`}</td>
-                  <td className="text-ink">{save === null ? "—" : `+${save}`}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {/* Compact SRD table: CAR / Valeur / Mod / JS — three abilities
+         * per line. JS = MOD + proficiency when the save is mastered. */}
+        <div className="mt-1 grid grid-cols-12 gap-x-2 text-sm">
+          {[0, 1, 2].map((group) => (
+            <Fragment key={`head-${group}`}>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.carHeader")}
+              </span>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.valueHeader")}
+              </span>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.modHeader")}
+              </span>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.saveHeader")}
+              </span>
+            </Fragment>
+          ))}
+          {abilities.map(([key, score]) => {
+            const mod = modifierOf(score);
+            const save = saveOf(key, mod);
+            return (
+              <Fragment key={key}>
+                <span className="font-semibold text-ink">
+                  {t(`stats.abbr.${key}`)}
+                </span>
+                <span className="text-ink">{score ?? "—"}</span>
+                <span className="text-ink">{mod === null ? "—" : `+${mod}`}</span>
+                <span className="text-ink">{save === null ? "—" : `+${save}`}</span>
+              </Fragment>
+            );
+          })}
+        </div>
         {(stats.skills ?? []).length > 0 && (
-          <p>
+          <p className="mt-2">
             <span className="font-semibold text-ink">{t("stats.skills")}</span>{" "}
             {(stats.skills ?? [])
               .map(
@@ -150,16 +164,16 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
               .join(", ")}
           </p>
         )}
-        {(stats.vulnerabilities ?? []).length > 0 && (
-          <p>
-            <span className="font-semibold text-ink">{t("stats.vulnerabilities")}</span>{" "}
-            {(stats.vulnerabilities ?? []).join(", ")}
-          </p>
-        )}
         {(stats.resistances ?? []).length > 0 && (
           <p>
             <span className="font-semibold text-ink">{t("stats.resistances")}</span>{" "}
             {(stats.resistances ?? []).join(", ")}
+          </p>
+        )}
+        {(stats.vulnerabilities ?? []).length > 0 && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.vulnerabilities")}</span>{" "}
+            {(stats.vulnerabilities ?? []).join(", ")}
           </p>
         )}
         {(stats.immunities ?? []).length > 0 && (

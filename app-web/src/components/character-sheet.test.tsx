@@ -42,10 +42,11 @@ describe("CharacterSheet", () => {
   it("renders the SRD-style ability table with modifiers and saves", () => {
     renderWithProviders(<CharacterSheet record={character} />);
     // FOR 18 → MOD +4; no save mastery → JS = MOD.
-    expect(screen.getByText(/^STR 18/)).toBeDefined();
+    expect(screen.getByText("STR")).toBeDefined();
+    expect(screen.getByText("18")).toBeDefined();
     expect(screen.getAllByText("+4").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("MOD")).toBeDefined();
-    expect(screen.getByText("Save")).toBeDefined();
+    expect(screen.getAllByText("MOD").length).toBe(3);
+    expect(screen.getAllByText("Save").length).toBe(3);
   });
 
   it("renders the SRD-style stat block lines", () => {
