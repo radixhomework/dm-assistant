@@ -209,32 +209,56 @@ function GenericFieldRows(props: {
   const entries = Object.entries(record.fields ?? {}) as Array<
     [string, string | number | boolean | object | null | undefined]
   >;
-  const fieldRows = entries
-    .map(([key, value]) =>
-      buildFieldRow({
-        key,
-        value,
-        shape,
-        label: t(`fields.${key}`),
-        translate: t as unknown as Translate,
-      }),
-    )
-    .filter((row) => row !== null);
-  const referenceEntries = Object.entries(record.references ?? {}).filter(
-    ([, targets]) => (targets as Array<{ slug: string }>).length > 0,
-  );
-  return (
-    <div>
-      {fieldRows.length > 0 && (
-        <dl className="record-read-fields">
-          {fieldRows.map((row) => (
+  // Prose fields render as headed sections (no boxed frame — the heading
+  // separates the sections); the other fields stay as label/value rows.
+  const blocks: React.ReactNode[] = [];
+  let plainRows: FieldRow[] = [];
+  const flushRows = () => {
+    if (plainRows.length > 0) {
+      const rows = plainRows;
+      blocks.push(
+        <dl key={`rows-${blocks.length}`} className="record-read-fields">
+          {rows.map((row) => (
             <div key={row.key} className="record-read-field">
               <dt>{row.label}</dt>
               <dd>{row.node}</dd>
             </div>
           ))}
-        </dl>
-      )}
+        </dl>,
+      );
+      plainRows = [];
+    }
+  };
+  for (const [key, value] of entries) {
+    const row = buildFieldRow({
+      key,
+      value,
+      shape,
+      label: t(`fields.${key}`),
+      translate: t as unknown as Translate,
+    });
+    if (row === null) continue;
+    if (classifyField(key, shape[key]) === "prose") {
+      flushRows();
+      blocks.push(
+        <section key={key} className="mt-8">
+          <h2 className="font-display text-2xl text-ink">{row.label}</h2>
+          <div className="mt-2">
+            <ProseEditor markdown={value as string} readonly frame={false} />
+          </div>
+        </section>,
+      );
+      continue;
+    }
+    plainRows.push(row);
+  }
+  flushRows();
+  const referenceEntries = Object.entries(record.references ?? {}).filter(
+    ([, targets]) => (targets as Array<{ slug: string }>).length > 0,
+  );
+  return (
+    <div>
+      {blocks}
       {referenceEntries.length > 0 && (
         <dl className="record-read-fields">
           {referenceEntries.map(([fieldKey, targets]) => (

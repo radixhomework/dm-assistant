@@ -88,10 +88,14 @@ export function ProseEditor({
   markdown,
   onChange,
   readonly = false,
+  frame = true,
 }: {
   readonly markdown: string;
   readonly onChange?: (markdown: string) => void;
   readonly readonly?: boolean;
+  /** false renders the prose without the boxed frame — the reading
+   * sheet separates prose sections with headings instead. */
+  readonly frame?: boolean;
 }) {
   const { t } = useTranslation();
   const { definition } = useCalendarDefinition();
@@ -252,7 +256,11 @@ export function ProseEditor({
       )}
       <EditorContent
         editor={editor}
-        className="prose-editor rounded-md border border-border bg-background px-3 py-2"
+        className={
+          frame
+            ? "prose-editor rounded-md border border-border bg-background px-3 py-2"
+            : "prose-editor"
+        }
       />
     </div>
   );

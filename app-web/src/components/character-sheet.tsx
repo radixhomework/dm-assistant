@@ -50,10 +50,10 @@ function StatChip(props: { readonly label: string; readonly value: React.ReactNo
 
 function LabeledProse(props: { readonly label: string; readonly markdown: string }) {
   return (
-    <section className="mt-4">
-      <h3 className="text-sm font-semibold text-ink">{props.label}</h3>
-      <div className="mt-1">
-        <ProseEditor markdown={props.markdown} readonly />
+    <section className="mt-8">
+      <h2 className="font-display text-2xl text-ink">{props.label}</h2>
+      <div className="mt-2">
+        <ProseEditor markdown={props.markdown} readonly frame={false} />
       </div>
     </section>
   );
@@ -100,8 +100,8 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
     { label: t("stats.immunities"), values: stats.immunities ?? [] },
   ];
   return (
-    <section className="mt-4">
-      <h3 className="text-sm font-semibold text-ink">{t("fields.statistics")}</h3>
+    <section className="mt-8">
+      <h2 className="font-display text-2xl text-ink">{t("fields.statistics")}</h2>
       <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
         {abilities.map(([key, score]) => (
           <AbilityCell key={key} label={t(`stats.${key}`)} score={score} />
