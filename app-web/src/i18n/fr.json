@@ -346,7 +346,8 @@
     "proficiencyBonus": "Bonus de maîtrise",
     "addSkill": "Ajouter une compétence",
     "skillName": "Compétence",
-    "skillModifier": "Modificateur"
+    "skillModifier": "Modificateur",
+    "speed": "Vitesse"
   },
   "calendar": {
     "title": "Calendrier",

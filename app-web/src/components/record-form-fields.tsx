@@ -447,6 +447,40 @@ function StatisticsControl(props: {
             />
           </Field>
         </div>
+        {(() => {
+          const speed = (props.value.speed ?? {}) as Record<string, number | undefined>;
+          const speeds: Array<readonly [string, string]> = [
+            ["walk", t("stats.speedWalk")],
+            ["fly", t("stats.speedFly")],
+            ["swim", t("stats.speedSwim")],
+            ["climb", t("stats.speedClimb")],
+            ["burrow", t("stats.speedBurrow")],
+          ];
+          const setSpeed = (key: string, raw: string): void => {
+            setPart("speed", {
+              ...speed,
+              [key]: raw === "" ? undefined : Number(raw),
+            });
+          };
+          return (
+            <Field label={t("stats.speed")}>
+              <div className="flex flex-wrap gap-2">
+                {speeds.map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-1 text-sm">
+                    <span className="text-muted">{label}</span>
+                    <input
+                      type="number"
+                      aria-label={`${t("stats.speed")} ${label}`}
+                      value={typeof speed[key] === "number" ? speed[key] : ""}
+                      onChange={(event) => setSpeed(key, event.target.value)}
+                      className={`${inputClass} w-20`}
+                    />
+                  </label>
+                ))}
+              </div>
+            </Field>
+          );
+        })()}
         <div className="grid grid-cols-2 gap-2">
           <Field label={t("stats.hpAverage")}>
             <input

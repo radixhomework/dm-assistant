@@ -346,7 +346,8 @@
     "proficiencyBonus": "Proficiency bonus",
     "addSkill": "Add a skill",
     "skillName": "Skill",
-    "skillModifier": "Modifier"
+    "skillModifier": "Modifier",
+    "speed": "Speed"
   },
   "calendar": {
     "title": "Calendar",
