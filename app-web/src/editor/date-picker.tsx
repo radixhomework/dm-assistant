@@ -4,6 +4,18 @@ import type { CalendarSettings } from "@dm/schemas";
 
 export type ProseDate = { year: number; month?: number; day?: number };
 
+/** Length of the selected month; without a selection, the longest month
+ * keeps the day list meaningful. */
+function monthLengthOf(
+  months: Array<{ name: string; days: number }>,
+  month: number | null,
+): number {
+  if (month !== null) {
+    return months[month - 1]?.days ?? 30;
+  }
+  return Math.max(...months.map((entry) => entry.days));
+}
+
 /**
  * The prose date picker (records-editor decision 7): a floating panel fed
  * by the world calendar definition — named months, the day bounded by the
@@ -35,10 +47,10 @@ export function DatePickerPanel(props: {
     }
   }, [props.definition, yearDraft]);
 
+  // The length of the selected month; without a selection, the longest
+  // month keeps the day list meaningful. Generic 31 without a definition.
   const monthLength = months
-    ? month !== null
-      ? months[month - 1]?.days ?? 30
-      : Math.max(...months.map((entry) => entry.days))
+    ? monthLengthOf(months, month)
     : 31;
 
   function onInsert(): void {
@@ -70,7 +82,6 @@ export function DatePickerPanel(props: {
             type="number"
             aria-label={t("editor.dateYear")}
             value={yearDraft}
-            autoFocus
             onChange={(event) => setYearDraft(event.target.value)}
             className={`${inputClass} w-24`}
           />

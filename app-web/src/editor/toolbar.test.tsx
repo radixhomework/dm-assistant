@@ -77,7 +77,7 @@ describe("ProseEditor toolbar", () => {
       expect(onChange.mock.calls.at(-1)![0] as string).toContain("[[date:842-01-12]]");
     });
     // The picker closed after inserting.
-    expect(document.querySelectorAll('select[aria-label="Month"]').length).toBe(0);
+    expect(document.querySelectorAll('select[aria-label="Month"]')).toHaveLength(0);
   });
 
   it("keeps toolbars out of the Tab order", () => {
