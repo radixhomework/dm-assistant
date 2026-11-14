@@ -150,7 +150,7 @@ describe("EntitiesService", () => {
       perimeter: "world",
       title: "Lone Place",
     });
-    const nation = await service.create({
+    await service.create({
       slug: "north-kingdom",
       type: "nations",
       perimeter: "world",
@@ -164,7 +164,7 @@ describe("EntitiesService", () => {
       "lone-place",
     );
     // A prose mention of the place in a second record.
-    const storyteller = await service.create({
+    await service.create({
       slug: "storyteller",
       type: "characters-and-entities",
       perimeter: "world",
