@@ -125,6 +125,41 @@ function RecordPage({
     enabled: ready,
     retry: false,
   });
+  // Backlinks feed the reading sheet's bottom section (phase 6).
+  const backlinks = useQuery({
+    queryKey: ["backlinks", slug],
+    queryFn: () =>
+      api<{
+        fields: Record<string, Array<{ slug: string; title: string }>>;
+        mentions: Array<{ slug: string; title: string }>;
+      }>(`/api/records/${slug}/backlinks`),
+    enabled: ready,
+  });
+
+  async function attachReference(field: string, targetSlug: string): Promise<void> {
+    setError(null);
+    try {
+      await api(`/api/records/${slug}/refs/${field}`, {
+        method: "POST",
+        body: { targetSlug },
+      });
+      await record.refetch();
+    } catch (attachError) {
+      setError(String(attachError));
+    }
+  }
+
+  async function detachReference(field: string, targetSlug: string): Promise<void> {
+    setError(null);
+    try {
+      await api(`/api/records/${slug}/refs/${field}/${targetSlug}`, {
+        method: "DELETE",
+      });
+      await record.refetch();
+    } catch (detachError) {
+      setError(String(detachError));
+    }
+  }
 
   // Field values flow through onChange instead of FormData once the
   // record is loaded (one state source of truth per control). Hooks stay
@@ -225,6 +260,9 @@ function RecordPage({
               schema={templateSchemaOf(data.type)!}
               fields={fields ?? {}}
               onChange={setFields}
+              references={(data.references ?? {}) as Record<string, Array<{ slug: string; title: string }>>}
+              onAttachReference={(field, targetSlug) => void attachReference(field, targetSlug)}
+              onDetachReference={(field, targetSlug) => void detachReference(field, targetSlug)}
             />
           ) : (
             <label className="flex flex-col gap-1 text-sm">
@@ -338,6 +376,57 @@ function RecordPage({
           </div>
         );
       })()}
+      {backlinks.data && (
+        <section className="mt-8 border-t border-border pt-6">
+          <h2 className="font-display text-2xl text-ink">{t("record.backlinks")}</h2>
+          {(() => {
+            const groups = Object.entries(backlinks.data.fields);
+            const nothing =
+              groups.length === 0 && backlinks.data.mentions.length === 0;
+            if (nothing) {
+              return <p className="mt-2 text-muted">{t("record.noBacklinks")}</p>;
+            }
+            return (
+              <dl className="record-read-fields mt-2">
+                {groups.map(([fieldKey, targets]) => (
+                  <div key={fieldKey} className="record-read-field">
+                    <dt>{t(`fields.${fieldKey}`)}</dt>
+                    <dd>
+                      {targets.map((target) => (
+                        <Link
+                          key={target.slug}
+                          to="/records/$slug"
+                          params={{ slug: target.slug }}
+                          className="text-accent hover:underline"
+                        >
+                          {target.title}
+                        </Link>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+                {backlinks.data.mentions.length > 0 && (
+                  <div className="record-read-field">
+                    <dt>{t("record.incomingMentions")}</dt>
+                    <dd>
+                      {backlinks.data.mentions.map((mention) => (
+                        <Link
+                          key={mention.slug}
+                          to="/records/$slug"
+                          params={{ slug: mention.slug }}
+                          className="text-accent hover:underline"
+                        >
+                          {mention.title}
+                        </Link>
+                      ))}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            );
+          })()}
+        </section>
+      )}
     </div>
   );
 }

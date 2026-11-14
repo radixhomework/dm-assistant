@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Field, inputClass } from "./form.js";
 import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
+import { ReferenceInput } from "./reference-input.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import type { CalendarSettings, TemplateSchema } from "@dm/schemas";
 
@@ -408,13 +409,16 @@ function StatisticsControl(props: {
 /**
  * Generic form renderer: one control per template field, in template
  * order, driven by the template schema (template-schemas capability).
- * Reference fields live in the relationships table and are rendered by
- * their own controls (phase 6); they never appear in fields JSONB.
+ * Reference fields live in the relationships table: they render below
+ * the schema fields with their own attach/detach controls (phase 6).
  */
 export function RecordFormFields(props: {
   readonly schema: TemplateSchema;
   readonly fields: Fields;
   readonly onChange: (fields: Fields) => void;
+  readonly references?: Record<string, Array<{ slug: string; title: string }>>;
+  readonly onAttachReference?: (field: string, targetSlug: string) => void;
+  readonly onDetachReference?: (field: string, targetSlug: string) => void;
 }) {
   const { t } = useTranslation();
   const shape = (props.schema.fields as unknown as {
@@ -508,5 +512,43 @@ export function RecordFormFields(props: {
     }
   }
 
-  return <div className="flex flex-col gap-4">{controls}</div>;
+  const referenceEntries = Object.entries(props.schema.references);
+  return (
+    <div className="flex flex-col gap-4">
+      {controls}
+      {referenceEntries.map(([field, declaration]) => {
+        const current = props.references?.[field] ?? [];
+        return (
+          <Field key={field} label={t(`fields.${field}`)}>
+            <div className="flex flex-col gap-1">
+              {current.map((target) => (
+                <span
+                  key={target.slug}
+                  className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                >
+                  {target.title}
+                  {props.onDetachReference && (
+                    <button
+                      type="button"
+                      onClick={() => props.onDetachReference?.(field, target.slug)}
+                      className="text-sm text-radish transition-colors duration-200 hover:underline"
+                    >
+                      {t("common.remove")}
+                    </button>
+                  )}
+                </span>
+              ))}
+              {props.onAttachReference && (
+                <ReferenceInput
+                  targetType={declaration.target}
+                  placeholder={t("record.referenceSearch")}
+                  onPick={(slug) => props.onAttachReference?.(field, slug)}
+                />
+              )}
+            </div>
+          </Field>
+        );
+      })}
+    </div>
+  );
 }

@@ -24,8 +24,15 @@ export const updateEntitySchema = z.object({
 
 export const parentSchema = z.object({
   parentSlug: slugSchema,
-  kind: z.enum(["chapter", "scene"]),
+  /** The child's reference field pointing at its parent: a chapter's
+   * `campaign`, a scene's `chapter` (records-editor decision 8). */
+  kind: z.enum(["campaign", "chapter"]),
 });
+
+export const attachReferenceSchema = z.object({
+  targetSlug: slugSchema,
+});
+export type AttachReferenceInput = z.infer<typeof attachReferenceSchema>;
 
 export const playStatuses = ["not_played", "in_progress", "played"] as const;
 export type PlayStatus = (typeof playStatuses)[number];

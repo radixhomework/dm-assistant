@@ -181,6 +181,41 @@ export class EntitiesService {
     return grouped;
   }
 
+  /**
+   * Backlinks of a record (records-editor spec, backlinks section):
+   * reverse typed references grouped by the referencing field, plus
+   * incoming mentions.
+   */
+  async backlinksOf(
+    slug: string,
+  ): Promise<{
+    fields: Record<string, Array<{ slug: string; title: string }>>;
+    mentions: Array<{ slug: string; title: string }>;
+  }> {
+    const record = await this.getBySlug(slug);
+    const rows = await this.db
+      .select({
+        kind: relationships.kind,
+        slug: entities.slug,
+        title: entities.title,
+      })
+      .from(relationships)
+      .innerJoin(entities, eq(relationships.fromId, entities.id))
+      .where(eq(relationships.toId, record.id));
+    const fields: Record<string, Array<{ slug: string; title: string }>> = {};
+    for (const row of rows) {
+      const targets = fields[row.kind] ?? [];
+      targets.push({ slug: row.slug, title: row.title });
+      fields[row.kind] = targets;
+    }
+    const mentionRows = await this.db
+      .select({ slug: entities.slug, title: entities.title })
+      .from(mentions)
+      .innerJoin(entities, eq(mentions.entityId, entities.id))
+      .where(eq(mentions.targetSlug, slug));
+    return { fields, mentions: mentionRows };
+  }
+
   async delete(slug: string): Promise<void> {
     const existing = await this.getBySlug(slug);
     await this.relationships.assertNoChildren(existing.id);
@@ -262,9 +297,12 @@ export function foldStatuses(statuses: PlayStatus[]): PlayStatus {
   return "not_played";
 }
 
-function childKindOf(type: string): "chapter" | "scene" | null {
-  if (type === "campaign") return "chapter";
-  if (type === "chapter") return "scene";
+/** The hierarchy field key a parent type receives children through
+ * (records-editor decision 8): a campaign gathers its chapters through
+ * the children's `campaign` field, a chapter its scenes. */
+function childKindOf(type: string): "campaign" | "chapter" | null {
+  if (type === "campaign") return "campaign";
+  if (type === "chapter") return "chapter";
   return null;
 }
 

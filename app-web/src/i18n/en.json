@@ -188,7 +188,11 @@
     "year": "Year",
     "month": "Month",
     "day": "Day",
-    "recurring": "Recurring event"
+    "recurring": "Recurring event",
+    "backlinks": "Backlinks",
+    "incomingMentions": "Incoming mentions",
+    "noBacklinks": "Nothing points at this record yet.",
+    "referenceSearch": "Search a record..."
   },
   "fields": {
     "illustration": "Illustration",

@@ -11,6 +11,7 @@ import {
   Query,
 } from "@nestjs/common";
 import {
+  attachReferenceSchema,
   createEntitySchema,
   parentSchema,
   updateEntitySchema,
@@ -53,6 +54,35 @@ export class EntitiesController {
     return { ...record, tracking, references, campaign };
   }
 
+  /** Reverse references grouped by field + incoming mentions. */
+  @Get(":slug/backlinks")
+  async backlinks(@Param("slug") slug: string) {
+    return this.entitiesService.backlinksOf(slug);
+  }
+
+  /** Attaches a typed reference: field declared by the child's template. */
+  @HttpCode(204)
+  @Post(":slug/refs/:field")
+  attachReference(
+    @Param("slug") slug: string,
+    @Param("field") field: string,
+    @Body() body: unknown,
+  ) {
+    const { targetSlug } = attachReferenceSchema.parse(body);
+    return this.relationshipsService.attachReference(slug, field, targetSlug);
+  }
+
+  /** Detaches one target of a field (or all of them without a target). */
+  @HttpCode(204)
+  @Delete(":slug/refs/:field/:targetSlug")
+  detachReference(
+    @Param("slug") slug: string,
+    @Param("field") field: string,
+    @Param("targetSlug") targetSlug: string,
+  ) {
+    return this.relationshipsService.detachReference(slug, field, targetSlug);
+  }
+
   @Post()
   create(@Req() req: AuthedRequest, @Body() body: unknown) {
     const input = createEntitySchema.parse(body);
@@ -75,15 +105,15 @@ export class EntitiesController {
   @Post(":slug/parent")
   attachParent(@Param("slug") slug: string, @Body() body: unknown) {
     const { parentSlug, kind } = parentSchema.parse(body);
-    return this.relationshipsService.attach(slug, parentSlug, kind);
+    return this.relationshipsService.attachReference(slug, kind, parentSlug);
   }
 
   @HttpCode(204)
   @Delete(":slug/parent/:kind")
   detachParent(
     @Param("slug") slug: string,
-    @Param("kind") kind: "chapter" | "scene",
+    @Param("kind") kind: "campaign" | "chapter",
   ) {
-    return this.relationshipsService.detach(slug, kind);
+    return this.relationshipsService.detachReference(slug, kind);
   }
 }

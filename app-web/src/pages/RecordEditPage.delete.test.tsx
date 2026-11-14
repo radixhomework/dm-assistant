@@ -28,6 +28,9 @@ describe("RecordEditPage delete", () => {
             }),
           };
         }
+        if (_input.endsWith("/backlinks")) {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
         return {
           ok: true,
           json: async () => ({
@@ -56,6 +59,9 @@ describe("RecordEditPage delete", () => {
             role: "admin",
           }),
         };
+      }
+      if (input.endsWith("/backlinks")) {
+        return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
       }
       return {
         ok: true,

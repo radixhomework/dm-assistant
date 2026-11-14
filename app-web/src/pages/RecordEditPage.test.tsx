@@ -59,6 +59,9 @@ function stubFetch(record: unknown) {
           }),
         };
       }
+      if (input.endsWith("/backlinks")) {
+        return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+      }
       return { ok: true, json: async () => record };
     }),
   );
@@ -72,10 +75,12 @@ describe("RecordEditPage", () => {
   });
 
   it("renders the edit form pre-filled and saves via PATCH", async () => {
-    const fetchMock = vi.fn(async (_input: string) => ({
-      ok: true,
-      json: async () => recordOf({ population: "1M" }),
-    }));
+    const fetchMock = vi.fn(async (input: string) => {
+      if (input.endsWith("/backlinks")) {
+        return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+      }
+      return { ok: true, json: async () => recordOf({ population: "1M" }) };
+    });
     vi.stubGlobal("fetch", fetchMock);
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() =>
@@ -172,7 +177,10 @@ describe("RecordEditPage", () => {
             }),
           };
         }
-        if (input.startsWith("/api/records/city-of-glass")) {
+        if (input === "/api/records/city-of-glass/backlinks") {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
+        if (input === "/api/records/city-of-glass") {
           return { ok: true, json: async () => eventRecord };
         }
         return { ok: true, status: 204, json: async () => ({}) };

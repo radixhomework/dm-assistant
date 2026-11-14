@@ -98,10 +98,10 @@ describe("EntitiesService", () => {
   it("refuses deleting a record that children reference as parent", async () => {
     await service.create(campaign);
     await service.create(chapter);
-    await service.relationships.attach(
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
     await expect(service.delete("north-realm")).rejects.toThrow(
       /children attached/,
@@ -113,17 +113,16 @@ describe("EntitiesService", () => {
   it("enforces a single parent and lists children at the parent", async () => {
     await service.create(campaign);
     await service.create(chapter);
-    await service.relationships.attach(
+    // A 0..1 field set a second time replaces its target: the child keeps
+    // exactly one campaign link.
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
-    await expect(
-      service.relationships.attach("chapter-one", "north-realm", "chapter"),
-    ).rejects.toThrow(/already carries/);
     const children = await service.relationships.listChildren(
       "north-realm",
-      "chapter",
+      "campaign",
     );
     expect(children.map((c) => c.slug)).toEqual(["chapter-one"]);
   });
@@ -132,16 +131,51 @@ describe("EntitiesService", () => {
     await service.create(campaign);
     await service.create(chapter);
     await service.create(scene);
-    await service.relationships.attach(
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
-    await service.relationships.attach("scene-one", "chapter-one", "scene");
+    await service.relationships.attachReference("scene-one", "chapter", "chapter-one");
     const owned = { slug: "north-realm", title: "The North Realm" };
     expect(await service.campaignOf(await service.getBySlug("north-realm"))).toEqual(owned);
     expect(await service.campaignOf(await service.getBySlug("chapter-one"))).toEqual(owned);
     expect(await service.campaignOf(await service.getBySlug("scene-one"))).toEqual(owned);
+  });
+
+  it("collects backlinks: reverse references and incoming mentions", async () => {
+    await service.create({
+      slug: "lone-place",
+      type: "places",
+      perimeter: "world",
+      title: "Lone Place",
+    });
+    const nation = await service.create({
+      slug: "north-kingdom",
+      type: "nations",
+      perimeter: "world",
+      title: "North Kingdom",
+      // geography is a 0..n reference field of the nations template:
+      // it lives in the relationships table, never in fields.
+    });
+    await service.relationships.attachReference(
+      "north-kingdom",
+      "geography",
+      "lone-place",
+    );
+    // A prose mention of the place in a second record.
+    const storyteller = await service.create({
+      slug: "storyteller",
+      type: "characters-and-entities",
+      perimeter: "world",
+      title: "Storyteller",
+      fields: { public_description: "Tales of @lone-place." },
+    });
+    const backlinks = await service.backlinksOf("lone-place");
+    expect(backlinks.fields.geography).toEqual([
+      { slug: "north-kingdom", title: "North Kingdom" },
+    ]);
+    expect(backlinks.mentions).toEqual([{ slug: "storyteller", title: "Storyteller" }]);
   });
 
   it("returns no owning campaign for a world record", async () => {
@@ -158,12 +192,12 @@ describe("EntitiesService", () => {
     await service.create(campaign);
     await service.create(chapter);
     await service.create(scene);
-    await service.relationships.attach(
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
-    await service.relationships.attach("scene-one", "chapter-one", "scene");
+    await service.relationships.attachReference("scene-one", "chapter", "chapter-one");
 
     const before = await service.tracking("north-realm");
     expect(before.status).toBe("not_played");
@@ -188,7 +222,7 @@ describe("EntitiesService", () => {
       perimeter: "campaign",
       title: "Scene Two",
     });
-    await service.relationships.attach("scene-two", "chapter-one", "scene");
+    await service.relationships.attachReference("scene-two", "chapter", "chapter-one");
     const restarted = await service.tracking("chapter-one");
     expect(restarted.status).toBe("in_progress");
     expect((await service.tracking("north-realm")).status).toBe("in_progress");
