@@ -140,7 +140,9 @@ describe("AuthService", () => {
       session,
     );
     expect(user.email).toBe(email);
-    expect(session.userId).toBeDefined();
+    // The session row is attributed to the inserted user id.
+    const [row] = await testDb.select({ id: users.id }).from(users).where(eq(users.email, email));
+    expect(session.userId).toBe(row?.id);
   });
 
   it("rejects a wrong password", async () => {

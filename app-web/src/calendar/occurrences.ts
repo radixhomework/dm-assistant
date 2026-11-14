@@ -141,21 +141,22 @@ function collectEvent(
     addRange(start, span, ref, calendar, add);
     return;
   }
-  // Anchored on the start, stepping forward; an occurrence counts when
-  // its span intersects the queried year.
-  let occurrence = start;
-  for (let step = 0; step < 10_000; step += 1) {
+  // Anchored on the start: occurrence n is start advanced by
+  // interval × n — computed from the anchor each time so a clamped day
+  // (day 31 in a 30-day month) never drifts. The walk stops at the
+  // first occurrence past the year window, so it terminates.
+  for (let step = 0; ; step += 1) {
+    const occurrence = advance(
+      start,
+      recurrence.unit,
+      recurrence.interval * step,
+      calendar,
+    );
     const occurrenceStart = absoluteDay(occurrence, calendar);
     if (occurrenceStart > window.endAbs) break;
     if (occurrenceStart + span >= window.startAbs) {
       addRange(occurrence, span, ref, calendar, add);
     }
-    occurrence = advance(
-      occurrence,
-      recurrence.unit,
-      recurrence.interval,
-      calendar,
-    );
   }
 }
 

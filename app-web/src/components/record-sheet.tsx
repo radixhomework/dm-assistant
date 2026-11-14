@@ -62,10 +62,15 @@ function CalendarDateText(props: { readonly value: CalendarDate }) {
       ? definition.months[props.value.month - 1]?.name
       : undefined;
   const params: Record<string, string | number> = { year: props.value.year };
-  if (props.value.day !== undefined && monthName) params.day = props.value.day;
-  if (monthName) params.month = monthName;
-  else if (props.value.month !== undefined) params.month = props.value.month;
-  return <>{t(dateFormatKey(params), params)}</>;
+  if (props.value.day !== undefined) params.day = props.value.day;
+  params.month = monthName ?? props.value.month ?? "";
+  const prefix = props.value.era ? `${props.value.era} ` : "";
+  return (
+    <>
+      {prefix}
+      {t(dateFormatKey(params), params)}
+    </>
+  );
 }
 
 function dateFormatKey(params: Record<string, string | number>): string {

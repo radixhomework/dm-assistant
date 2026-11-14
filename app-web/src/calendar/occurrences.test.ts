@@ -75,6 +75,36 @@ describe("dayOccurrences", () => {
     expect([...result.keys()].sort()).toEqual(["1-10", "1-11", "1-12", "2-10", "2-11", "2-12"]);
   });
 
+  it("does not drift clamped days: day-31 monthly returns to day 31", () => {
+    // A calendar whose first month has 31 days: the month-2 occurrence
+    // (30-day month) clamps to day 30, but the month-3 occurrence
+    // computes from the anchor and returns to day 31.
+    const longMonthCalendar: CalendarSettings = {
+      months: [
+        { name: "L1", days: 31 },
+        { name: "L2", days: 30 },
+      ],
+      week: { days: 8 },
+      dayNames: ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"],
+      moon: { name: "Lune", cycleDays: 29 },
+      currentYear: 842,
+    };
+    const year842 = dayOccurrences(
+      [event("mensuel", { start: { year: 842, month: 1, day: 31 }, recurrence: { unit: "month", interval: 1 } })],
+      longMonthCalendar,
+      842,
+    );
+    expect([...year842.keys()].sort()).toEqual(["1-31", "2-30"]);
+    // Year 843's first occurrence computes from the anchor: day 31 again,
+    // proving a clamped month never drifts the recurrence.
+    const year843 = dayOccurrences(
+      [event("mensuel", { start: { year: 842, month: 1, day: 31 }, recurrence: { unit: "month", interval: 1 } })],
+      longMonthCalendar,
+      843,
+    );
+    expect([...year843.keys()].sort()).toEqual(["1-31", "2-30"]);
+  });
+
   it("leaves partial dates unmarked", () => {
     const result = dayOccurrences(
       [

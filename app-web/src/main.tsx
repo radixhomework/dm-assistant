@@ -59,7 +59,7 @@ const recordEditRoute = createRoute({
   path: "/records/$slug",
   component: RecordEditPage,
   validateSearch: (search: Record<string, unknown>) => ({
-    edit: search.edit === "1" ? true : undefined,
+    edit: search.edit === "1" || search.edit === true ? true : undefined,
   }),
 });
 const campaignViewRoute = createRoute({

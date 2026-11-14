@@ -126,12 +126,12 @@ describe("MentionList", () => {
     expect(command).toHaveBeenCalledWith(twoItems[0]);
   });
 
-  it("reports Enter on an empty list as handled without inserting", () => {
+  it("passes Enter through when the list has no candidates", () => {
     const command = vi.fn();
     const ref = createRef<MentionListHandle>();
     renderWithProviders(<MentionList ref={ref} items={[]} command={command} />);
     act(() => {
-      expect(ref.current!.onKeyDown(new KeyboardEvent("keydown", { key: "Enter" }))).toBe(true);
+      expect(ref.current!.onKeyDown(new KeyboardEvent("keydown", { key: "Enter" }))).toBe(false);
     });
     expect(command).not.toHaveBeenCalled();
   });

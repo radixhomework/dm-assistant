@@ -58,12 +58,17 @@ export function DatePickerPanel(props: {
       setError(t("editor.dateNeedsYear"));
       return;
     }
-    const year = Math.trunc(Number(yearDraft));
+    const year = Number(yearDraft);
     if (!Number.isFinite(year) || year === 0) {
       setError(t("editor.dateNoYearZero"));
       return;
     }
-    const date: ProseDate = { year };
+    if (!Number.isInteger(year)) {
+      setError(t("editor.dateNoYearZero"));
+      return;
+    }
+    const wholeYear = Math.trunc(year);
+    const date: ProseDate = { year: wholeYear };
     if (month !== null) date.month = month;
     if (month !== null && day !== null) date.day = day;
     props.onInsert(date);

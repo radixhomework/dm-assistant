@@ -102,7 +102,7 @@ export function RootLayout() {
         <>
           <header className="sticky top-0 z-40 border-b border-[#1e211c] bg-[#2e332b]">
             <div className="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-6 py-3">
-              {user && (
+              {user && mode.kind !== "none" && (
                 <button
                   type="button"
                   aria-label={t("nav.sidebar")}

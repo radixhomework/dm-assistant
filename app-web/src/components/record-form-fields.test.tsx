@@ -163,6 +163,21 @@ describe("RecordFormFields — statistics block", () => {
     expect(lastFields(onChange).statistics).toMatchObject({ size: "large" });
   });
 
+  it("splits the comma-separated damage lists into arrays", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <RecordFormFields schema={templateSchemaOf("monsters")!} fields={{}} onChange={onChange} />,
+    );
+    fireEvent.input(inputOfLabel("Resistances"), { target: { value: "feu, froid" } });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      resistances: ["feu", "froid"],
+    });
+    fireEvent.input(inputOfLabel("Immunities"), { target: { value: "poison" } });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      immunities: ["poison"],
+    });
+  });
+
   it("translates size options", () => {
     renderWithProviders(
       <RecordFormFields schema={templateSchemaOf("monsters")!} fields={{}} onChange={vi.fn()} />,

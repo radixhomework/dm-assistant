@@ -29,12 +29,10 @@ export const DiceNode = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     const formula = node.attrs.formula as string | null;
     const average = formula === null ? null : diceAverage(formula);
-    const text =
-      formula === null || formula === undefined
-        ? ""
-        : average === null
-          ? formula
-          : `${formula} (${average})`;
+    let text = "";
+    if (formula !== null && formula !== undefined) {
+      text = average === null ? formula : `${formula} (${average})`;
+    }
     return [
       "span",
       mergeAttributes(

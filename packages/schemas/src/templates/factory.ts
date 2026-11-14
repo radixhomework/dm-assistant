@@ -69,6 +69,7 @@ export function catalogSchema(withStatistics: boolean): TemplateSchema {
 /** Field keys whose values are prose — edited with the rich-text editor
  * and scanned for @slug mentions alongside the body. */
 export const proseFieldKeys = new Set([
+  "physical_traits",
   "public_description",
   "private_description",
   "dm_summary",

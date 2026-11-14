@@ -30,6 +30,8 @@ const character: Entity = {
       size: "medium",
       creatureType: "humanoid",
       vulnerabilities: ["fire"],
+      senses: { darkvision: 18, tremorsense: 3 },
+      passivePerception: 13,
     },
     public_description: "A tall figure.",
   },
@@ -58,6 +60,13 @@ describe("CharacterSheet", () => {
     // Creature type on the subtitle line, damage vulnerabilities as a group.
     expect(screen.getByText(/humanoid/)).toBeDefined();
     expect(screen.getByText("fire")).toBeDefined();
+  });
+
+  it("renders the five senses in the Sens line", () => {
+    renderWithProviders(<CharacterSheet record={character} />);
+    expect(screen.getByText(/Darkvision 18 m/)).toBeDefined();
+    expect(screen.getByText(/Tremorsense 3 m/)).toBeDefined();
+    expect(screen.getByText(/Passive perception 13/)).toBeDefined();
   });
 
   it("renders the typed references as links", () => {

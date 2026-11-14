@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formString } from "../forms.js";
 import { useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -45,12 +45,18 @@ function RecordPage({
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
+  const queryClient = useQueryClient();
   const record = useQuery({
     queryKey: ["record", slug],
     queryFn: () => api<Entity>(`/api/records/${slug}`),
     enabled: ready,
     retry: false,
   });
+  async function onSaveRecord(): Promise<void> {
+    // The sidebar campaign tree and campaign view share this cache.
+    await queryClient.invalidateQueries({ queryKey: ["campaign-view"] });
+  }
+
   async function attachReference(field: string, targetSlug: string): Promise<void> {
     setError(null);
     try {
@@ -142,6 +148,7 @@ function RecordPage({
       });
       setSaved(true);
       await record.refetch();
+      await onSaveRecord();
       setMode("read");
     } catch (saveError) {
       setError(String(saveError));

@@ -66,5 +66,8 @@ export const templateTypes = Object.keys(templateSchemas) as TemplateType[];
  * types — those keep the P1 structural fields validation.
  */
 export function templateSchemaOf(type: string): TemplateSchema | undefined {
-  return templateSchemas[type as TemplateType];
+  // Own-property check: inherited keys ("constructor") must not resolve.
+  return Object.prototype.hasOwnProperty.call(templateSchemas, type)
+    ? templateSchemas[type as TemplateType]
+    : undefined;
 }

@@ -48,4 +48,4 @@ export const numericStringSchema = z.string().min(1).max(60);
 /** Asset reference placeholder — replaced by the S3 gateway in P4. */
 export const assetReferenceSchema = z.string().max(400);
 
-export const orderSchema = z.number().int().nonnegative();
+export const orderSchema = z.number().int().nonnegative().max(2147483647);

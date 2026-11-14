@@ -34,7 +34,7 @@ export const RecordMention = Mention.extend({
     start(src: string): number {
       // Word-start rule: "@" after chunk start or a non-slug character,
       // followed by at least one slug character. -1 means no candidate.
-      const re = /(?:^|[^a-z0-9-])@(?=[a-z0-9-])/g;
+      const re = /(?:^|[^a-zA-Z0-9-])@(?=[a-z0-9-])/g;
       const match = re.exec(src);
       return match === null ? -1 : match.index + (match[0].length - 1);
     },

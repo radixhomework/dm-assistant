@@ -40,7 +40,7 @@ export const MentionList = forwardRef<MentionListHandle, { readonly items: Menti
         if (event.key === "Enter") {
           const item = props.items[selectedIndex];
           if (item) props.command(item);
-          return true;
+          return item !== undefined;
         }
         return false;
       },
@@ -81,6 +81,7 @@ export const MentionList = forwardRef<MentionListHandle, { readonly items: Menti
  */
 export const mentionSuggestion: Omit<SuggestionOptions<MentionCandidate>, "editor"> = {
   char: "@",
+  debounce: 200,
   items: async ({ query }) => {
     return api<MentionCandidate[]>(`/api/records?q=${encodeURIComponent(query)}`);
   },

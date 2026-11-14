@@ -421,6 +421,7 @@ describe("parseMentionSlugs", () => {
 
   it("ignores email addresses by construction", () => {
     expect(parseMentionSlugs("write to user@example.com or me@work.org")).toEqual([]);
+    expect(parseMentionSlugs("Contact John@Doe.com or X@Y.org today")).toEqual([]);
   });
 
   it("deduplicates and keeps first-seen order", () => {

@@ -53,10 +53,21 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
   ];
   // MOD = pure ability modifier; JS = MOD + proficiency when the save is
   // mastered (records-editor — SRD stat-block convention).
-  const modifierOf = (score: number | undefined): number | null =>
-    score === undefined ? null : abilityModifier(score);
-  const saveOf = (key: string, mod: number | null): number | null =>
-    mod === null ? null : mod + (stats.savesMastery?.[key as keyof typeof stats.savesMastery] === true ? prof : 0);
+  function modifierOf(score: number | undefined): number | null {
+    if (score === undefined) return null;
+    return abilityModifier(score);
+  }
+
+  function saveOf(
+    key: keyof Statistics["savesMastery"] | (typeof abilities)[number][0],
+    mod: number | null,
+  ): number | null {
+    if (mod === null) return null;
+    const mastered =
+      stats.savesMastery?.[key as keyof NonNullable<Statistics["savesMastery"]>] ===
+      true;
+    return mod + (mastered ? prof : 0);
+  }
 
   const speed = stats.speed;
   const speedParts: string[] = speed
@@ -70,7 +81,10 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
         ] as const
       )
         .filter(([, value]) => value !== undefined)
-        .map(([key, value]) => `${value} m (${t(`stats.${key}`)})`)
+        .map(([key, value]) => {
+          const label = t(`stats.${key}`);
+          return `${value} m (${label})`;
+        })
     : [];
   const senses: string[] = (
     [
@@ -82,7 +96,10 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
     ] as const
   )
     .filter((pair) => pair[1] !== undefined)
-    .map(([key, value, unit]) => `${t(`stats.${key}`)} ${value}${unit}`);
+    .map(([key, value, unit]) => {
+      const label = t(`stats.${key}`);
+      return `${label} ${value}${unit}`;
+    });
 
   return (
     <section className="mt-8">

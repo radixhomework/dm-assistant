@@ -93,12 +93,9 @@ export class EntitiesService {
       })
       .where(eq(entities.id, existing.id))
       .returning();
-    // The JSONB column is typed unknown; it always holds an object here.
-    const mentionSources: Record<string, unknown> = {
-      ...(existing.fields as Record<string, unknown>),
-      ...fields,
-    };
-    await this.replaceMentions(row.id, mentionSources);
+    // Mentions rebuild from the fields as saved (the payload always
+    // carries the full fields object when provided).
+    await this.replaceMentions(row.id, row.fields as Record<string, unknown>);
     return row;
   }
 
@@ -319,7 +316,7 @@ function childKindOf(type: string): "campaign" | "chapter" | null {
  */
 export function parseMentionSlugs(text: string): string[] {
   const found: string[] = [];
-  for (const [, slug] of text.matchAll(/(?:^|[^a-z0-9-])@([a-z0-9-]+)(?=$|[^a-z0-9-])/g)) {
+  for (const [, slug] of text.matchAll(/(?:^|[^a-zA-Z0-9-])@([a-z0-9-]+)(?=$|[^a-zA-Z0-9-])/g)) {
     if (!found.includes(slug)) found.push(slug);
   }
   return found;

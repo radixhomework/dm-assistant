@@ -56,6 +56,8 @@ function MoneyControl(props: {
             props.onChange({
               ...props.value,
               amount: event.target.value === "" ? undefined : Number(event.target.value),
+              // The GP default applies as soon as the amount exists.
+              currency: event.target.value === "" ? props.value.currency : "gp",
             })
           }
           className={inputClass}
@@ -286,9 +288,19 @@ function StatisticsControl(props: {
     setPart(key, { ...masteryFlags(key), [ability]: checked });
   };
   const skills = (props.value.skills ?? []) as Array<{
+    rowId: string;
     name?: string;
     modifier?: number;
   }>;
+  const setSkill = (
+    rowId: string,
+    patch: { name?: string; modifier?: number },
+  ): void => {
+    setPart(
+      "skills",
+      skills.map((skill) => (skill.rowId === rowId ? { ...skill, ...patch } : skill)),
+    );
+  };
   const damageList = (key: "resistances" | "vulnerabilities" | "immunities") =>
     ((props.value[key] ?? []) as string[]).join(", ");
   const setDamageList = (
@@ -301,14 +313,6 @@ function StatisticsControl(props: {
         ? []
         : raw.split(",").map((entry) => entry.trim()).filter(Boolean),
     );
-  };
-  const setSkill = (
-    index: number,
-    skill: { name?: string; modifier?: number },
-  ): void => {
-    const next = [...skills];
-    next[index] = skill;
-    setPart("skills", next);
   };
 
   return (
@@ -520,12 +524,12 @@ function StatisticsControl(props: {
         {/* Skills */}
         <Field label={t("stats.skills")}>
           <div className="flex flex-col gap-1">
-            {skills.map((skill, index) => (
-              <div key={index} className="flex items-center gap-2">
+            {skills.map((skill) => (
+              <div key={skill.rowId} className="flex items-center gap-2">
                 <input
                   placeholder={t("stats.skillName")}
                   value={skill.name ?? ""}
-                  onChange={(event) => setSkill(index, { ...skill, name: event.target.value })}
+                  onChange={(event) => setSkill(skill.rowId, { name: event.target.value })}
                   className={`${inputClass} flex-1`}
                 />
                 <input
@@ -533,13 +537,20 @@ function StatisticsControl(props: {
                   aria-label={t("stats.skillModifier")}
                   value={typeof skill.modifier === "number" ? skill.modifier : ""}
                   onChange={(event) =>
-                    setSkill(index, { ...skill, modifier: event.target.value === "" ? 0 : Number(event.target.value) })
+                    setSkill(skill.rowId, {
+                      modifier: event.target.value === "" ? 0 : Number(event.target.value),
+                    })
                   }
                   className={`${inputClass} w-20`}
                 />
                 <button
                   type="button"
-                  onClick={() => setPart("skills", skills.filter((_, i) => i !== index))}
+                  onClick={() =>
+                    setPart(
+                      "skills",
+                      skills.filter((entry) => entry.rowId !== skill.rowId),
+                    )
+                  }
                   className="text-sm text-radish transition-colors duration-200 hover:underline"
                 >
                   {t("common.remove")}
@@ -548,7 +559,16 @@ function StatisticsControl(props: {
             ))}
             <button
               type="button"
-              onClick={() => setPart("skills", [...skills, { name: "", modifier: 0 }])}
+              onClick={() =>
+                setPart("skills", [
+                  ...skills,
+                  {
+                    rowId: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    name: "",
+                    modifier: 0,
+                  },
+                ])
+              }
               className="w-fit text-sm text-accent transition-colors duration-200 hover:underline"
             >
               {t("stats.addSkill")}
