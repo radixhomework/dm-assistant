@@ -38,6 +38,8 @@ describe("HomePage", () => {
     renderWithProviders(<HomePage />);
     await vi.waitFor(() => expect(screen.getByText("Lore")).toBeDefined());
     expect(screen.getByText("Calendar")).toBeDefined();
+    const loreTile = screen.getByText("Lore").closest("a");
+    expect(loreTile?.getAttribute("data-to")).toBe("/lore");
     expect(screen.getByText("Campaigns")).toBeDefined();
     expect(screen.getByText("My account")).toBeDefined();
     expect(screen.queryByText("Admin")).toBeNull();

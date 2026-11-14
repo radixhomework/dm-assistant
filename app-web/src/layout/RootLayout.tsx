@@ -73,6 +73,7 @@ export function RootLayout() {
     | { kind: "none" };
   let mode: SidebarMode = { kind: "lore" };
   if (
+    pathname === "/" ||
     pathname === "/home" ||
     pathname === "/admin" ||
     pathname === "/account" ||
@@ -90,7 +91,7 @@ export function RootLayout() {
     mode = campaignSlug ? { kind: "campaign", slug: campaignSlug } : { kind: "none" };
   }
 
-  const loreActive = mode.kind === "lore";
+  const loreActive = pathname === "/lore" || mode.kind === "lore";
   const campaignsActive = mode.kind === "campaign" || pathname === "/campaigns";
 
   return (
@@ -116,7 +117,7 @@ export function RootLayout() {
                 {getWorldName() ?? t("app.title")}
               </Link>
               <nav className="ml-4 flex items-center gap-2">
-                <Link to="/" className={navItemClass(loreActive)}>
+                <Link to="/lore" className={navItemClass(loreActive)}>
                   <BookOpen className="size-4" aria-hidden />
                   {t("nav.lore")}
                 </Link>

@@ -23,7 +23,7 @@ export function HomePage() {
 
   const tiles: Tile[] = [
     {
-      to: "/",
+      to: "/lore",
       icon: BookOpen,
       titleKey: "nav.lore",
       descriptionKey: "home.lore",

@@ -100,8 +100,9 @@ describe("RootLayout navigation", () => {
     expect(screen.queryByText("Admin")).toBeNull();
   });
 
-  it("renders the records sidebar with collapsed categories", async () => {
+  it("renders the records sidebar on the Lore page", async () => {
     mockSession("admin");
+    routerState.pathname = "/lore";
     renderWithProviders(<RootLayout />);
     await vi.waitFor(() =>
       expect(screen.getByRole("navigation", { name: "Records" })).toBeDefined(),
@@ -114,6 +115,7 @@ describe("RootLayout navigation", () => {
 
   it("toggles the narrow-screen drawer with the header button", async () => {
     mockSession("admin");
+    routerState.pathname = "/lore";
     renderWithProviders(<RootLayout />);
     await vi.waitFor(() =>
       expect(screen.getByRole("button", { name: "Records" })).toBeDefined(),
@@ -130,7 +132,7 @@ describe("RootLayout navigation", () => {
 
   it("hides the sidebar on Admin, Account and the campaign list", () => {
     mockSession("admin");
-    for (const path of ["/admin", "/account", "/campaigns", "/calendar"]) {
+    for (const path of ["/", "/home", "/admin", "/account", "/campaigns", "/calendar"]) {
       routerState.pathname = path;
       renderWithProviders(<RootLayout />);
       expect(screen.queryByRole("navigation", { name: "Records" })).toBeNull();

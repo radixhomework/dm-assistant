@@ -46,7 +46,7 @@ const rootRoute = createRootRoute({
 });
 const loreRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  path: "/lore",
   component: LorePage,
 });
 const campaignsRoute = createRoute({
@@ -74,7 +74,7 @@ const calendarRoute = createRoute({
 });
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/home",
+  path: "/",
   component: HomePage,
 });
 const adminRoute = createRoute({
