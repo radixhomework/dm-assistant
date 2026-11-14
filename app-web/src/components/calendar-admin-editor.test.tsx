@@ -65,7 +65,7 @@ describe("CalendarAdminEditor", () => {
     fireEvent.change(screen.getByLabelText("Days per week"), { target: { value: "7" } });
     fireEvent.click(screen.getByText("Save"));
     await vi.waitFor(() => {
-      const patch = captured.find(([path, init]) => init?.method === "PATCH");
+      const patch = captured.find(([_path, init]) => init?.method === "PATCH");
       expect(patch).toBeDefined();
       const payload = JSON.parse(String(patch![1].body)) as {
         week: { days: number };
