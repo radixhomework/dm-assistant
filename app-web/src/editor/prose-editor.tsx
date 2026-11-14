@@ -20,13 +20,11 @@ const toolButton =
  * section color, the tooltip the action. */
 function IconToolButton({
   icon: Icon,
-  color,
   label,
   title,
   action,
 }: {
   readonly icon: LucideIcon;
-  readonly color: string;
   readonly label: string;
   readonly title: string;
   readonly action: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -38,8 +36,7 @@ function IconToolButton({
       aria-label={label}
       tabIndex={-1}
       onClick={action}
-      className="rounded-md border border-border bg-surface px-2 py-1 transition-colors duration-200 hover:bg-background"
-      style={{ color }}
+      className="rounded-md border border-border bg-surface px-2 py-1 text-muted transition-colors duration-200 hover:bg-background hover:text-ink"
     >
       <Icon className="size-4" aria-hidden />
     </button>
@@ -210,7 +207,6 @@ export function ProseEditor({
           >
             <IconToolButton
               icon={Dices}
-              color="#567a94"
               label={t("editor.dice")}
               title={t("editor.dice")}
               action={() => {
@@ -224,7 +220,6 @@ export function ProseEditor({
             />
             <IconToolButton
               icon={CalendarDays}
-              color="#76604e"
               label={t("editor.date")}
               title={t("editor.date")}
               action={(event) => {
@@ -236,21 +231,18 @@ export function ProseEditor({
             />
             <IconToolButton
               icon={TriangleAlert}
-              color="#8a5e61"
               label={t("editor.attention")}
               title={t("editor.attention")}
               action={() => cmd().insertContent({ type: "attention", content: [{ type: "paragraph" }] }).run()}
             />
             <IconToolButton
               icon={MessageSquareQuote}
-              color="#76604e"
               label={t("editor.paraphrase")}
               title={t("editor.paraphrase")}
               action={() => cmd().insertContent({ type: "paraphrase", content: [{ type: "paragraph" }] }).run()}
             />
             <IconToolButton
               icon={Feather}
-              color="#c4943a"
               label={t("editor.develop")}
               title={t("editor.develop")}
               action={() => cmd().insertContent({ type: "develop", content: [{ type: "paragraph" }] }).run()}
