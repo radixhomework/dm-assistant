@@ -16,6 +16,14 @@ import { entities, relationships } from "../database/schema.js";
 /** Hierarchy field keys: the child→parent reference fields. */
 export type HierarchyField = "campaign" | "chapter";
 
+/** The hierarchy field a child type attaches through (null for
+ * non-hierarchy types). */
+function hierarchyFieldOf(type: string): HierarchyField | null {
+  if (type === "chapter") return "campaign";
+  if (type === "scene") return "chapter";
+  return null;
+}
+
 @Injectable()
 export class RelationshipsService {
   constructor(@Inject(DB) private readonly db: Db) {}
@@ -121,12 +129,7 @@ export class RelationshipsService {
    */
   async moveChild(childSlug: string, direction: "up" | "down"): Promise<void> {
     const child = await this.entityBySlug(childSlug);
-    const field =
-      child.type === "chapter"
-        ? "campaign"
-        : child.type === "scene"
-          ? "chapter"
-          : null;
+    const field = hierarchyFieldOf(child.type);
     if (field === null) {
       throw new ConflictException(
         `A ${child.type} record has no play-order position`,
@@ -148,14 +151,14 @@ export class RelationshipsService {
     if (index === -1 || swapWith < 0 || swapWith >= siblings.length) return;
     const reordered = [...siblings];
     [reordered[index], reordered[swapWith]] = [reordered[swapWith], reordered[index]];
-    for (let position = 0; position < reordered.length; position += 1) {
-      await this.db
-        .update(entities)
-        .set({
-          fields: { ...(reordered[position].fields ?? {}), order: position },
-        })
-        .where(eq(entities.slug, reordered[position].slug));
-    }
+    await Promise.all(
+      reordered.map((sibling, position) =>
+        this.db
+          .update(entities)
+          .set({ fields: { ...sibling.fields, order: position } })
+          .where(eq(entities.slug, sibling.slug)),
+      ),
+    );
   }
 
   /** Refuses deletion of a record that children reference as parent. */
