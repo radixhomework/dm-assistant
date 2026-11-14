@@ -49,9 +49,9 @@
 
 ## 8. Play order
 
-- [ ] 8.1 Add `Order` to Chapter and Scene templates (`templates/_index.md` + the two files) and to their schemas
-- [ ] 8.2 Children listing ordered by `Order` (missing last, then title); reorder action rewriting sibling orders; endpoint tests
-- [ ] 8.3 Move up/down controls on the parent sheet
+- [x] 8.1 Add `Order` to Chapter and Scene templates (`templates/_index.md` + the two files) and to their schemas
+- [x] 8.2 Children listing ordered by `Order` (missing last, then title); reorder action rewriting sibling orders; endpoint tests
+- [x] 8.3 Move up/down controls on the parent sheet
 
 ## 9. Sheets
 
