@@ -127,6 +127,22 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
             <StatChip key={row.label} label={row.label} value={row.value} />
           ))}
       </div>
+      {Object.entries(stats.savingThrows ?? {})
+        .filter((pair) => pair[1] !== undefined)
+        .map(([ability, throwDetail]) => (
+          <StatChip
+            key={ability}
+            label={`${t(`stats.${ability}`)} · ${t("stats.savingThrows")}`}
+            value={throwDetail.modifier}
+          />
+        ))}
+      {(stats.skills ?? []).map((skill) => (
+        <StatChip
+          key={skill.name}
+          label={skill.name}
+          value={skill.modifier >= 0 ? `+${skill.modifier}` : skill.modifier}
+        />
+      ))}
       <div className="mt-2 flex flex-wrap gap-2">
         <StatChip label={t("stats.creatureType")} value={stats.creatureType} />
         <StatChip

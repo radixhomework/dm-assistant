@@ -17,7 +17,6 @@
     "image": "Image",
     "imagePrompt": "URL de l'image",
     "attention": "Point d'attention",
-    "mechanics": "Mécanique DM",
     "mentionNoResults": "Aucune fiche correspondante",
     "highlightToolbar": "Blocs de mise en exergue",
     "date": "Date",
@@ -26,7 +25,11 @@
     "dateDay": "Jour",
     "dateInsert": "Insérer",
     "dateNeedsYear": "L'année est obligatoire.",
-    "dateNoYearZero": "L'année 0 n'existe pas."
+    "dateNoYearZero": "L'année 0 n'existe pas.",
+    "dice": "Jet de dés",
+    "dicePrompt": "Formule de dés, ex. 3d6+2",
+    "paraphrase": "À paraphraser",
+    "develop": "À développer"
   },
   "app": {
     "title": "DM Assistant",
@@ -334,7 +337,9 @@
     "speedBurrow": "Creusement",
     "vulnerabilities": "Vulnérabilités",
     "resistances": "Résistances",
-    "immunities": "Immunités"
+    "immunities": "Immunités",
+    "savingThrows": "Jets de sauvegarde",
+    "skills": "Compétences"
   },
   "calendar": {
     "title": "Calendrier",

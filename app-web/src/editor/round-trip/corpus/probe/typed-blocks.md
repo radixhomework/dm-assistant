@@ -4,12 +4,8 @@ The trapdoor leads to the smugglers' cache.
 
 Plain prose between the typed blocks.
 
-:::mechanics
-DC 15 Perception check. On failure: ambush at dawn.
+==This passage still needs paraphrasing.== ++This one wants developing++ [[dice:3d6+2]]
 
-
-| Roll | Result         |
-| :---- | :--------------: |
-| 15+  | Surprise round |
-
+:::attention
+An important highlight, distinct from the attention points above.
 :::

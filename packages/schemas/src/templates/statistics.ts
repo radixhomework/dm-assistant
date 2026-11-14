@@ -66,6 +66,16 @@ export const statisticsSchema = z.object({
       charisma: savingThrowSchema.optional(),
     })
     .optional(),
+  /** Proficient skills as the stat blocks print them: name + total
+   * modifier (proficiency/expertise already included by the source). */
+  skills: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(60),
+        modifier: z.number().int(),
+      }),
+    )
+    .optional(),
   ac: z.number().int().optional(),
   hp: z.object({ average: z.number().int(), formula: z.string() }).optional(),
   speed: z

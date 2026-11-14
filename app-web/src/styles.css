@@ -242,3 +242,25 @@ body {
   outline: 2px solid #9a7656;
   background: rgba(154, 118, 86, 0.18);
 }
+/* Inline dice node: the stat-block convention (formula + round-down
+ * average). */
+.dice-node {
+  background: #e9ece7;
+  border-radius: 0.25rem;
+  padding: 0 0.3rem;
+  font-weight: 600;
+  color: #2e332b;
+  white-space: nowrap;
+}
+/* Editorial intent marks: persistent workflow markers on imported text
+ * (paraphrase = yellow, develop = blue), visible in both modes. */
+.mark-paraphrase {
+  background: rgba(196, 148, 58, 0.25);
+  border-bottom: 2px dotted #9a7656;
+  color: #6b5227;
+}
+.mark-develop {
+  background: rgba(86, 122, 148, 0.18);
+  border-bottom: 2px dotted #567a94;
+  color: #3c5566;
+}

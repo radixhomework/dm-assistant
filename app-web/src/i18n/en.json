@@ -17,7 +17,6 @@
     "image": "Image",
     "imagePrompt": "Image URL",
     "attention": "Attention point",
-    "mechanics": "DM mechanics",
     "mentionNoResults": "No matching record",
     "highlightToolbar": "Highlight blocks",
     "date": "Date",
@@ -26,7 +25,11 @@
     "dateDay": "Day",
     "dateInsert": "Insert",
     "dateNeedsYear": "The year is required.",
-    "dateNoYearZero": "Year 0 does not exist."
+    "dateNoYearZero": "Year 0 does not exist.",
+    "dice": "Dice roll",
+    "dicePrompt": "Dice formula, e.g. 3d6+2",
+    "paraphrase": "To paraphrase",
+    "develop": "To develop"
   },
   "app": {
     "title": "DM Assistant",
@@ -334,7 +337,9 @@
     "speedBurrow": "Burrow",
     "vulnerabilities": "Vulnerabilities",
     "resistances": "Resistances",
-    "immunities": "Immunities"
+    "immunities": "Immunities",
+    "savingThrows": "Saving throws",
+    "skills": "Skills"
   },
   "calendar": {
     "title": "Calendar",

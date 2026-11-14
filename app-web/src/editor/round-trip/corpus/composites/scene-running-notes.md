@@ -7,7 +7,7 @@ The trapdoor under the altar leads to the smugglers' cache. Do not let the
 party find it before the second night.
 :::
 
-## DM mechanics
+## DM notes
 
 
 | Source     | DC  | On failure                |

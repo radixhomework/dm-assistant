@@ -142,6 +142,16 @@ export function ProseEditor({
               const src = window.prompt(t("editor.imagePrompt"));
               if (src) cmd().setImage({ src }).run();
             }} />
+            <ToolButton editor={editor} active={false} label="🎲" title={t("editor.dice")} action={() => {
+              const raw = window.prompt(t("editor.dicePrompt"));
+              if (!raw) return;
+              editor.chain().focus().insertContent({
+                type: "dice",
+                attrs: { formula: raw.trim() },
+              }).run();
+            }} />
+            <ToolButton editor={editor} active={editor.isActive("paraphrase")} label={t("editor.paraphrase")} title={t("editor.paraphrase")} action={() => cmd().toggleMark("paraphrase").run()} />
+            <ToolButton editor={editor} active={editor.isActive("develop")} label={t("editor.develop")} title={t("editor.develop")} action={() => cmd().toggleMark("develop").run()} />
             <button
               type="button"
               title={t("editor.date")}
@@ -190,7 +200,6 @@ export function ProseEditor({
             tabIndex={-1}
           >
             <ToolButton editor={editor} active={editor.isActive("attention")} label={t("editor.attention")} title={t("editor.attention")} action={() => cmd().insertContent({ type: "attention", content: [{ type: "paragraph" }] }).run()} />
-            <ToolButton editor={editor} active={editor.isActive("mechanics")} label={t("editor.mechanics")} title={t("editor.mechanics")} action={() => cmd().insertContent({ type: "mechanics", content: [{ type: "paragraph" }] }).run()} />
           </div>
         </>
       )}
