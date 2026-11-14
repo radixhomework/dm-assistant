@@ -127,15 +127,59 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
             <StatChip key={row.label} label={row.label} value={row.value} />
           ))}
       </div>
-      {Object.entries(stats.savingThrows ?? {})
-        .filter((pair) => pair[1] !== undefined)
-        .map(([ability, throwDetail]) => (
-          <StatChip
-            key={ability}
-            label={`${t(`stats.${ability}`)} · ${t("stats.savingThrows")}`}
-            value={throwDetail.modifier}
-          />
-        ))}
+      {(() => {
+        // JdC / JdS derived: ability modifier + the proficiency bonus when
+        // mastered (checksMastery / savesMastery flags).
+        const prof = stats.proficiencyBonus ?? 0;
+        const lines: Array<{ row: string; label: string; mod: number; mastered: boolean }> = [];
+        for (const [key, score] of abilities) {
+          const base = score === undefined ? null : abilityModifier(score);
+          if (base === null) continue;
+          const checkMastery = stats.checksMastery?.[key] === true;
+          const saveMastery = stats.savesMastery?.[key] === true;
+          lines.push({
+            row: "checks",
+            label: t(`stats.${key}`),
+            mod: base + (checkMastery ? prof : 0),
+            mastered: checkMastery,
+          });
+          lines.push({
+            row: "saves",
+            label: t(`stats.${key}`),
+            mod: base + (saveMastery ? prof : 0),
+            mastered: saveMastery,
+          });
+        }
+        const byRow = (row: string) => lines.filter((line) => line.row === row);
+        const render = (row: string) =>
+          byRow(row).map((line) => (
+            <StatChip
+              key={line.label}
+              label={line.label}
+              value={`${line.mod >= 0 ? "+" : ""}${line.mod}${line.mastered ? " •" : ""}`}
+            />
+          ));
+        return (
+          <>
+            {byRow("checks").length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="w-full text-sm font-semibold text-ink">
+                  {t("stats.abilityChecks")}
+                </span>
+                {render("checks")}
+              </div>
+            )}
+            {byRow("saves").length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="w-full text-sm font-semibold text-ink">
+                  {t("stats.savingThrows")}
+                </span>
+                {render("saves")}
+              </div>
+            )}
+          </>
+        );
+      })()}
       {(stats.skills ?? []).map((skill) => (
         <StatChip
           key={skill.name}

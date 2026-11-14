@@ -43,9 +43,9 @@ body {
   outline-offset: 2px;
 }
 
-/* Prose editor (TipTap) */
+/* Prose editor (TipTap): no vertical minimum — a one-line field stays
+ * compact; the box keeps its padding. */
 .prose-editor .ProseMirror {
-  min-height: 12rem;
   outline: none;
 }
 .prose-editor .ProseMirror p:first-child {

@@ -144,7 +144,7 @@ describe("RecordFormFields — statistics block", () => {
     renderWithProviders(
       <RecordFormFields schema={templateSchemaOf("monsters")!} fields={{}} onChange={onChange} />,
     );
-    fireEvent.input(inputOfLabel("Strength"), { target: { value: "18" } });
+    fireEvent.input(screen.getAllByLabelText("Strength", { exact: true })[0], { target: { value: "18" } });
     expect(lastFields(onChange).statistics).toMatchObject({ strength: 18 });
 
     fireEvent.input(inputOfLabel("HP (average)"), { target: { value: "110" } });
@@ -173,7 +173,9 @@ describe("RecordFormFields — statistics block", () => {
     );
     expect(screen.getByText("(+4)")).toBeDefined();
     // While the input is focused the modifier hides (no echo while typing).
-    const strength = inputOfLabel("Strength");
+    const strength = screen
+      .getAllByLabelText("Strength", { exact: true })
+      .find((el): el is HTMLInputElement => (el as HTMLInputElement).type === "number")!;
     fireEvent.focus(strength);
     expect(screen.queryByText("(+4)")).toBeNull();
     fireEvent.blur(strength);

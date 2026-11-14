@@ -339,7 +339,14 @@
     "resistances": "Résistances",
     "immunities": "Immunités",
     "savingThrows": "Jets de sauvegarde",
-    "skills": "Compétences"
+    "skills": "Compétences",
+    "abilityChecks": "Jets de caractéristiques",
+    "checksMastery": "JdC maîtrisés",
+    "savesMastery": "JdS maîtrisés",
+    "proficiencyBonus": "Bonus de maîtrise",
+    "addSkill": "Ajouter une compétence",
+    "skillName": "Compétence",
+    "skillModifier": "Modificateur"
   },
   "calendar": {
     "title": "Calendrier",

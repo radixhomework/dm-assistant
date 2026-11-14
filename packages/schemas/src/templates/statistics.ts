@@ -44,9 +44,14 @@ export const rarityValues = [
  * Alignment and creature type are SRD value lists delivered by the P3
  * import — free short strings until then (charter rule 6: never invented).
  */
-const savingThrowSchema = z.object({
-  raw: z.number().int(),
-  modifier: z.number().int(),
+/** Une case de maîtrise par caractéristique (JdC ou JdS). */
+const abilityFlagsSchema = z.object({
+  strength: z.boolean().optional(),
+  dexterity: z.boolean().optional(),
+  constitution: z.boolean().optional(),
+  intelligence: z.boolean().optional(),
+  wisdom: z.boolean().optional(),
+  charisma: z.boolean().optional(),
 });
 
 export const statisticsSchema = z.object({
@@ -56,18 +61,15 @@ export const statisticsSchema = z.object({
   intelligence: z.number().int().optional(),
   wisdom: z.number().int().optional(),
   charisma: z.number().int().optional(),
-  savingThrows: z
-    .object({
-      strength: savingThrowSchema.optional(),
-      dexterity: savingThrowSchema.optional(),
-      constitution: savingThrowSchema.optional(),
-      intelligence: savingThrowSchema.optional(),
-      wisdom: savingThrowSchema.optional(),
-      charisma: savingThrowSchema.optional(),
-    })
-    .optional(),
-  /** Proficient skills as the stat blocks print them: name + total
-   * modifier (proficiency/expertise already included by the source). */
+  /** Bonus de maîtrise : ajouté automatiquement aux JdC et JdS
+   * maîtrisés (valeur saisie par le MJ ou fournie par l'import SRD). */
+  proficiencyBonus: z.number().int().optional(),
+  /** JdC maîtrisés (une case par caractéristique). */
+  checksMastery: abilityFlagsSchema.optional(),
+  /** JdS maîtrisés (une case par caractéristique). */
+  savesMastery: abilityFlagsSchema.optional(),
+  /** Compétences maîtrisées, avec leur modificateur total tel qu'imprimé
+   * dans le bloc de stats de la source. */
   skills: z
     .array(
       z.object({

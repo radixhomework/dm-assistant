@@ -280,6 +280,29 @@ function StatisticsControl(props: {
   };
   // hp is the nested { average, formula } object of the statistics value.
   const hp = props.value.hp as { average?: number; formula?: string } | undefined;
+  const masteryFlags = (key: "checksMastery" | "savesMastery") =>
+    (props.value[key] ?? {}) as Record<string, boolean | undefined>;
+  const masteryFlag = (key: "checksMastery" | "savesMastery", ability: string) =>
+    masteryFlags(key)[ability] === true;
+  const setMastery = (
+    key: "checksMastery" | "savesMastery",
+    ability: string,
+    checked: boolean,
+  ): void => {
+    setPart(key, { ...masteryFlags(key), [ability]: checked });
+  };
+  const skills = (props.value.skills ?? []) as Array<{
+    name?: string;
+    modifier?: number;
+  }>;
+  const setSkill = (
+    index: number,
+    skill: { name?: string; modifier?: number },
+  ): void => {
+    const next = [...skills];
+    next[index] = skill;
+    setPart("skills", next);
+  };
 
   return (
     <Field label={props.label}>
@@ -291,6 +314,7 @@ function StatisticsControl(props: {
               <div className="flex items-center gap-1">
                 <input
                   type="number"
+                  aria-label={abilityLabels[ability]}
                   value={typeof props.value[ability] === "number" ? props.value[ability] : ""}
                   onFocus={() => setFocusedAbility(ability)}
                   onBlur={() => setFocusedAbility(null)}
@@ -304,6 +328,85 @@ function StatisticsControl(props: {
             </label>
           ))}
         </div>
+        <div className="flex flex-wrap items-end gap-4">
+          <Field label={t("stats.proficiencyBonus")}>
+            <input
+              type="number"
+              value={typeof props.value.proficiencyBonus === "number" ? props.value.proficiencyBonus : ""}
+              onChange={(event) =>
+                setPart("proficiencyBonus", event.target.value === "" ? undefined : Number(event.target.value))
+              }
+              className={`${inputClass} w-20`}
+            />
+          </Field>
+        </div>
+        <Field label={t("stats.checksMastery")}>
+          <div className="flex flex-wrap gap-2">
+            {abilities.map((ability) => (
+              <label key={ability} className="flex items-center gap-1 text-sm">
+                <input
+                  type="checkbox"
+                  aria-label={`${t("stats.abilityChecks")} ${abilityLabels[ability]}`}
+                  checked={masteryFlag("checksMastery", ability)}
+                  onChange={(event) => setMastery("checksMastery", ability, event.target.checked)}
+                />
+                {abilityLabels[ability]}
+              </label>
+            ))}
+          </div>
+        </Field>
+        <Field label={t("stats.savesMastery")}>
+          <div className="flex flex-wrap gap-2">
+            {abilities.map((ability) => (
+              <label key={ability} className="flex items-center gap-1 text-sm">
+                <input
+                  type="checkbox"
+                  aria-label={`${t("stats.savesMastery")} ${abilityLabels[ability]}`}
+                  checked={masteryFlag("savesMastery", ability)}
+                  onChange={(event) => setMastery("savesMastery", ability, event.target.checked)}
+                />
+                {abilityLabels[ability]}
+              </label>
+            ))}
+          </div>
+        </Field>
+        <Field label={t("stats.skills")}>
+          <div className="flex flex-col gap-1">
+            {skills.map((skill, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  placeholder={t("stats.skillName")}
+                  value={skill.name ?? ""}
+                  onChange={(event) => setSkill(index, { ...skill, name: event.target.value })}
+                  className={`${inputClass} flex-1`}
+                />
+                <input
+                  type="number"
+                  aria-label={t("stats.skillModifier")}
+                  value={typeof skill.modifier === "number" ? skill.modifier : ""}
+                  onChange={(event) =>
+                    setSkill(index, { ...skill, modifier: event.target.value === "" ? 0 : Number(event.target.value) })
+                  }
+                  className={`${inputClass} w-20`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPart("skills", skills.filter((_, i) => i !== index))}
+                  className="text-sm text-radish transition-colors duration-200 hover:underline"
+                >
+                  {t("common.remove")}
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setPart("skills", [...skills, { name: "", modifier: 0 }])}
+              className="w-fit text-sm text-accent transition-colors duration-200 hover:underline"
+            >
+              {t("stats.addSkill")}
+            </button>
+          </div>
+        </Field>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Field label={t("stats.ac")}>
             <input

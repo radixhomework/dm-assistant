@@ -339,7 +339,14 @@
     "resistances": "Resistances",
     "immunities": "Immunities",
     "savingThrows": "Saving throws",
-    "skills": "Skills"
+    "skills": "Skills",
+    "abilityChecks": "Ability checks",
+    "checksMastery": "Check mastery",
+    "savesMastery": "Saving throw mastery",
+    "proficiencyBonus": "Proficiency bonus",
+    "addSkill": "Add a skill",
+    "skillName": "Skill",
+    "skillModifier": "Modifier"
   },
   "calendar": {
     "title": "Calendar",
