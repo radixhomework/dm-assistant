@@ -14,7 +14,7 @@ export function parseDice(formula: string): {
   faces: number;
   modifier: number;
 } | null {
-  const match = DICE_FORMULA.exec(formula.trim());
+  const match = DICE_FORMULA.exec(formula.replaceAll(" ", ""));
   if (!match) return null;
   const count = match[1] === undefined || match[1] === "" ? 1 : Math.abs(Number(match[1]));
   const faces = Number(match[2]);

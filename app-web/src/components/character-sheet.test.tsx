@@ -39,18 +39,23 @@ const character: Entity = {
 };
 
 describe("CharacterSheet", () => {
-  it("renders the ability scores with their SRD modifiers", () => {
+  it("renders the SRD-style ability table with modifiers and saves", () => {
     renderWithProviders(<CharacterSheet record={character} />);
-    // STR 18 → +4.
-    expect(screen.getByText(/^18/).textContent).toContain("(+4)");
-    expect(screen.getByText(/^14/).textContent).toContain("(+2)");
+    // FOR 18 → MOD +4; no save mastery → JS = MOD.
+    expect(screen.getByText(/^STR 18/)).toBeDefined();
+    expect(screen.getAllByText("+4").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("MOD")).toBeDefined();
+    expect(screen.getByText("Save")).toBeDefined();
   });
 
-  it("renders the combat chips and the damage vulnerabilities", () => {
+  it("renders the SRD-style stat block lines", () => {
     renderWithProviders(<CharacterSheet record={character} />);
+    expect(screen.getByText("AC")).toBeDefined();
     expect(screen.getByText("15")).toBeDefined();
-    expect(screen.getByText("22 (4d8)")).toBeDefined();
-    expect(screen.getByText("humanoid")).toBeDefined();
+    // HP: average then formula, SRD order.
+    expect(screen.getByText(/22 \(4d8\)/)).toBeDefined();
+    // Creature type on the subtitle line, damage vulnerabilities as a group.
+    expect(screen.getByText(/humanoid/)).toBeDefined();
     expect(screen.getByText("fire")).toBeDefined();
   });
 

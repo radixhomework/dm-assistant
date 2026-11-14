@@ -4,6 +4,7 @@ import { Field, inputClass } from "./form.js";
 import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { ReferenceInput } from "./reference-input.js";
+import { diceAverage } from "../editor/dice.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import type { CalendarSettings, TemplateSchema } from "@dm/schemas";
 
@@ -307,28 +308,90 @@ function StatisticsControl(props: {
   return (
     <Field label={props.label}>
       <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-3">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {/* Row 1: ability score values */}
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {abilities.map((ability) => (
             <label key={ability} className="flex flex-col gap-1 text-sm">
-              {abilityLabels[ability]}
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  aria-label={abilityLabels[ability]}
-                  value={typeof props.value[ability] === "number" ? props.value[ability] : ""}
-                  onFocus={() => setFocusedAbility(ability)}
-                  onBlur={() => setFocusedAbility(null)}
-                  onChange={(event) => setAbility(ability, event.target.value)}
-                  className={`${inputClass} w-20`}
-                />
-                {focusedAbility !== ability && modifier(ability) && (
-                  <span className="text-sm text-muted">{modifier(ability)}</span>
-                )}
-              </div>
+              <span className="text-xs uppercase tracking-wide text-muted">
+                {t(`stats.abbr.${ability}`)}
+              </span>
+              <input
+                type="number"
+                aria-label={abilityLabels[ability]}
+                value={typeof props.value[ability] === "number" ? props.value[ability] : ""}
+                onFocus={() => setFocusedAbility(ability)}
+                onBlur={() => setFocusedAbility(null)}
+                onChange={(event) => setAbility(ability, event.target.value)}
+                className={inputClass}
+              />
+              {focusedAbility !== ability && modifier(ability) && (
+                <span className="text-xs text-muted">{modifier(ability)}</span>
+              )}
             </label>
           ))}
         </div>
-        <div className="flex flex-wrap items-end gap-4">
+        {/* Row 2: check mastery */}
+        <Field label={t("stats.checksMastery")}>
+          <div className="flex flex-wrap gap-2">
+            {abilities.map((ability) => (
+              <label key={ability} className="flex items-center gap-1 text-sm">
+                <input
+                  type="checkbox"
+                  aria-label={`${t("stats.abilityChecks")} ${abilityLabels[ability]}`}
+                  checked={masteryFlag("checksMastery", ability)}
+                  onChange={(event) => setMastery("checksMastery", ability, event.target.checked)}
+                />
+                {t(`stats.abbr.${ability}`)}
+              </label>
+            ))}
+          </div>
+        </Field>
+        {/* Row 3: saving throw mastery */}
+        <Field label={t("stats.savesMastery")}>
+          <div className="flex flex-wrap gap-2">
+            {abilities.map((ability) => (
+              <label key={ability} className="flex items-center gap-1 text-sm">
+                <input
+                  type="checkbox"
+                  aria-label={`${t("stats.savesMastery")} ${abilityLabels[ability]}`}
+                  checked={masteryFlag("savesMastery", ability)}
+                  onChange={(event) => setMastery("savesMastery", ability, event.target.checked)}
+                />
+                {t(`stats.abbr.${ability}`)}
+              </label>
+            ))}
+          </div>
+        </Field>
+        {/* AC, passive perception, initiative, proficiency bonus */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Field label={t("stats.ac")}>
+            <input
+              type="number"
+              value={numberPart("ac")}
+              onChange={(event) => setPart("ac", event.target.value === "" ? undefined : Number(event.target.value))}
+              className={`${inputClass} w-20`}
+            />
+          </Field>
+          <Field label={t("stats.passivePerception")}>
+            <input
+              type="number"
+              value={numberPart("passivePerception")}
+              onChange={(event) =>
+                setPart("passivePerception", event.target.value === "" ? undefined : Number(event.target.value))
+              }
+              className={`${inputClass} w-20`}
+            />
+          </Field>
+          <Field label={t("stats.initiative")}>
+            <input
+              type="number"
+              value={numberPart("initiative")}
+              onChange={(event) =>
+                setPart("initiative", event.target.value === "" ? undefined : Number(event.target.value))
+              }
+              className={`${inputClass} w-20`}
+            />
+          </Field>
           <Field label={t("stats.proficiencyBonus")}>
             <input
               type="number"
@@ -340,36 +403,102 @@ function StatisticsControl(props: {
             />
           </Field>
         </div>
-        <Field label={t("stats.checksMastery")}>
-          <div className="flex flex-wrap gap-2">
-            {abilities.map((ability) => (
-              <label key={ability} className="flex items-center gap-1 text-sm">
-                <input
-                  type="checkbox"
-                  aria-label={`${t("stats.abilityChecks")} ${abilityLabels[ability]}`}
-                  checked={masteryFlag("checksMastery", ability)}
-                  onChange={(event) => setMastery("checksMastery", ability, event.target.checked)}
-                />
-                {abilityLabels[ability]}
-              </label>
-            ))}
+        {/* HP formula — the average is computed automatically */}
+        <Field label={t("stats.hpFormula")}>
+          <div className="flex items-center gap-2">
+            <input
+              value={hp?.formula ?? ""}
+              onChange={(event) => {
+                const formula = event.target.value;
+                const average = formula.trim() === "" ? undefined : diceAverage(formula);
+                setPart("hp", { formula, average: average ?? 0 });
+              }}
+              className={inputClass}
+            />
+            {hp?.formula !== undefined && diceAverage(hp.formula) !== null && (
+              <span className="text-sm text-muted">
+                {t("stats.hpAverage")} : {diceAverage(hp.formula)}
+              </span>
+            )}
           </div>
         </Field>
-        <Field label={t("stats.savesMastery")}>
-          <div className="flex flex-wrap gap-2">
-            {abilities.map((ability) => (
-              <label key={ability} className="flex items-center gap-1 text-sm">
-                <input
-                  type="checkbox"
-                  aria-label={`${t("stats.savesMastery")} ${abilityLabels[ability]}`}
-                  checked={masteryFlag("savesMastery", ability)}
-                  onChange={(event) => setMastery("savesMastery", ability, event.target.checked)}
-                />
-                {abilityLabels[ability]}
-              </label>
-            ))}
-          </div>
-        </Field>
+        {/* Speeds */}
+        {(() => {
+          const speed = (props.value.speed ?? {}) as Record<string, number | undefined>;
+          const speeds: Array<readonly [string, string]> = [
+            ["walk", t("stats.speedWalk")],
+            ["fly", t("stats.speedFly")],
+            ["swim", t("stats.speedSwim")],
+            ["climb", t("stats.speedClimb")],
+            ["burrow", t("stats.speedBurrow")],
+          ];
+          const setSpeed = (key: string, raw: string): void => {
+            setPart("speed", {
+              ...speed,
+              [key]: raw === "" ? undefined : Number(raw),
+            });
+          };
+          return (
+            <Field label={t("stats.speed")}>
+              <div className="flex flex-wrap gap-2">
+                {speeds.map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-1 text-sm">
+                    <span className="text-muted">{label}</span>
+                    <input
+                      type="number"
+                      aria-label={`${t("stats.speed")} ${label}`}
+                      value={typeof speed[key] === "number" ? speed[key] : ""}
+                      onChange={(event) => setSpeed(key, event.target.value)}
+                      className={`${inputClass} w-20`}
+                    />
+                  </label>
+                ))}
+              </div>
+            </Field>
+          );
+        })()}
+        {/* Darkvision, alignment, creature type, size */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Field label={t("stats.darkvision")}>
+            <input
+              type="number"
+              value={numberPart("darkvision")}
+              onChange={(event) =>
+                setPart("darkvision", event.target.value === "" ? undefined : Number(event.target.value))
+              }
+              className={`${inputClass} w-20`}
+            />
+          </Field>
+          <Field label={t("stats.alignment")}>
+            <input
+              value={textPart("alignment")}
+              onChange={(event) => setPart("alignment", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          <Field label={t("stats.creatureType")}>
+            <input
+              value={textPart("creatureType")}
+              onChange={(event) => setPart("creatureType", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          <Field label={t("stats.size")}>
+            <select
+              value={textPart("size")}
+              onChange={(event) => setPart("size", event.target.value === "" ? undefined : event.target.value)}
+              className={inputClass}
+            >
+              <option value="">—</option>
+              {["tiny", "small", "medium", "large", "huge", "gargantuan"].map((size) => (
+                <option key={size} value={size}>
+                  {t(`enums.size.${size}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        {/* Skills */}
         <Field label={t("stats.skills")}>
           <div className="flex flex-col gap-1">
             {skills.map((skill, index) => (
@@ -407,137 +536,6 @@ function StatisticsControl(props: {
             </button>
           </div>
         </Field>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Field label={t("stats.ac")}>
-            <input
-              type="number"
-              value={numberPart("ac")}
-              onChange={(event) => setPart("ac", event.target.value === "" ? undefined : Number(event.target.value))}
-              className={`${inputClass} w-20`}
-            />
-          </Field>
-          <Field label={t("stats.passivePerception")}>
-            <input
-              type="number"
-              value={numberPart("passivePerception")}
-              onChange={(event) =>
-                setPart("passivePerception", event.target.value === "" ? undefined : Number(event.target.value))
-              }
-              className={`${inputClass} w-20`}
-            />
-          </Field>
-          <Field label={t("stats.initiative")}>
-            <input
-              type="number"
-              value={numberPart("initiative")}
-              onChange={(event) =>
-                setPart("initiative", event.target.value === "" ? undefined : Number(event.target.value))
-              }
-              className={`${inputClass} w-20`}
-            />
-          </Field>
-          <Field label={t("stats.darkvision")}>
-            <input
-              type="number"
-              value={numberPart("darkvision")}
-              onChange={(event) =>
-                setPart("darkvision", event.target.value === "" ? undefined : Number(event.target.value))
-              }
-              className={`${inputClass} w-20`}
-            />
-          </Field>
-        </div>
-        {(() => {
-          const speed = (props.value.speed ?? {}) as Record<string, number | undefined>;
-          const speeds: Array<readonly [string, string]> = [
-            ["walk", t("stats.speedWalk")],
-            ["fly", t("stats.speedFly")],
-            ["swim", t("stats.speedSwim")],
-            ["climb", t("stats.speedClimb")],
-            ["burrow", t("stats.speedBurrow")],
-          ];
-          const setSpeed = (key: string, raw: string): void => {
-            setPart("speed", {
-              ...speed,
-              [key]: raw === "" ? undefined : Number(raw),
-            });
-          };
-          return (
-            <Field label={t("stats.speed")}>
-              <div className="flex flex-wrap gap-2">
-                {speeds.map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-1 text-sm">
-                    <span className="text-muted">{label}</span>
-                    <input
-                      type="number"
-                      aria-label={`${t("stats.speed")} ${label}`}
-                      value={typeof speed[key] === "number" ? speed[key] : ""}
-                      onChange={(event) => setSpeed(key, event.target.value)}
-                      className={`${inputClass} w-20`}
-                    />
-                  </label>
-                ))}
-              </div>
-            </Field>
-          );
-        })()}
-        <div className="grid grid-cols-2 gap-2">
-          <Field label={t("stats.hpAverage")}>
-            <input
-              type="number"
-              value={typeof hp?.average === "number" ? hp.average : ""}
-              onChange={(event) =>
-                setPart("hp", {
-                  ...hp,
-                  average: event.target.value === "" ? undefined : Number(event.target.value),
-                })
-              }
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("stats.hpFormula")}>
-            <input
-              value={hp?.formula ?? ""}
-              onChange={(event) =>
-                setPart("hp", {
-                  ...hp,
-                  formula: event.target.value,
-                })
-              }
-              className={inputClass}
-            />
-          </Field>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Field label={t("stats.alignment")}>
-            <input
-              value={textPart("alignment")}
-              onChange={(event) => setPart("alignment", event.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("stats.creatureType")}>
-            <input
-              value={textPart("creatureType")}
-              onChange={(event) => setPart("creatureType", event.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("stats.size")}>
-            <select
-              value={textPart("size")}
-              onChange={(event) => setPart("size", event.target.value === "" ? undefined : event.target.value)}
-              className={inputClass}
-            >
-              <option value="">—</option>
-              {["tiny", "small", "medium", "large", "huge", "gargantuan"].map((size) => (
-                <option key={size} value={size}>
-                  {t(`enums.size.${size}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
       </div>
     </Field>
   );

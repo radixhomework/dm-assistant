@@ -347,7 +347,19 @@
     "addSkill": "Add a skill",
     "skillName": "Skill",
     "skillModifier": "Modifier",
-    "speed": "Speed"
+    "speed": "Speed",
+    "abbr": {
+      "strength": "STR",
+      "dexterity": "DEX",
+      "constitution": "CON",
+      "intelligence": "INT",
+      "wisdom": "WIS",
+      "charisma": "CHA"
+    },
+    "hpShort": "HP",
+    "modHeader": "MOD",
+    "saveHeader": "Save",
+    "senses": "Senses"
   },
   "calendar": {
     "title": "Calendar",

@@ -147,11 +147,11 @@ describe("RecordFormFields — statistics block", () => {
     fireEvent.input(screen.getAllByLabelText("Strength", { exact: true })[0], { target: { value: "18" } });
     expect(lastFields(onChange).statistics).toMatchObject({ strength: 18 });
 
-    fireEvent.input(inputOfLabel("HP (average)"), { target: { value: "110" } });
-    expect(lastFields(onChange).statistics).toMatchObject({ hp: { average: 110 } });
-
+    // The PV formula computes its average automatically (17d6 avg 59 + 22).
     fireEvent.input(inputOfLabel("HP formula"), { target: { value: "17d6 + 22" } });
-    expect(lastFields(onChange).statistics).toMatchObject({ hp: { formula: "17d6 + 22" } });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      hp: { formula: "17d6 + 22", average: 81 },
+    });
 
     fireEvent.input(inputOfLabel("Alignment"), { target: { value: "chaotic neutral" } });
     expect(lastFields(onChange).statistics).toMatchObject({ alignment: "chaotic neutral" });

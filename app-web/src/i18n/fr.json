@@ -347,7 +347,19 @@
     "addSkill": "Ajouter une compétence",
     "skillName": "Compétence",
     "skillModifier": "Modificateur",
-    "speed": "Vitesse"
+    "speed": "Vitesse",
+    "abbr": {
+      "strength": "FOR",
+      "dexterity": "DEX",
+      "constitution": "CON",
+      "intelligence": "INT",
+      "wisdom": "SAG",
+      "charisma": "CHA"
+    },
+    "hpShort": "Pv",
+    "modHeader": "MOD",
+    "saveHeader": "JS",
+    "senses": "Sens"
   },
   "calendar": {
     "title": "Calendrier",
