@@ -20,11 +20,9 @@ function AbilityCell(props: {
   readonly score: number | undefined;
 }) {
   const modifier =
-    props.score === undefined
-      ? null
-      : abilityModifier(props.score);
-  const modifierText =
-    modifier === null ? "" : ` (${modifier >= 0 ? "+" : ""}${modifier})`;
+    props.score === undefined ? null : abilityModifier(props.score);
+  const sign = modifier !== null && modifier >= 0 ? "+" : "";
+  const modifierText = modifier === null ? "" : ` (${sign}${modifier})`;
   return (
     <div className="rounded-md border border-border bg-background px-3 py-2 text-center">
       <p className="text-xs uppercase tracking-wide text-muted">{props.label}</p>
