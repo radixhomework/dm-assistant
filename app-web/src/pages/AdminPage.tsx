@@ -47,11 +47,15 @@ export function AdminPage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
+      const email = formString(form, "email");
       await api("/api/admin/users", {
         method: "POST",
         body: {
           username: formString(form, "username"),
-          email: formString(form, "email"),
+          // The email is optional: an empty field sends no email at all
+          // and the account falls back to the username@instance.local
+          // placeholder.
+          ...(email !== "" ? { email } : {}),
           password: formString(form, "password"),
           displayName: formString(form, "displayName"),
           role: String(formString(form, "role") || "dm"),
@@ -154,8 +158,8 @@ export function AdminPage() {
             <Field label={t("admin.username")}>
               <input name="username" required minLength={2} className={inputClass} />
             </Field>
-            <Field label={t("admin.email")}>
-              <input name="email" type="email" required className={inputClass} />
+            <Field label={`${t("admin.email")} ${t("admin.emailOptional")}`}>
+              <input name="email" type="email" className={inputClass} />
             </Field>
             <Field label={t("admin.password")}>
               <input name="password" type="password" minLength={12} required className={inputClass} />

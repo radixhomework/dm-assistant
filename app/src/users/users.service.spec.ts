@@ -82,6 +82,17 @@ describe("UsersService", () => {
     await expect(service.deleteUser(acting.id, acting.id)).rejects.toThrow(/own account/);
   });
 
+  it("falls back to the placeholder email when none is given", async () => {
+    const username = `${randomUUID()}`.slice(0, 12);
+    const created = await service.create({
+      username,
+      password: "a-long-enough-passphrase",
+      displayName: "No Email",
+      role: "dm",
+    });
+    expect(created.email).toBe(`${username}@instance.local`);
+  });
+
   it("returns null for unknown ids and emails", async () => {
     expect(await service.findById(randomUUID())).toBeNull();
     expect(await service.findByEmail(`${randomUUID()}@example.com`)).toBeNull();

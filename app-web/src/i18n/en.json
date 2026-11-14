@@ -182,7 +182,9 @@
       "saved": "Calendar saved.",
       "save": "Save",
       "currentYear": "Current year"
-    }
+    },
+    "password": "Password",
+    "emailOptional": "(optional)"
   },
   "health": {
     "title": "API status",

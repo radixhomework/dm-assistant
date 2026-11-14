@@ -182,7 +182,9 @@
       "saved": "Calendrier enregistré.",
       "save": "Enregistrer",
       "currentYear": "Année en cours"
-    }
+    },
+    "password": "Mot de passe",
+    "emailOptional": "(facultatif)"
   },
   "health": {
     "title": "État de l'API",
