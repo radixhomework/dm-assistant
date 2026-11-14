@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { formString } from "../forms.js";
 import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
@@ -30,6 +30,32 @@ function CalendarDateText(props: { readonly value: CalendarDate }) {
   if (monthName) params.month = monthName;
   else if (props.value.month !== undefined) params.month = props.value.month;
   return <>{t(dateFormatKey(params), params)}</>;
+}
+
+/** Links to records, sorted alphabetically by title (not slug) and
+ * separated by commas. */
+function TitleLinks(props: {
+  readonly targets: Array<{ slug: string; title: string }>;
+}) {
+  const sorted = [...props.targets].sort((a, b) =>
+    a.title.localeCompare(b.title, "fr"),
+  );
+  return (
+    <>
+      {sorted.map((target, index) => (
+        <Fragment key={target.slug}>
+          {index > 0 && ", "}
+          <Link
+            to="/records/$slug"
+            params={{ slug: target.slug }}
+            className="text-accent hover:underline"
+          >
+            {target.title}
+          </Link>
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
 /** The format key matching the parts the date carries. */
@@ -358,16 +384,9 @@ function RecordPage({
                   <div key={fieldKey} className="record-read-field">
                     <dt>{t(`fields.${fieldKey}`)}</dt>
                     <dd>
-                      {(targets as Array<{ slug: string; title: string }>).map((target) => (
-                        <Link
-                          key={target.slug}
-                          to="/records/$slug"
-                          params={{ slug: target.slug }}
-                          className="text-accent hover:underline"
-                        >
-                          {target.title}
-                        </Link>
-                      ))}
+                      <TitleLinks
+                        targets={targets as Array<{ slug: string; title: string }>}
+                      />
                     </dd>
                   </div>
                 ))}
@@ -392,16 +411,7 @@ function RecordPage({
                   <div key={fieldKey} className="record-read-field">
                     <dt>{t(`fields.${fieldKey}`)}</dt>
                     <dd>
-                      {targets.map((target) => (
-                        <Link
-                          key={target.slug}
-                          to="/records/$slug"
-                          params={{ slug: target.slug }}
-                          className="text-accent hover:underline"
-                        >
-                          {target.title}
-                        </Link>
-                      ))}
+                      <TitleLinks targets={targets} />
                     </dd>
                   </div>
                 ))}
@@ -409,16 +419,7 @@ function RecordPage({
                   <div className="record-read-field">
                     <dt>{t("record.incomingMentions")}</dt>
                     <dd>
-                      {backlinks.data.mentions.map((mention) => (
-                        <Link
-                          key={mention.slug}
-                          to="/records/$slug"
-                          params={{ slug: mention.slug }}
-                          className="text-accent hover:underline"
-                        >
-                          {mention.title}
-                        </Link>
-                      ))}
+                      <TitleLinks targets={backlinks.data.mentions} />
                     </dd>
                   </div>
                 )}
