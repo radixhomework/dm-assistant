@@ -202,7 +202,8 @@
     "backlinks": "Backlinks",
     "incomingMentions": "Incoming mentions",
     "noBacklinks": "Nothing points at this record yet.",
-    "referenceSearch": "Search a record..."
+    "referenceSearch": "Search a record...",
+    "noChildren": "No chapters or scenes attached yet."
   },
   "fields": {
     "illustration": "Illustration",
@@ -325,7 +326,15 @@
     "hpFormula": "HP formula",
     "alignment": "Alignment",
     "creatureType": "Type",
-    "size": "Size"
+    "size": "Size",
+    "speedWalk": "Walk",
+    "speedFly": "Fly",
+    "speedSwim": "Swim",
+    "speedClimb": "Climb",
+    "speedBurrow": "Burrow",
+    "vulnerabilities": "Vulnerabilities",
+    "resistances": "Resistances",
+    "immunities": "Immunities"
   },
   "calendar": {
     "title": "Calendar",

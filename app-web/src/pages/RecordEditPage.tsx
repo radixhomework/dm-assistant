@@ -1,116 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { formString } from "../forms.js";
-import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
-import { Fragment, useEffect, useState } from "react";
+import { useNavigate, useParams, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
-import { classifyField } from "../components/field-classify.js";
-import { useCalendarDefinition } from "../calendar/use-calendar.js";
-import { templateSchemaOf, type CalendarDate } from "@dm/schemas";
+import { RecordSheet } from "../components/record-sheet.js";
+import { CharacterSheet } from "../components/character-sheet.js";
+import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
-import { ProseEditor } from "../editor/prose-editor.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
-
-/**
- * A structured calendar date rendered for the reading sheet: the day and
- * the month name from the world definition (fr: "12 M1 842"; en:
- * "M1 12, 842"), degrading to partial forms (month + year, year only).
- */
-function CalendarDateText(props: { readonly value: CalendarDate }) {
-  const { t } = useTranslation();
-  const { definition } = useCalendarDefinition();
-  const monthName =
-    definition && props.value.month
-      ? definition.months[props.value.month - 1]?.name
-      : undefined;
-  const params: Record<string, string | number> = { year: props.value.year };
-  if (props.value.day !== undefined && monthName) params.day = props.value.day;
-  if (monthName) params.month = monthName;
-  else if (props.value.month !== undefined) params.month = props.value.month;
-  return <>{t(dateFormatKey(params), params)}</>;
-}
-
-/** Links to records, sorted alphabetically by title (not slug) and
- * separated by commas. */
-function TitleLinks(props: {
-  readonly targets: Array<{ slug: string; title: string }>;
-}) {
-  const sorted = [...props.targets].sort((a, b) =>
-    a.title.localeCompare(b.title, "fr"),
-  );
-  return (
-    <>
-      {sorted.map((target, index) => (
-        <Fragment key={target.slug}>
-          {index > 0 && ", "}
-          <Link
-            to="/records/$slug"
-            params={{ slug: target.slug }}
-            className="text-accent hover:underline"
-          >
-            {target.title}
-          </Link>
-        </Fragment>
-      ))}
-    </>
-  );
-}
-
-/** The format key matching the parts the date carries. */
-function dateFormatKey(params: Record<string, string | number>): string {
-  if (params.day !== undefined && params.month !== undefined) return "calendar.formatDay";
-  if (params.month !== undefined) return "calendar.formatMonth";
-  return "calendar.formatYear";
-}
-
-type FieldRow = { key: string; label: string; node: React.ReactNode };
-
-type Translate = (key: string, options?: Record<string, unknown>) => string;
-
-/** Builds the reading-sheet row of one template field: empty means
- * hidden, statistics belongs to the bespoke sheet, dates render through
- * the world definition, enums through their catalog, prose through the
- * readonly editor, objects flatten into one line. */
-function buildFieldRow(args: {
-  readonly key: string;
-  readonly value: string | number | boolean | object | null | undefined;
-  readonly shape: Record<string, unknown>;
-  readonly label: string;
-  readonly translate: Translate;
-}): FieldRow | null {
-  const { key, value, shape, label, translate } = args;
-  if (!(key in shape) || value === undefined || value === "" || value === null) return null;
-  const kind = classifyField(key, shape[key]);
-  if (kind === "statistics") return null; // rendered by the bespoke sheet
-  if (kind === "calendarDate") {
-    // Dates render intelligibly via the world calendar definition.
-    return { key, label, node: <CalendarDateText value={value as CalendarDate} /> };
-  }
-  if (kind === "enum") {
-    const raw = value as string; // enum fields always store a string
-    const translated = translate(`enums.${key}.${raw}`, {
-      defaultValue: raw.replaceAll("_", " "),
-    });
-    return { key, label, node: translated };
-  }
-  if (kind === "prose") {
-    // The readonly editor renders markdown and resolves mention links
-    // (title display, click opens the record in a new tab).
-    return { key, label, node: <ProseEditor markdown={value as string} readonly /> };
-  }
-  if (typeof value === "number") {
-    return { key, label, node: String(value) };
-  }
-  if (typeof value === "object") {
-    const parts = Object.entries(value as Record<string, unknown>)
-      .filter(([, part]) => part !== undefined && part !== "")
-      .map((entry) => String(entry[1]));
-    return { key, label, node: parts.join(" — ") };
-  }
-  return { key, label, node: String(value) };
-}
 
 /**
  * Record page: opens in reading mode (PRE-SPEC.md §5 rule 10 flow) and an
@@ -151,17 +51,6 @@ function RecordPage({
     enabled: ready,
     retry: false,
   });
-  // Backlinks feed the reading sheet's bottom section (phase 6).
-  const backlinks = useQuery({
-    queryKey: ["backlinks", slug],
-    queryFn: () =>
-      api<{
-        fields: Record<string, Array<{ slug: string; title: string }>>;
-        mentions: Array<{ slug: string; title: string }>;
-      }>(`/api/records/${slug}/backlinks`),
-    enabled: ready,
-  });
-
   async function attachReference(field: string, targetSlug: string): Promise<void> {
     setError(null);
     try {
@@ -338,96 +227,14 @@ function RecordPage({
       </div>
       {saved && <p className="mt-3 text-sm text-primary">{t("lore.saved")}</p>}
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}
-      {(() => {
-        // Interim reading sheet (phase 9 delivers the bespoke sheets):
-        // filled template fields (empty means hidden), then reference
-        // links.
-        const template = templateSchemaOf(data.type);
-        const shape = template
-          ? (template.fields as unknown as { shape: Record<string, unknown> }).shape
-          : {};
-        // Field values are JSON primitives or nested structured objects
-        // (money, dates, hp…) — primitives render as text, objects flatten
-        // into a readable line.
-        const entries = Object.entries(data.fields ?? {}) as Array<
-          [string, string | number | boolean | object | null | undefined]
-        >;
-        const fieldRows = entries
-          .map(([key, value]) =>
-            buildFieldRow({
-              key,
-              value,
-              shape,
-              label: t(`fields.${key}`),
-              translate: t as unknown as Translate,
-            }),
-          )
-          .filter((row) => row !== null);
-        const referenceEntries = Object.entries(data.references ?? {}).filter(
-          ([, targets]) => (targets as Array<{ slug: string }>).length > 0,
-        );
-        return (
-          <div className="mt-6 flex flex-col gap-6">
-            {fieldRows.length > 0 && (
-              <dl className="record-read-fields">
-                {fieldRows.map((row) => (
-                  <div key={row.key} className="record-read-field">
-                    <dt>{row.label}</dt>
-                    <dd>{row.node}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-            {referenceEntries.length > 0 && (
-              <dl className="record-read-fields">
-                {referenceEntries.map(([fieldKey, targets]) => (
-                  <div key={fieldKey} className="record-read-field">
-                    <dt>{t(`fields.${fieldKey}`)}</dt>
-                    <dd>
-                      <TitleLinks
-                        targets={targets as Array<{ slug: string; title: string }>}
-                      />
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-        );
-      })()}
-      {backlinks.data && (
-        <section className="mt-8 border-t border-border pt-6">
-          <h2 className="font-display text-2xl text-ink">{t("record.backlinks")}</h2>
-          {(() => {
-            const groups = Object.entries(backlinks.data.fields);
-            const nothing =
-              groups.length === 0 && backlinks.data.mentions.length === 0;
-            if (nothing) {
-              return <p className="mt-2 text-muted">{t("record.noBacklinks")}</p>;
-            }
-            return (
-              <dl className="record-read-fields mt-2">
-                {groups.map(([fieldKey, targets]) => (
-                  <div key={fieldKey} className="record-read-field">
-                    <dt>{t(`fields.${fieldKey}`)}</dt>
-                    <dd>
-                      <TitleLinks targets={targets} />
-                    </dd>
-                  </div>
-                ))}
-                {backlinks.data.mentions.length > 0 && (
-                  <div className="record-read-field">
-                    <dt>{t("record.incomingMentions")}</dt>
-                    <dd>
-                      <TitleLinks targets={backlinks.data.mentions} />
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            );
-          })()}
-        </section>
-      )}
+      <RecordSheet
+        record={data}
+        slot={
+          data.type === "characters-and-entities" ? (
+            <CharacterSheet record={data} />
+          ) : undefined
+        }
+      />
     </div>
   );
 }

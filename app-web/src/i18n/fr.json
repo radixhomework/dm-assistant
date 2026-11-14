@@ -202,7 +202,8 @@
     "backlinks": "Renvois",
     "incomingMentions": "Mentions entrantes",
     "noBacklinks": "Rien ne pointe vers cette fiche pour l'instant.",
-    "referenceSearch": "Rechercher une fiche..."
+    "referenceSearch": "Rechercher une fiche...",
+    "noChildren": "Aucun chapitre ou scène rattaché pour l'instant."
   },
   "fields": {
     "illustration": "Illustration",
@@ -325,7 +326,15 @@
     "hpFormula": "Formule de PV",
     "alignment": "Alignement",
     "creatureType": "Type",
-    "size": "Taille"
+    "size": "Taille",
+    "speedWalk": "Marche",
+    "speedFly": "Vol",
+    "speedSwim": "Nage",
+    "speedClimb": "Escalade",
+    "speedBurrow": "Creusement",
+    "vulnerabilities": "Vulnérabilités",
+    "resistances": "Résistances",
+    "immunities": "Immunités"
   },
   "calendar": {
     "title": "Calendrier",
