@@ -9,26 +9,46 @@ describe("RelationshipsService", () => {
   beforeAll(async () => {
     await resetTables();
     await testDb.execute(
-      sql`insert into entities (id, slug, type, perimeter, title) values (gen_random_uuid(), 'chapter-a', 'chapter', 'campaign', 'A'), (gen_random_uuid(), 'campaign-a', 'campaign', 'campaign', 'C'), (gen_random_uuid(), 'place-a', 'places', 'world', 'P')`,
+      sql`insert into entities (id, slug, type, perimeter, title) values (gen_random_uuid(), 'chapter-a', 'chapter', 'campaign', 'A'), (gen_random_uuid(), 'campaign-a', 'campaign', 'campaign', 'C'), (gen_random_uuid(), 'campaign-b', 'campaign', 'campaign', 'C2'), (gen_random_uuid(), 'place-a', 'places', 'world', 'P'), (gen_random_uuid(), 'nation-a', 'nations', 'world', 'N')`,
     );
   });
 
-
-  it("rejects an unknown child or parent slug", async () => {
+  it("rejects an unknown child or target slug", async () => {
     await expect(
-      service.attach("ghost", "also-ghost", "chapter"),
+      service.attachReference("ghost", "campaign", "also-ghost"),
     ).rejects.toThrow(/not found/);
   });
 
-  it("rejects a kind that does not match the child type", async () => {
+  it("rejects a field the child's template does not declare", async () => {
+    // A chapter has no 'capital' reference field.
     await expect(
-      service.attach("chapter-a", "campaign-a", "scene"),
-    ).rejects.toThrow(/hierarchy role/);
+      service.attachReference("chapter-a", "capital", "place-a"),
+    ).rejects.toThrow(/not a reference field/);
   });
 
-  it("rejects a parent of the wrong type", async () => {
+  it("rejects a target of the wrong type", async () => {
+    // A chapter's campaign field expects a campaign, not a place.
     await expect(
-      service.attach("chapter-a", "place-a", "chapter"),
-    ).rejects.toThrow(/must be a campaign/);
+      service.attachReference("chapter-a", "campaign", "place-a"),
+    ).rejects.toThrow(/expects a campaign/);
+  });
+
+  it("replaces the target of a 0..1 reference", async () => {
+    await service.attachReference("chapter-a", "campaign", "campaign-a");
+    // Re-attaching through the same 0..1 field replaces the target.
+    await service.attachReference("chapter-a", "campaign", "campaign-b");
+    const rows = await testDb.execute(
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'chapter-a') and kind = 'campaign' and to_id = (select id from entities where slug = 'campaign-b')`,
+    );
+    expect(rows[0]).toMatchObject({ count: 1 });
+  });
+
+  it("detaches the field's reference", async () => {
+    await service.attachReference("chapter-a", "campaign", "campaign-a");
+    await service.detachReference("chapter-a", "campaign");
+    const rows = await testDb.execute(
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'chapter-a') and kind = 'campaign'`,
+    );
+    expect(rows[0]).toMatchObject({ count: 0 });
   });
 });

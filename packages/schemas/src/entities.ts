@@ -14,20 +14,31 @@ export const createEntitySchema = z.object({
   title: z.string().min(1).max(200),
   tags: z.array(z.string().min(1).max(60)).default([]),
   fields: z.record(z.string(), z.unknown()).default({}),
-  body: z.string().default(""),
 });
 
 export const updateEntitySchema = z.object({
   title: z.string().min(1).max(200).optional(),
   tags: z.array(z.string().min(1).max(60)).optional(),
   fields: z.record(z.string(), z.unknown()).optional(),
-  body: z.string().optional(),
 });
 
 export const parentSchema = z.object({
   parentSlug: slugSchema,
-  kind: z.enum(["chapter", "scene"]),
+  /** The child's reference field pointing at its parent: a chapter's
+   * `campaign`, a scene's `chapter` (records-editor decision 8). */
+  kind: z.enum(["campaign", "chapter"]),
 });
+
+export const attachReferenceSchema = z.object({
+  targetSlug: slugSchema,
+});
+export type AttachReferenceInput = z.infer<typeof attachReferenceSchema>;
+
+/** Play-order move: swaps a child with its previous/next sibling. */
+export const moveSchema = z.object({
+  direction: z.enum(["up", "down"]),
+});
+export type MoveInput = z.infer<typeof moveSchema>;
 
 export const playStatuses = ["not_played", "in_progress", "played"] as const;
 export type PlayStatus = (typeof playStatuses)[number];

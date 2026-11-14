@@ -1,60 +1,108 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { templateSchemaOf } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { entities, relationships } from "../database/schema.js";
 
-/** Hierarchy kinds: the child→parent link (PRE-SPEC.md §5, rule 8). */
-export type HierarchyKind = "chapter" | "scene";
+/**
+ * Typed relationships (records-editor decision 8): every link lives in
+ * `relationships (from_id, to_id, kind = field key)`. Hierarchy fields
+ * join the same rule — a chapter's `campaign` and a scene's `chapter` —
+ * and the template schema's reference declarations (target template +
+ * cardinality) drive validation for every field.
+ */
 
-const PARENT_TYPE_BY_KIND: Record<HierarchyKind, string> = {
-  chapter: "campaign",
-  scene: "chapter",
-};
+/** Hierarchy field keys: the child→parent reference fields. */
+export type HierarchyField = "campaign" | "chapter";
+
+/** The hierarchy field a child type attaches through (null for
+ * non-hierarchy types). */
+function hierarchyFieldOf(type: string): HierarchyField | null {
+  if (type === "chapter") return "campaign";
+  if (type === "scene") return "chapter";
+  return null;
+}
 
 @Injectable()
 export class RelationshipsService {
   constructor(@Inject(DB) private readonly db: Db) {}
 
-  async attach(
+  /**
+   * Attaches a reference: `field` must be declared by the child's
+   * template, the target must match the declared target template. A 0..1
+   * field replaces its previous target; a 0..n field refuses duplicates.
+   */
+  async attachReference(
     childSlug: string,
-    parentSlug: string,
-    kind: HierarchyKind,
+    field: string,
+    targetSlug: string,
   ): Promise<void> {
     const child = await this.entityBySlug(childSlug);
-    const parent = await this.entityBySlug(parentSlug);
-    if (child.type !== kind) {
-      throw new ConflictException(
-        `A ${child.type} record cannot carry the '${kind}' hierarchy role`,
+    const declaration = templateSchemaOf(child.type)?.references[field];
+    if (!declaration) {
+      throw new NotFoundException(
+        `'${field}' is not a reference field of '${child.type}'`,
       );
     }
-    if (parent.type !== PARENT_TYPE_BY_KIND[kind]) {
+    const target = await this.entityBySlug(targetSlug);
+    if (target.type !== declaration.target) {
       throw new ConflictException(
-        `A '${kind}' parent must be a ${PARENT_TYPE_BY_KIND[kind]}`,
+        `The '${field}' field of a ${child.type} expects a ${declaration.target}`,
       );
     }
-    try {
+    if (declaration.cardinality === "one") {
+      // 0..1: the previous link, if any, is replaced.
       await this.db
-        .insert(relationships)
-        .values({ fromId: child.id, toId: parent.id, kind });
-    } catch (error) {
-      if (isUniqueViolation(error)) {
+        .delete(relationships)
+        .where(and(eq(relationships.fromId, child.id), eq(relationships.kind, field)));
+    } else {
+      const [existing] = await this.db
+        .select({ id: relationships.id })
+        .from(relationships)
+        .where(
+          and(
+            eq(relationships.fromId, child.id),
+            eq(relationships.kind, field),
+            eq(relationships.toId, target.id),
+          ),
+        )
+        .limit(1);
+      if (existing) {
         throw new ConflictException(
-          `${childSlug} already carries a '${kind}' parent`,
+          `${targetSlug} is already attached to '${field}'`,
         );
       }
-      throw error;
     }
+    await this.db
+      .insert(relationships)
+      .values({ fromId: child.id, toId: target.id, kind: field });
   }
 
-  async detach(childSlug: string, kind: HierarchyKind): Promise<void> {
+  /** Detaches one target of a field, or all of them when no target. */
+  async detachReference(
+    childSlug: string,
+    field: string,
+    targetSlug?: string,
+  ): Promise<void> {
     const child = await this.entityBySlug(childSlug);
+    const conditions = [
+      eq(relationships.fromId, child.id),
+      eq(relationships.kind, field),
+    ];
+    if (targetSlug !== undefined) {
+      const target = await this.entityBySlug(targetSlug);
+      conditions.push(eq(relationships.toId, target.id));
+    }
     await this.db
       .delete(relationships)
-      .where(and(eq(relationships.fromId, child.id), eq(relationships.kind, kind)));
+      .where(and(...conditions));
   }
 
-  async listChildren(parentSlug: string, kind: HierarchyKind) {
+  /** Children attached through a hierarchy field, in play order
+   * (records-editor decision 10): explicit order ascending, records
+   * without an order last, then title. */
+  async listChildren(parentSlug: string, field: HierarchyField) {
     const parent = await this.entityBySlug(parentSlug);
     return this.db
       .select({
@@ -65,9 +113,52 @@ export class RelationshipsService {
       .from(relationships)
       .innerJoin(entities, eq(relationships.fromId, entities.id))
       .where(
-        and(eq(relationships.toId, parent.id), eq(relationships.kind, kind)),
+        and(eq(relationships.toId, parent.id), eq(relationships.kind, field)),
       )
-      .orderBy(entities.title);
+      .orderBy(
+        sql`(entities.fields->>'order')::int NULLS LAST`,
+        entities.title,
+      );
+  }
+
+  /**
+   * Moves a child up or down within its sibling play order (records-
+   * editor decision 10): the sibling list is recomputed and every
+   * sibling's order renumbered sequentially. The hierarchy field is the
+   * child type's own parent reference.
+   */
+  async moveChild(childSlug: string, direction: "up" | "down"): Promise<void> {
+    const child = await this.entityBySlug(childSlug);
+    const field = hierarchyFieldOf(child.type);
+    if (field === null) {
+      throw new ConflictException(
+        `A ${child.type} record has no play-order position`,
+      );
+    }
+    const [link] = await this.db
+      .select({ toId: relationships.toId })
+      .from(relationships)
+      .where(and(eq(relationships.fromId, child.id), eq(relationships.kind, field)))
+      .limit(1);
+    if (!link) {
+      throw new ConflictException(
+        "This record has no parent — attach it first",
+      );
+    }
+    const siblings = await this.childSlugsAndStatuses(link.toId, field);
+    const index = siblings.findIndex((sibling) => sibling.slug === childSlug);
+    const swapWith = direction === "up" ? index - 1 : index + 1;
+    if (index === -1 || swapWith < 0 || swapWith >= siblings.length) return;
+    const reordered = [...siblings];
+    [reordered[index], reordered[swapWith]] = [reordered[swapWith], reordered[index]];
+    await Promise.all(
+      reordered.map((sibling, position) =>
+        this.db
+          .update(entities)
+          .set({ fields: { ...sibling.fields, order: position } })
+          .where(eq(entities.slug, sibling.slug)),
+      ),
+    );
   }
 
   /** Refuses deletion of a record that children reference as parent. */
@@ -76,7 +167,10 @@ export class RelationshipsService {
       .select({ fromId: relationships.fromId })
       .from(relationships)
       .where(
-        and(eq(relationships.toId, entityId), eq(relationships.kind, "chapter")),
+        and(
+          eq(relationships.toId, entityId),
+          eq(relationships.kind, "campaign"),
+        ),
       )
       .limit(1);
     if (row) {
@@ -89,7 +183,7 @@ export class RelationshipsService {
   /** Children of a parent, used by the tracking aggregation. */
   async childSlugsAndStatuses(
     parentId: string,
-    kind: HierarchyKind,
+    field: HierarchyField,
   ): Promise<
     Array<{ slug: string; title: string; fields: Record<string, unknown> }>
   > {
@@ -102,9 +196,12 @@ export class RelationshipsService {
       .from(relationships)
       .innerJoin(entities, eq(relationships.fromId, entities.id))
       .where(
-        and(eq(relationships.toId, parentId), eq(relationships.kind, kind)),
+        and(eq(relationships.toId, parentId), eq(relationships.kind, field)),
       )
-      .orderBy(entities.title);
+      .orderBy(
+        sql`(entities.fields->>'order')::int NULLS LAST`,
+        entities.title,
+      );
     return rows.map((row) => ({
       slug: row.slug,
       title: row.title,
@@ -122,17 +219,4 @@ export class RelationshipsService {
     }
     return row;
   }
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: string; cause?: { code?: string } }).code ===
-      "23505" ||
-    (error as { cause?: { code?: string } }).cause?.code === "23505" ||
-    /duplicate key|unique constraint/i.test(
-      error instanceof Error ? error.message : String(error),
-    )
-  );
 }

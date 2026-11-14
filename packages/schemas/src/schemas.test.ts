@@ -18,7 +18,6 @@ describe("entity schemas", () => {
     });
     expect(parsed.tags).toEqual([]);
     expect(parsed.fields).toEqual({});
-    expect(parsed.body).toBe("");
   });
 
   it("rejects an invalid slug", () => {
@@ -44,17 +43,17 @@ describe("entity schemas", () => {
 describe("auth schemas", () => {
   it("accepts a valid wizard payload", () => {
     const parsed = wizardSchema.parse({
-      email: "dm@example.com",
+      username: "dm",
       password: "a-long-enough-passphrase",
       displayName: "The DM",
       worldName: "My World",
     });
-    expect(parsed.email).toBe("dm@example.com");
+    expect(parsed.username).toBe("dm");
   });
 
   it("rejects a short password", () => {
     const result = wizardSchema.safeParse({
-      email: "dm@example.com",
+      username: "dm",
       password: "short",
       displayName: "The DM",
       worldName: "My World",

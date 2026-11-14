@@ -1,16 +1,56 @@
 {
+  "editor": {
+    "toolbar": "Formatting toolbar",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strike": "Strikethrough",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "heading4": "Heading 4",
+    "inlineCode": "Inline code",
+    "codeBlock": "Code block",
+    "quote": "Quote",
+    "bulletList": "Bullet list",
+    "orderedList": "Numbered list",
+    "link": "Link",
+    "linkPrompt": "Link URL (empty removes it)",
+    "image": "Image",
+    "imagePrompt": "Image URL",
+    "attention": "Attention point",
+    "mentionNoResults": "No matching record",
+    "highlightToolbar": "Highlight blocks",
+    "date": "Date",
+    "dateYear": "Year",
+    "dateMonth": "Month",
+    "dateDay": "Day",
+    "dateInsert": "Insert",
+    "dateNeedsYear": "The year is required.",
+    "dateNoYearZero": "Year 0 does not exist.",
+    "dice": "Dice roll",
+    "dicePrompt": "Dice formula, e.g. 3d6+2",
+    "paraphrase": "To paraphrase",
+    "develop": "To develop"
+  },
   "app": {
     "title": "DM Assistant",
     "tagline": "Your world and campaigns, in one place"
   },
   "home": {
-    "intro": "Structured records for your lore, a coherence audit, and an assistant that creates nothing but flags what needs attention."
+    "intro": "Structured records for your lore, a coherence audit, and an assistant that creates nothing but flags what needs attention.",
+    "welcome": "Where would you like to go?",
+    "lore": "World records, grouped by template type.",
+    "calendar": "The world's year at a glance: events and moon cycle.",
+    "campaigns": "Your campaigns with their chapters and scenes.",
+    "admin": "Instance users and settings.",
+    "account": "Your profile, language and password."
   },
   "nav": {
     "lore": "Lore",
     "campaigns": "Campaigns",
     "admin": "Admin",
-    "logout": "Log out"
+    "logout": "Log out",
+    "sidebar": "Records",
+    "calendar": "Calendar"
   },
   "common": {
     "loading": "Loading…",
@@ -19,7 +59,9 @@
     "fields": {
       "title": "Title",
       "slug": "Slug"
-    }
+    },
+    "close": "Close",
+    "remove": "Remove"
   },
   "setup": {
     "title": "Welcome to your instance",
@@ -28,13 +70,14 @@
     "password": "Password (12+ characters)",
     "displayName": "Display name",
     "worldName": "World name",
-    "submit": "Create the administrator"
+    "submit": "Create the administrator",
+    "username": "Username"
   },
   "login": {
     "title": "Log in",
-    "email": "Email",
     "password": "Password",
-    "submit": "Log in"
+    "submit": "Log in",
+    "username": "Username"
   },
   "lore": {
     "title": "Lore",
@@ -44,12 +87,25 @@
     "create": "Create",
     "open": "Open",
     "delete": "Delete",
-    "body": "Body (markdown)",
     "tags": "Tags (comma-separated)",
     "fields": "Fields (JSON)",
     "save": "Save",
     "saved": "Saved.",
-    "empty": "No records yet."
+    "empty": "No records yet.",
+    "categories": {
+      "characters-and-entities": "Characters and entities",
+      "places": "Places",
+      "organizations": "Organizations",
+      "monsters": "Monsters",
+      "nations": "Nations",
+      "natural-landmarks": "Natural landmarks",
+      "works": "Works",
+      "events": "Events",
+      "equipment-and-items": "Equipment and items",
+      "beliefs-myths-and-customs": "Beliefs, myths and customs",
+      "knowledge-and-technologies": "Knowledge and technologies",
+      "game-rules": "Game rules"
+    }
   },
   "campaigns": {
     "title": "Campaigns",
@@ -70,7 +126,9 @@
     "deleteCampaignConfirm": "Delete this campaign? Chapters must be deleted first.",
     "deleteConfirm": "Delete this item?",
     "setStatus": "Set status",
-    "empty": "No campaigns yet."
+    "empty": "No campaigns yet.",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "account": {
     "title": "My account",
@@ -84,14 +142,14 @@
     "saveProfile": "Save profile",
     "changePassword": "Change password",
     "saved": "Saved.",
-    "passwordChanged": "Password changed."
+    "passwordChanged": "Password changed.",
+    "username": "Username"
   },
   "admin": {
     "title": "Admin",
     "users": "Users",
     "createUser": "Create user",
     "email": "Email",
-    "password": "Password (12+ characters)",
     "displayName": "Display name",
     "role": "Role",
     "status": "Status",
@@ -110,12 +168,200 @@
     "selfDelete": "You cannot delete your own account.",
     "passwordReset": "Password updated.",
     "save": "Save",
-    "saved": "Saved."
+    "saved": "Saved.",
+    "username": "Username",
+    "calendar": {
+      "title": "World calendar",
+      "months": "Months",
+      "addMonth": "Add a month",
+      "monthName": "Name",
+      "monthDays": "Days",
+      "week": "Week",
+      "weekDays": "Days per week",
+      "dayNames": "Day names",
+      "moon": "Moon",
+      "moonName": "Name",
+      "moonCycle": "Cycle (days)",
+      "saved": "Calendar saved.",
+      "save": "Save",
+      "currentYear": "Current year"
+    },
+    "password": "Password",
+    "emailOptional": "(optional)"
   },
   "health": {
     "title": "API status",
     "loading": "Checking…",
     "ok": "Online",
     "error": "Offline — check that the app server is running"
+  },
+  "record": {
+    "edit": "Edit",
+    "era": "Era",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "recurring": "Recurring event",
+    "backlinks": "Backlinks",
+    "incomingMentions": "Incoming mentions",
+    "noBacklinks": "Nothing points at this record yet.",
+    "referenceSearch": "Search a record...",
+    "noChildren": "No chapters or scenes attached yet."
+  },
+  "fields": {
+    "illustration": "Illustration",
+    "gender": "Gender",
+    "origin": "Origin",
+    "physical_traits": "Physical traits",
+    "species": "Species",
+    "classes": "Classes",
+    "languages": "Languages",
+    "statistics": "Statistics block",
+    "public_description": "Public description",
+    "private_description": "Private description",
+    "characters": "Characters",
+    "beliefs": "Beliefs",
+    "organizations": "Organizations",
+    "knowledge": "Knowledge",
+    "works": "Works",
+    "place_type": "Type",
+    "population": "Population",
+    "leaders": "Leaders",
+    "nations": "Nations",
+    "events": "Events",
+    "member_count": "Member count",
+    "headquarters": "Headquarters",
+    "traits": "Traits",
+    "actions": "Actions",
+    "bonus_actions": "Bonus actions",
+    "treasure_types": "Treasure types",
+    "political_system": "Political system",
+    "capital": "Capital",
+    "geography": "Geography",
+    "follower_count": "Follower count",
+    "start": "Start",
+    "end": "End",
+    "recurrence": "Recurrence",
+    "value": "Value",
+    "weight": "Weight",
+    "size": "Size",
+    "rarity": "Rarity",
+    "level": "Level",
+    "pitch": "Pitch",
+    "campaign": "Campaign",
+    "chapter": "Chapter",
+    "dm_summary": "DM summary",
+    "running_notes": "Running notes",
+    "play_status": "Play status",
+    "order": "Order"
+  },
+  "enums": {
+    "place_type": {
+      "intangible_place": "Intangible place",
+      "locality": "Locality",
+      "city": "City"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "nonbinary": "Nonbinary"
+    },
+    "political_system": {
+      "anarchy": "Anarchy",
+      "aristocracy": "Aristocracy",
+      "autocracy": "Autocracy",
+      "confederation": "Confederation",
+      "diarchy": "Diarchy",
+      "empire": "Empire",
+      "matriarchy": "Matriarchy",
+      "militocracy": "Militocracy",
+      "monarchy": "Monarchy",
+      "oligarchy": "Oligarchy",
+      "patriarchy": "Patriarchy",
+      "republic": "Republic",
+      "tribal_system": "Tribal system",
+      "theocracy": "Theocracy",
+      "timocracy": "Timocracy",
+      "triarchy": "Triarchy"
+    },
+    "size": {
+      "tiny": "Tiny",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "huge": "Huge",
+      "gargantuan": "Gargantuan"
+    },
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "rare": "Rare",
+      "very_rare": "Very rare",
+      "epic": "Epic",
+      "legendary": "Legendary",
+      "unique": "Unique"
+    }
+  },
+  "money": {
+    "gp": "GP",
+    "sp": "SP",
+    "cp": "CP"
+  },
+  "recurrence": {
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years",
+    "unit": "Unit",
+    "interval": "Interval"
+  },
+  "stats": {
+    "strength": "Strength",
+    "dexterity": "Dexterity",
+    "constitution": "Constitution",
+    "intelligence": "Intelligence",
+    "wisdom": "Wisdom",
+    "charisma": "Charisma",
+    "ac": "AC",
+    "passivePerception": "Passive perception",
+    "initiative": "Initiative",
+    "darkvision": "Darkvision",
+    "hpAverage": "HP (average)",
+    "hpFormula": "HP formula",
+    "alignment": "Alignment",
+    "creatureType": "Type",
+    "size": "Size",
+    "speedWalk": "Walk",
+    "speedFly": "Fly",
+    "speedSwim": "Swim",
+    "speedClimb": "Climb",
+    "speedBurrow": "Burrow",
+    "vulnerabilities": "Vulnerabilities",
+    "resistances": "Resistances",
+    "immunities": "Immunities",
+    "savingThrows": "Saving throws",
+    "skills": "Skills"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "previous": "Previous year",
+    "next": "Next year",
+    "notDefined": "The world calendar is not defined yet.",
+    "defineHint": "Define it in the admin panel.",
+    "dayHeading": "{{month}} {{day}}, {{year}}",
+    "emptyDay": "No events on this day.",
+    "goToYear": "Go to year",
+    "newEvent": "New event on this day",
+    "create": "Create",
+    "moonLegend": "Moon cycle:",
+    "moon": {
+      "new": "New moon",
+      "waxing": "Waxing half",
+      "full": "Full moon",
+      "waning": "Waning half"
+    },
+    "format": "{{month}} {{day}}, {{year}}",
+    "formatDay": "{{month}} {{day}}, {{year}}",
+    "formatMonth": "{{month}} {{year}}",
+    "formatYear": "{{year}}"
   }
 }

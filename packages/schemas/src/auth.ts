@@ -3,20 +3,33 @@ import { locales } from "./env.js";
 
 export const passwordSchema = z.string().min(12).max(128);
 
+/**
+ * Login name: lowercase letters, digits, dots, dashes and underscores —
+ * unique per instance. The email stays a profile field, not the login.
+ */
+export const usernameSchema = z
+  .string()
+  .min(2)
+  .max(40)
+  .regex(/^[a-z0-9][a-z0-9._-]*$/, "lowercase letters, digits, dots, dashes and underscores");
+
 export const loginSchema = z.object({
-  email: z.email(),
+  username: usernameSchema,
   password: z.string().min(1),
 });
 
 export const createUserSchema = z.object({
-  email: z.email(),
+  username: usernameSchema,
+  email: z.email().optional(),
   password: passwordSchema,
   displayName: z.string().min(1).max(80),
   role: z.enum(["admin", "dm"]).default("dm"),
 });
 
 export const wizardSchema = z.object({
-  email: z.email(),
+  username: usernameSchema,
+  // No email at instance creation: login is by username. A real email can
+  // be added later through the profile page.
   password: passwordSchema,
   displayName: z.string().min(1).max(80),
   worldName: z.string().min(1).max(120),

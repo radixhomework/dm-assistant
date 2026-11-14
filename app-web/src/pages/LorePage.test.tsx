@@ -40,7 +40,6 @@ describe("LorePage", () => {
                 title: "City of Glass",
                 tags: [],
                 fields: {},
-                body: "",
               },
             ],
           };
@@ -52,9 +51,12 @@ describe("LorePage", () => {
 
   it("groups world records by template type", async () => {
     renderWithProviders(<LorePage />, "/");
+    // Categories are collapsed by default: the heading carries the count.
     await vi.waitFor(() =>
-      expect(screen.getByText("City of Glass")).toBeDefined(),
+      expect(screen.getByRole("button", { name: /Places\s*\(1\)/ })).toBeDefined(),
     );
-    expect(screen.getByText("places")).toBeDefined();
+    expect(screen.queryByText("City of Glass")).toBeNull();
+    screen.getByRole("button", { name: /Places\s*\(1\)/ }).click();
+    await vi.waitFor(() => expect(screen.getByText("City of Glass")).toBeDefined());
   });
 });

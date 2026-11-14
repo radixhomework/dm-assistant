@@ -1,16 +1,56 @@
 {
+  "editor": {
+    "toolbar": "Barre de mise en forme",
+    "bold": "Gras",
+    "italic": "Italique",
+    "strike": "Barré",
+    "heading2": "Titre 2",
+    "heading3": "Titre 3",
+    "heading4": "Titre 4",
+    "inlineCode": "Code inline",
+    "codeBlock": "Bloc de code",
+    "quote": "Citation",
+    "bulletList": "Liste à puces",
+    "orderedList": "Liste numérotée",
+    "link": "Lien",
+    "linkPrompt": "URL du lien (vide pour le retirer)",
+    "image": "Image",
+    "imagePrompt": "URL de l'image",
+    "attention": "Point d'attention",
+    "mentionNoResults": "Aucune fiche correspondante",
+    "highlightToolbar": "Blocs de mise en exergue",
+    "date": "Date",
+    "dateYear": "Année",
+    "dateMonth": "Mois",
+    "dateDay": "Jour",
+    "dateInsert": "Insérer",
+    "dateNeedsYear": "L'année est obligatoire.",
+    "dateNoYearZero": "L'année 0 n'existe pas.",
+    "dice": "Jet de dés",
+    "dicePrompt": "Formule de dés, ex. 3d6+2",
+    "paraphrase": "À paraphraser",
+    "develop": "À développer"
+  },
   "app": {
     "title": "DM Assistant",
     "tagline": "Votre monde et vos campagnes, au même endroit"
   },
   "home": {
-    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui mérite attention."
+    "intro": "Des fiches structurées pour votre lore, un audit de cohérence, et un assistant qui ne crée rien mais signale ce qui mérite attention.",
+    "welcome": "Que souhaitez-vous ouvrir ?",
+    "lore": "Fiches du monde, groupées par type.",
+    "calendar": "L'année du monde en un coup d'œil : événements et cycle lunaire.",
+    "campaigns": "Vos campagnes, leurs chapitres et leurs scènes.",
+    "admin": "Utilisateurs et réglages de l'instance.",
+    "account": "Votre profil, votre langue, votre mot de passe."
   },
   "nav": {
     "lore": "Lore",
     "campaigns": "Campagnes",
     "admin": "Admin",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "sidebar": "Fiches",
+    "calendar": "Calendrier"
   },
   "common": {
     "loading": "Chargement…",
@@ -19,7 +59,9 @@
     "fields": {
       "title": "Titre",
       "slug": "Slug"
-    }
+    },
+    "close": "Fermer",
+    "remove": "Retirer"
   },
   "setup": {
     "title": "Bienvenue sur votre instance",
@@ -28,13 +70,14 @@
     "password": "Mot de passe (12+ caractères)",
     "displayName": "Nom d'affichage",
     "worldName": "Nom du monde",
-    "submit": "Créer l'administrateur"
+    "submit": "Créer l'administrateur",
+    "username": "Nom d'utilisateur"
   },
   "login": {
     "title": "Connexion",
-    "email": "Email",
     "password": "Mot de passe",
-    "submit": "Se connecter"
+    "submit": "Se connecter",
+    "username": "Nom d'utilisateur"
   },
   "lore": {
     "title": "Lore",
@@ -44,12 +87,25 @@
     "create": "Créer",
     "open": "Ouvrir",
     "delete": "Supprimer",
-    "body": "Corps (markdown)",
     "tags": "Tags (séparés par des virgules)",
     "fields": "Champs (JSON)",
     "save": "Enregistrer",
     "saved": "Enregistré.",
-    "empty": "Aucune fiche pour l'instant."
+    "empty": "Aucune fiche pour l'instant.",
+    "categories": {
+      "characters-and-entities": "Personnages et entités",
+      "places": "Lieux",
+      "organizations": "Organisations",
+      "monsters": "Monstres",
+      "nations": "Nations",
+      "natural-landmarks": "Sites naturels",
+      "works": "Œuvres",
+      "events": "Événements",
+      "equipment-and-items": "Équipement et objets",
+      "beliefs-myths-and-customs": "Croyances, mythes et coutumes",
+      "knowledge-and-technologies": "Savoirs et technologies",
+      "game-rules": "Règles du jeu"
+    }
   },
   "campaigns": {
     "title": "Campagnes",
@@ -70,7 +126,9 @@
     "deleteCampaignConfirm": "Supprimer cette campagne ? Les chapitres doivent être supprimés d’abord.",
     "deleteConfirm": "Supprimer cet élément ?",
     "setStatus": "Définir le statut",
-    "empty": "Aucune campagne pour l'instant."
+    "empty": "Aucune campagne pour l'instant.",
+    "moveUp": "Monter",
+    "moveDown": "Descendre"
   },
   "account": {
     "title": "Mon compte",
@@ -84,14 +142,14 @@
     "saveProfile": "Enregistrer le profil",
     "changePassword": "Changer le mot de passe",
     "saved": "Enregistré.",
-    "passwordChanged": "Mot de passe modifié."
+    "passwordChanged": "Mot de passe modifié.",
+    "username": "Nom d'utilisateur"
   },
   "admin": {
     "title": "Admin",
     "users": "Utilisateurs",
     "createUser": "Créer un utilisateur",
     "email": "Email",
-    "password": "Mot de passe (12+ caractères)",
     "displayName": "Nom d'affichage",
     "role": "Rôle",
     "status": "Statut",
@@ -110,12 +168,200 @@
     "selfDelete": "Vous ne pouvez pas supprimer votre propre compte.",
     "passwordReset": "Mot de passe mis à jour.",
     "save": "Enregistrer",
-    "saved": "Enregistré."
+    "saved": "Enregistré.",
+    "username": "Nom d'utilisateur",
+    "calendar": {
+      "title": "Calendrier du monde",
+      "months": "Mois",
+      "addMonth": "Ajouter un mois",
+      "monthName": "Nom",
+      "monthDays": "Jours",
+      "week": "Semaine",
+      "weekDays": "Jours par semaine",
+      "dayNames": "Noms des jours",
+      "moon": "Lune",
+      "moonName": "Nom",
+      "moonCycle": "Cycle (jours)",
+      "saved": "Calendrier enregistré.",
+      "save": "Enregistrer",
+      "currentYear": "Année en cours"
+    },
+    "password": "Mot de passe",
+    "emailOptional": "(facultatif)"
   },
   "health": {
     "title": "État de l'API",
     "loading": "Vérification…",
     "ok": "En ligne",
     "error": "Hors ligne — vérifiez que le serveur applicatif tourne"
+  },
+  "record": {
+    "edit": "Éditer",
+    "era": "Ère",
+    "year": "Année",
+    "month": "Mois",
+    "day": "Jour",
+    "recurring": "Événement récurrent",
+    "backlinks": "Renvois",
+    "incomingMentions": "Mentions entrantes",
+    "noBacklinks": "Rien ne pointe vers cette fiche pour l'instant.",
+    "referenceSearch": "Rechercher une fiche...",
+    "noChildren": "Aucun chapitre ou scène rattaché pour l'instant."
+  },
+  "fields": {
+    "illustration": "Illustration",
+    "gender": "Genre",
+    "origin": "Origine",
+    "physical_traits": "Traits physiques",
+    "species": "Espèces",
+    "classes": "Classes",
+    "languages": "Langues",
+    "statistics": "Bloc de statistiques",
+    "public_description": "Description publique",
+    "private_description": "Description privée",
+    "characters": "Personnages",
+    "beliefs": "Croyances",
+    "organizations": "Organisations",
+    "knowledge": "Savoirs",
+    "works": "Œuvres",
+    "place_type": "Type de lieu",
+    "population": "Population",
+    "leaders": "Dirigeants",
+    "nations": "Nations",
+    "events": "Événements",
+    "member_count": "Nombre de membres",
+    "headquarters": "Quartier général",
+    "traits": "Traits",
+    "actions": "Actions",
+    "bonus_actions": "Actions bonus",
+    "treasure_types": "Types de trésors",
+    "political_system": "Système politique",
+    "capital": "Capitale",
+    "geography": "Géographie",
+    "follower_count": "Nombre de fidèles",
+    "start": "Début",
+    "end": "Fin",
+    "recurrence": "Récurrence",
+    "value": "Valeur",
+    "weight": "Poids",
+    "size": "Taille",
+    "rarity": "Rareté",
+    "level": "Niveau",
+    "pitch": "Pitch",
+    "campaign": "Campagne",
+    "chapter": "Chapitre",
+    "dm_summary": "Résumé DM",
+    "running_notes": "Notes de jeu",
+    "play_status": "Statut de jeu",
+    "order": "Ordre"
+  },
+  "enums": {
+    "place_type": {
+      "intangible_place": "Lieu immatériel",
+      "locality": "Localité",
+      "city": "Cité"
+    },
+    "gender": {
+      "male": "Masculin",
+      "female": "Féminin",
+      "nonbinary": "Non binaire"
+    },
+    "political_system": {
+      "anarchy": "Anarchie",
+      "aristocracy": "Aristocratie",
+      "autocracy": "Autocratie",
+      "confederation": "Confédération",
+      "diarchy": "Diarchie",
+      "empire": "Empire",
+      "matriarchy": "Matriarcat",
+      "militocracy": "Militocratie",
+      "monarchy": "Monarchie",
+      "oligarchy": "Oligarchie",
+      "patriarchy": "Patriarcat",
+      "republic": "République",
+      "tribal_system": "Système tribal",
+      "theocracy": "Théocratie",
+      "timocracy": "Timocratie",
+      "triarchy": "Triarchie"
+    },
+    "size": {
+      "tiny": "Minuscule",
+      "small": "Petite",
+      "medium": "Moyenne",
+      "large": "Grande",
+      "huge": "Énorme",
+      "gargantuan": "Gigantesque"
+    },
+    "rarity": {
+      "common": "Commun",
+      "uncommon": "Peu commun",
+      "rare": "Rare",
+      "very_rare": "Très rare",
+      "epic": "Épique",
+      "legendary": "Légendaire",
+      "unique": "Unique"
+    }
+  },
+  "money": {
+    "gp": "GP",
+    "sp": "SP",
+    "cp": "CP"
+  },
+  "recurrence": {
+    "weeks": "semaines",
+    "months": "mois",
+    "years": "années",
+    "unit": "Unité",
+    "interval": "Intervalle"
+  },
+  "stats": {
+    "strength": "Force",
+    "dexterity": "Dextérité",
+    "constitution": "Constitution",
+    "intelligence": "Intelligence",
+    "wisdom": "Sagesse",
+    "charisma": "Charisme",
+    "ac": "CA",
+    "passivePerception": "Perception passive",
+    "initiative": "Initiative",
+    "darkvision": "Vision dans le noir",
+    "hpAverage": "PV (moyenne)",
+    "hpFormula": "Formule de PV",
+    "alignment": "Alignement",
+    "creatureType": "Type",
+    "size": "Taille",
+    "speedWalk": "Marche",
+    "speedFly": "Vol",
+    "speedSwim": "Nage",
+    "speedClimb": "Escalade",
+    "speedBurrow": "Creusement",
+    "vulnerabilities": "Vulnérabilités",
+    "resistances": "Résistances",
+    "immunities": "Immunités",
+    "savingThrows": "Jets de sauvegarde",
+    "skills": "Compétences"
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "previous": "Année précédente",
+    "next": "Année suivante",
+    "notDefined": "Le calendrier du monde n'est pas encore défini.",
+    "defineHint": "Définis-le dans l'administration.",
+    "dayHeading": "{{day}} {{month}} {{year}}",
+    "emptyDay": "Aucun événement ce jour-là.",
+    "goToYear": "Aller à l'année",
+    "newEvent": "Nouvel événement ce jour",
+    "create": "Créer",
+    "moonLegend": "Cycle lunaire :",
+    "moon": {
+      "new": "Nouvelle lune",
+      "waxing": "Demi-lune montante",
+      "full": "Pleine lune",
+      "waning": "Demi-lune descendante"
+    },
+    "format": "{{day}} {{month}} {{year}}",
+    "formatDay": "{{day}} {{month}} {{year}}",
+    "formatMonth": "{{month}} {{year}}",
+    "formatYear": "{{year}}"
   }
 }

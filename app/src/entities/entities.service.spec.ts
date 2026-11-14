@@ -1,7 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import { resetTables, testDb } from "../testing/test-db.js";
-import { users } from "../database/schema.js";
-import { EntitiesService, foldStatuses } from "./entities.service.js";
+import { entities, mentions, users } from "../database/schema.js";
+import { EntitiesService, foldStatuses, parseMentionSlugs } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
 describe("foldStatuses (pure)", () => {
@@ -10,10 +11,18 @@ describe("foldStatuses (pure)", () => {
   });
   it("returns in progress when any child is in progress", () => {
     expect(foldStatuses(["played", "in_progress"])).toBe("in_progress");
+    expect(foldStatuses(["in_progress", "not_played"])).toBe("in_progress");
+  });
+  it("returns in progress when a child is played (work started)", () => {
+    expect(foldStatuses(["played", "not_played"])).toBe("in_progress");
+    expect(foldStatuses(["played", "not_played", "not_played"])).toBe("in_progress");
   });
   it("returns played only when all children are played", () => {
     expect(foldStatuses(["played", "played"])).toBe("played");
-    expect(foldStatuses(["played", "not_played"])).toBe("not_played");
+    expect(foldStatuses(["played"])).toBe("played");
+  });
+  it("returns not played while every child is untouched", () => {
+    expect(foldStatuses(["not_played", "not_played"])).toBe("not_played");
   });
 });
 
@@ -58,7 +67,7 @@ describe("EntitiesService", () => {
     const authorId = "11111111-1111-4111-8111-111111111111";
     await testDb
       .insert(users)
-      .values({ id: authorId, email: "author@example.com", displayName: "Author", passwordHash: "x" })
+      .values({ id: authorId, username: "author", email: "author@example.com", displayName: "Author", passwordHash: "x" })
       .onConflictDoNothing();
     const created = await service.create({ ...scene, slug: "scene-authored" }, authorId);
     expect(created.createdBy).toBe(authorId);
@@ -80,7 +89,7 @@ describe("EntitiesService", () => {
     await service.create(campaign);
     const updated = await service.update("north-realm", {
       title: "Renamed",
-      body: "Body text",
+      fields: {},
     });
     expect(updated.title).toBe("Renamed");
     expect(updated.slug).toBe("north-realm");
@@ -89,10 +98,10 @@ describe("EntitiesService", () => {
   it("refuses deleting a record that children reference as parent", async () => {
     await service.create(campaign);
     await service.create(chapter);
-    await service.relationships.attach(
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
     await expect(service.delete("north-realm")).rejects.toThrow(
       /children attached/,
@@ -104,46 +113,172 @@ describe("EntitiesService", () => {
   it("enforces a single parent and lists children at the parent", async () => {
     await service.create(campaign);
     await service.create(chapter);
-    await service.relationships.attach(
+    // A 0..1 field set a second time replaces its target: the child keeps
+    // exactly one campaign link.
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
-    await expect(
-      service.relationships.attach("chapter-one", "north-realm", "chapter"),
-    ).rejects.toThrow(/already carries/);
     const children = await service.relationships.listChildren(
       "north-realm",
-      "chapter",
+      "campaign",
     );
     expect(children.map((c) => c.slug)).toEqual(["chapter-one"]);
+  });
+
+  it("lists children in play order (missing last, then title)", async () => {
+    await service.create(campaign);
+    // Three chapters: one ordered high, one low, one without order.
+    await service.create({ slug: "chapter-last", type: "chapter", perimeter: "campaign", title: "Alpha" });
+    await service.create({ slug: "chapter-first", type: "chapter", perimeter: "campaign", title: "Zeta" });
+    await service.create({ slug: "chapter-mid", type: "chapter", perimeter: "campaign", title: "Mid" });
+    await service.create({ slug: "chapter-none", type: "chapter", perimeter: "campaign", title: "No order" });
+    for (const [slug, order] of [
+      ["chapter-last", 3],
+      ["chapter-first", 0],
+      ["chapter-mid", 1],
+    ] as const) {
+      await service.update(slug, { fields: { order } });
+      await service.relationships.attachReference(slug, "campaign", "north-realm");
+    }
+    await service.relationships.attachReference("chapter-none", "campaign", "north-realm");
+    const children = await service.relationships.listChildren("north-realm", "campaign");
+    expect(children.map((c) => c.slug)).toEqual([
+      "chapter-first",
+      "chapter-mid",
+      "chapter-last",
+      "chapter-none",
+    ]);
+  });
+
+  it("moves a child up and down within its sibling play order", async () => {
+    await service.create(campaign);
+    await service.create(chapter);
+    await service.create({ slug: "chapter-b", type: "chapter", perimeter: "campaign", title: "B" });
+    await service.create({ slug: "chapter-c", type: "chapter", perimeter: "campaign", title: "C" });
+    for (const slug of ["chapter-one", "chapter-b", "chapter-c"]) {
+      await service.relationships.attachReference(slug, "campaign", "north-realm");
+    }
+    // All without order: title order is B, C, Chapter One.
+    const before = await service.relationships.listChildren("north-realm", "campaign");
+    expect(before.map((c) => c.slug)).toEqual(["chapter-b", "chapter-c", "chapter-one"]);
+
+    await service.relationships.moveChild("chapter-c", "up");
+    const afterUp = await service.relationships.listChildren("north-realm", "campaign");
+    expect(afterUp.map((c) => c.slug)).toEqual(["chapter-c", "chapter-b", "chapter-one"]);
+
+    await service.relationships.moveChild("chapter-c", "down");
+    const afterDown = await service.relationships.listChildren("north-realm", "campaign");
+    expect(afterDown.map((c) => c.slug)).toEqual(["chapter-b", "chapter-c", "chapter-one"]);
+  });
+
+  it("resolves the owning campaign through the parent chain", async () => {
+    await service.create(campaign);
+    await service.create(chapter);
+    await service.create(scene);
+    await service.relationships.attachReference(
+      "chapter-one",
+      "campaign",
+      "north-realm",
+    );
+    await service.relationships.attachReference("scene-one", "chapter", "chapter-one");
+    const owned = { slug: "north-realm", title: "The North Realm" };
+    expect(await service.campaignOf(await service.getBySlug("north-realm"))).toEqual(owned);
+    expect(await service.campaignOf(await service.getBySlug("chapter-one"))).toEqual(owned);
+    expect(await service.campaignOf(await service.getBySlug("scene-one"))).toEqual(owned);
+  });
+
+  it("collects backlinks: reverse references and incoming mentions", async () => {
+    await service.create({
+      slug: "lone-place",
+      type: "places",
+      perimeter: "world",
+      title: "Lone Place",
+    });
+    await service.create({
+      slug: "north-kingdom",
+      type: "nations",
+      perimeter: "world",
+      title: "North Kingdom",
+      // geography is a 0..n reference field of the nations template:
+      // it lives in the relationships table, never in fields.
+    });
+    await service.relationships.attachReference(
+      "north-kingdom",
+      "geography",
+      "lone-place",
+    );
+    // A prose mention of the place in a second record.
+    await service.create({
+      slug: "storyteller",
+      type: "characters-and-entities",
+      perimeter: "world",
+      title: "Storyteller",
+      fields: { public_description: "Tales of @lone-place." },
+    });
+    const backlinks = await service.backlinksOf("lone-place");
+    expect(backlinks.fields.geography).toEqual([
+      { slug: "north-kingdom", title: "North Kingdom" },
+    ]);
+    expect(backlinks.mentions).toEqual([{ slug: "storyteller", title: "Storyteller" }]);
+  });
+
+  it("returns no owning campaign for a world record", async () => {
+    const place = await service.create({
+      slug: "lone-place",
+      type: "places",
+      perimeter: "world",
+      title: "Lone Place",
+    });
+    expect(await service.campaignOf(place)).toBeNull();
   });
 
   it("aggregates play tracking upward", async () => {
     await service.create(campaign);
     await service.create(chapter);
     await service.create(scene);
-    await service.relationships.attach(
+    await service.relationships.attachReference(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
-    await service.relationships.attach("scene-one", "chapter-one", "scene");
+    await service.relationships.attachReference("scene-one", "chapter", "chapter-one");
 
     const before = await service.tracking("north-realm");
     expect(before.status).toBe("not_played");
 
-    await service.update("scene-one", { fields: { status: "in_progress" } });
+    await service.update("scene-one", { fields: { play_status: "in_progress" } });
     const during = await service.tracking("chapter-one");
     expect(during.status).toBe("in_progress");
     const campaignDuring = await service.tracking("north-realm");
     expect(campaignDuring.status).toBe("in_progress");
 
-    await service.update("scene-one", { fields: { status: "played" } });
+    await service.update("scene-one", { fields: { play_status: "played" } });
     const after = await service.tracking("chapter-one");
     expect(after.status).toBe("played");
     const campaignAfter = await service.tracking("north-realm");
     expect(campaignAfter.status).toBe("played");
+
+    // A played scene with an untouched sibling keeps the parent in
+    // progress: work has started, it is not finished.
+    await service.create({
+      slug: "scene-two",
+      type: "scene",
+      perimeter: "campaign",
+      title: "Scene Two",
+    });
+    await service.relationships.attachReference("scene-two", "chapter", "chapter-one");
+    const restarted = await service.tracking("chapter-one");
+    expect(restarted.status).toBe("in_progress");
+    expect((await service.tracking("north-realm")).status).toBe("in_progress");
+
+    // The tree is fully recursive: scenes nest under their chapter,
+    // and every node carries its title.
+    expect(campaignAfter.children[0]?.title).toBe("Chapter One");
+    expect(
+      campaignAfter.children[0]?.children.map((scene) => scene.title),
+    ).toEqual(["Scene One"]);
   });
 });
 
@@ -156,6 +291,68 @@ describe("EntitiesService edge cases", () => {
   beforeEach(resetTables);
 
 
+  it("writes the mention set on create and replaces it on update", async () => {
+    await service.create({
+      slug: "mentioning-place",
+      type: "places",
+      perimeter: "world",
+      title: "Mentioning Place",
+      fields: {
+        public_description: "Below @north-realm, above @chapter-one.",
+      },
+    });
+    const [owner] = await testDb
+      .select({ id: entities.id })
+      .from(entities)
+      .where(eq(entities.slug, "mentioning-place"));
+    let rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
+    expect(rows.map((r) => r.targetSlug).sort()).toEqual(["chapter-one", "north-realm"]);
+
+    await service.update("mentioning-place", {
+      fields: { public_description: "Now only @north-realm." },
+    });
+    rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
+    expect(rows.map((r) => r.targetSlug)).toEqual(["north-realm"]);
+  });
+
+  it("keeps mention rows pointing at deleted targets (dead links)", async () => {
+    await service.create({
+      slug: "ghost-place",
+      type: "places",
+      perimeter: "world",
+      title: "Ghost Place",
+      fields: { public_description: "A dead @vanished-place." },
+    });
+    const [owner] = await testDb
+      .select({ id: entities.id })
+      .from(entities)
+      .where(eq(entities.slug, "ghost-place"));
+    const rows = await testDb.select().from(mentions).where(eq(mentions.entityId, owner.id));
+    expect(rows.map((r) => r.targetSlug)).toEqual(["vanished-place"]);
+  });
+
+  it("suggests records by title for autocomplete", async () => {
+    await service.create({
+      slug: "validated-place",
+      type: "places",
+      perimeter: "world",
+      title: "Silver City",
+    });
+    const results = await service.autocomplete("silver");
+    expect(results.map((r) => r.slug)).toContain("validated-place");
+  });
+
+  it("filters autocomplete suggestions by template type", async () => {
+    await service.create({
+      slug: "typed-campaign",
+      type: "campaign",
+      perimeter: "campaign",
+      title: "A Silver Campaign",
+    });
+    const results = await service.autocomplete("silver", "campaign");
+    expect(results.every((r) => r.type === "campaign")).toBe(true);
+    expect(results.map((r) => r.slug)).toContain("typed-campaign");
+  });
   it("rejects reading an unknown slug", async () => {
     await expect(service.getBySlug("does-not-exist")).rejects.toThrow(
       /not found/,
@@ -186,5 +383,51 @@ describe("EntitiesService edge cases", () => {
       type: "campaign",
     });
     expect(campaigns.map((row) => row.slug)).toEqual(["a-campaign"]);
+  });
+  it("validates fields against the template schema", async () => {
+    const places = { slug: "validated-place", type: "places", perimeter: "world" as const, title: "Validated Place", fields: { population: "2M" } };
+    await service.create(places);
+    const read = await service.getBySlug("validated-place");
+    expect(read.fields).toEqual({ population: "2M" });
+  });
+
+  it("rejects unknown template fields with a stable code", async () => {
+    const bad = { slug: "bad-place", type: "places", perimeter: "world" as const, title: "Bad Place", fields: { nickname: "The Pearl" } };
+    await expect(service.create(bad)).rejects.toMatchObject({
+      response: { code: "fields_invalid" },
+    });
+  });
+
+  it("keeps structural validation for unregistered types", async () => {
+    await service.create({
+      slug: "custom-type-record",
+      type: "custom-type",
+      perimeter: "world",
+      title: "Custom",
+      fields: { anything: [1, 2, 3] },
+    });
+    const read = await service.getBySlug("custom-type-record");
+    expect(read.fields).toEqual({ anything: [1, 2, 3] });
+  });
+});
+
+describe("parseMentionSlugs", () => {
+  it("extracts word-start mentions", () => {
+    expect(parseMentionSlugs("See @silver-city and @north-realm.")).toEqual([
+      "silver-city",
+      "north-realm",
+    ]);
+  });
+
+  it("ignores email addresses by construction", () => {
+    expect(parseMentionSlugs("write to user@example.com or me@work.org")).toEqual([]);
+  });
+
+  it("deduplicates and keeps first-seen order", () => {
+    expect(parseMentionSlugs("@b then @a then @b again")).toEqual(["b", "a"]);
+  });
+
+  it("returns nothing without mentions", () => {
+    expect(parseMentionSlugs("plain prose, no mentions at all")).toEqual([]);
   });
 });

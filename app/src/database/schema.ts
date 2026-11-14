@@ -34,6 +34,8 @@ export const users = pgTable("users", {
     .default("active"),
   /** Per-account UI language (null = instance default from UI_LOCALE). */
   uiLocale: text("ui_locale", { enum: ["en", "fr"] }),
+  /** Login name — unique, lowercase; the email stays a profile field. */
+  username: text("username"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -59,7 +61,6 @@ export const entities = pgTable("entities", {
     .notNull()
     .default([]),
   fields: jsonb("fields").notNull().default({}),
-  body: text("body").notNull().default(""),
   /** Authoring reference — carries the user-deletion campaign constraint. */
   createdBy: uuid("created_by").references(() => users.id, {
     onDelete: "set null",
@@ -93,5 +94,25 @@ export const relationships = pgTable(
       .on(t.fromId, t.kind)
       .where(sql`kind in ('chapter', 'scene')`),
     index("relationships_to_idx").on(t.toId, t.kind),
+  ],
+);
+
+/**
+ * `@slug` mentions parsed from record bodies on save (PRE-SPEC.md §6).
+ * Rows reference the target by slug text — a deleted target keeps its
+ * rows so the rendering marks the mention as a dead link.
+ */
+export const mentions = pgTable(
+  "mentions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    entityId: uuid("entity_id")
+      .notNull()
+      .references(() => entities.id, { onDelete: "cascade" }),
+    targetSlug: text("target_slug").notNull(),
+  },
+  (t) => [
+    index("mentions_entity_idx").on(t.entityId),
+    index("mentions_target_idx").on(t.targetSlug),
   ],
 );

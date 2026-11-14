@@ -9,3 +9,4 @@
 3. **Running notes** — multi-block running prose: what can be read to players or paraphrased, DM mechanics, attention points, images, tables…
 4. **Chapter** — the parent chapter (single reference)
 5. **Play status** — game status: not played, in progress, played
+6. **Order** — position of the scene in the chapter's play order

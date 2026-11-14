@@ -6,14 +6,18 @@ export type Entity = {
   title: string;
   tags: string[];
   fields: Record<string, unknown>;
-  body: string;
   tracking?: { slug: string; status: string; children: ChildView[] };
+  references?: Record<string, Array<{ slug: string; title: string }>>;
+  /** The campaign owning this record (itself for a campaign); null on
+   * world-perimeter records. Resolved server-side on read. */
+  campaign?: { slug: string; title: string } | null;
 };
 
 export type ChildView = {
   slug: string;
   title: string;
   status: string;
+  children?: ChildView[];
 };
 
 export type WorldTemplate =
@@ -47,6 +51,7 @@ export const worldTemplates: WorldTemplate[] = [
 
 export type SafeUserLike = {
   id: string;
+  username?: string | null;
   email: string;
   displayName: string;
   role: "admin" | "dm";

@@ -11,14 +11,16 @@ function makeService(): vi.Mocked<EntitiesService> {
     update: vi.fn(),
     delete: vi.fn(),
     tracking: vi.fn(),
+    referencesOf: vi.fn(async () => ({ leaders: [{ slug: "the-king", title: "The King" }] })),
+    campaignOf: vi.fn(async () => null),
     statusOf: vi.fn(),
   } as unknown as vi.Mocked<EntitiesService>;
 }
 
 function makeRelationships(): vi.Mocked<RelationshipsService> {
   return {
-    attach: vi.fn(async () => undefined),
-    detach: vi.fn(async () => undefined),
+    attachReference: vi.fn(async () => undefined),
+    detachReference: vi.fn(async () => undefined),
   } as unknown as vi.Mocked<RelationshipsService>;
 }
 
@@ -67,7 +69,7 @@ describe("EntitiesController", () => {
     expect(service.delete).toHaveBeenCalledWith("city-of-glass");
   });
 
-  it("reads a record with its tracking", async () => {
+  it("reads a record with its tracking and owning campaign", async () => {
     service.getBySlug.mockResolvedValue({
       id: "1",
       slug: "north-realm",
@@ -76,30 +78,35 @@ describe("EntitiesController", () => {
       title: "North",
       tags: [],
       fields: {},
-      body: "",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
     service.tracking.mockResolvedValue({
       slug: "north-realm",
+      title: "North",
       status: "played",
       children: [],
     });
+    service.campaignOf.mockResolvedValue({ slug: "north-realm", title: "North" });
     const result = await controller.getBySlug("north-realm");
     expect(result.tracking.status).toBe("played");
+    expect(result.campaign).toEqual({ slug: "north-realm", title: "North" });
   });
 
   it("attaches and detaches parents", async () => {
     await controller.attachParent("chapter-one", {
       parentSlug: "north-realm",
-      kind: "chapter",
+      kind: "campaign",
     });
-    expect(relationships.attach).toHaveBeenCalledWith(
+    expect(relationships.attachReference).toHaveBeenCalledWith(
       "chapter-one",
+      "campaign",
       "north-realm",
-      "chapter",
     );
-    await controller.detachParent("chapter-one", "chapter");
-    expect(relationships.detach).toHaveBeenCalledWith("chapter-one", "chapter");
+    await controller.detachParent("chapter-one", "campaign");
+    expect(relationships.detachReference).toHaveBeenCalledWith(
+      "chapter-one",
+      "campaign",
+    );
   });
 });

@@ -14,6 +14,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { LorePage } from "./pages/LorePage";
 import { CampaignsPage } from "./pages/CampaignsPage";
 import { CampaignViewPage } from "./pages/CampaignViewPage";
+import { CalendarPage } from "./pages/CalendarPage";
+import { HomePage } from "./pages/HomePage";
 import { AdminPage } from "./pages/AdminPage";
 import { AccountPage } from "./pages/AccountPage";
 import { RecordEditPage } from "./pages/RecordEditPage";
@@ -44,7 +46,7 @@ const rootRoute = createRootRoute({
 });
 const loreRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  path: "/lore",
   component: LorePage,
 });
 const campaignsRoute = createRoute({
@@ -56,11 +58,24 @@ const recordEditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/records/$slug",
   component: RecordEditPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: search.edit === "1" ? true : undefined,
+  }),
 });
 const campaignViewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/campaigns/$slug",
   component: CampaignViewPage,
+});
+const calendarRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/calendar",
+  component: CalendarPage,
+});
+const homeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: HomePage,
 });
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -88,6 +103,8 @@ const router = createRouter({
     recordEditRoute,
     campaignsRoute,
     campaignViewRoute,
+    calendarRoute,
+    homeRoute,
     adminRoute,
     accountRoute,
     loginRoute,

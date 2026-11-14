@@ -40,7 +40,8 @@ Parked:
 - One definition per world: months (ordered list: name, number of days — the year length follows), week (number of days), day names (cycled), a single moon (name, cycle in days). Intercalary days outside months: parked.
 - **Date** = (optional era, year, optional month, optional day): signed years (negative allowed, no year 0 — to confirm at spec time), partial granularity allowed (year alone; never month without year).
 - **Event** (the Events template is the calendar registry): `Start` and `End` optional dates, `Recurrence` optional `{unit: week | month | year, interval: x}`.
-- Semantics: start only = punctual event; start + end = period; recurrence applies to both and is anchored on the start date (previous/next occurrences computed from it).
+- Semantics: start only = punctual event; start + end = period; recurrence applies to both and is anchored on the start date.
+- **Year overview (decision, 2026-11-11)**: the application renders the world's year month by month with an indicator on days holding events (punctual, inclusive periods, recurrence expanded within the year); clicking an indicated day lists that day's events below the calendar, each linking to the event's sheet. Only events resolvable to a specific day mark days — partial-date events stay unmarked.
 - **Prose date node**: a date embedded in prose is a dedicated editor node (calendar picker, canonical markdown representation); a complete date renders clickable; a raw/incomplete date stays plain text.
 
 ## 5. Data model — rules, types and inventory

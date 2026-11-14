@@ -5,6 +5,10 @@ import { renderWithProviders } from "../testing/render.js";
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ slug: "city-of-glass" }),
   useNavigate: () => ({ to: vi.fn() }),
+  useRouterState: (opts?: { select?: (s: unknown) => unknown }) =>
+    opts?.select
+      ? opts.select({ location: { pathname: "/records/city-of-glass", search: {} } })
+      : { location: { pathname: "/records/city-of-glass", search: {} } },
 }));
 
 describe("RecordEditPage delete", () => {
@@ -24,6 +28,9 @@ describe("RecordEditPage delete", () => {
             }),
           };
         }
+        if (_input.endsWith("/backlinks")) {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
         return {
           ok: true,
           json: async () => ({
@@ -34,7 +41,6 @@ describe("RecordEditPage delete", () => {
             title: "City of Glass",
             tags: [],
             fields: {},
-            body: "",
           }),
         };
       }),
@@ -54,6 +60,9 @@ describe("RecordEditPage delete", () => {
           }),
         };
       }
+      if (input.endsWith("/backlinks")) {
+        return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+      }
       return {
         ok: true,
         json: async () => ({
@@ -64,7 +73,6 @@ describe("RecordEditPage delete", () => {
           title: "City of Glass",
           tags: [],
           fields: {},
-          body: "",
         }),
       };
     });

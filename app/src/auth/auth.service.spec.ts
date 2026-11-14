@@ -15,6 +15,7 @@ describe("AuthService", () => {
 
   function wizardInput(): WizardInput {
     return {
+      username: `admin-${randomUUID().slice(0, 8)}`,
       email: `admin-${randomUUID()}@example.com`,
       password: "a-long-enough-passphrase",
       displayName: "The DM",
@@ -27,6 +28,7 @@ describe("AuthService", () => {
     await testDb
       .insert(users)
       .values({
+        username: `dm-${randomUUID().slice(0, 8)}`,
         email,
         displayName: "Other DM",
         passwordHash: await (await import("@node-rs/argon2")).hash("a-long-enough-passphrase"),
@@ -38,14 +40,14 @@ describe("AuthService", () => {
   it("bootstraps the admin and the world settings atomically", async () => {
     const input = wizardInput();
     const result = await service.bootstrapInstance(input);
-    expect(result.email).toBe(input.email);
+    expect(result.email).toBe(`${input.username}@instance.local`);
     const rows = await testDb.select().from(settings);
     const keys = rows.map((row) => row.key);
     expect(keys).toContain("world_name");
     const [admin] = await testDb
       .select()
       .from(users)
-      .where(eq(users.email, input.email));
+      .where(eq(users.username, input.username));
     expect(admin.role).toBe("admin");
   });
 
@@ -55,7 +57,7 @@ describe("AuthService", () => {
     const { hash } = await import("@node-rs/argon2");
     const [row] = await testDb
       .insert(users)
-      .values({ email, displayName: "The DM", passwordHash: await hash(password), role: "admin" })
+      .values({ username: `admin-${randomUUID().slice(0, 8)}`, email, displayName: "The DM", passwordHash: await hash(password), role: "admin" })
       .returning();
     return { id: row.id, email, password };
   }
@@ -146,6 +148,26 @@ describe("AuthService", () => {
     await expect(
       service.login(email, "wrong-passphrase-entirely", {}),
     ).rejects.toThrow(/Invalid credentials/);
+  });
+
+  it("logs in by username as well as by email", async () => {
+    const { hash } = await import("@node-rs/argon2");
+    const username = `dm-${randomUUID().slice(0, 8)}`;
+    const email = `dm-${randomUUID()}@example.com`;
+    await testDb
+      .insert(users)
+      .values({
+        username,
+        email,
+        displayName: "Username DM",
+        passwordHash: await hash("a-long-enough-passphrase"),
+        role: "dm",
+      });
+    const session: { userId?: string } = {};
+    const byUsername = await service.login(username, "a-long-enough-passphrase", session);
+    expect(byUsername.username).toBe(username);
+    const byEmail = await service.login(email, "a-long-enough-passphrase", {});
+    expect(byEmail.username).toBe(username);
   });
 
   it("rejects a blocked account", async () => {

@@ -29,6 +29,27 @@
       "when": 1794229695942,
       "tag": "0003_oval_wild_child",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794346940228,
+      "tag": "0004_fair_raza",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794428450209,
+      "tag": "0005_youthful_shinobi_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794660504822,
+      "tag": "0006_typed_references",
+      "breakpoints": true
     }
   ]
 }

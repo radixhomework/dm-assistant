@@ -35,6 +35,7 @@ describe("UsersController", () => {
 
   it("creates a user through the schema", async () => {
     await controller.create({
+      username: "new",
       email: "new@example.com",
       password: "a-long-enough-passphrase",
       displayName: "New",

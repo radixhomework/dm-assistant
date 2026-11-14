@@ -34,7 +34,6 @@ function mockInstance() {
             title: "The North Realm",
             tags: [],
             fields: {},
-            body: "",
             tracking: {
               slug: "north-realm",
               status: "not_played",
@@ -68,7 +67,6 @@ function mockInstance() {
             title: "Scene One",
             tags: [],
             fields: {},
-            body: "",
           }),
         };
       }
@@ -126,7 +124,6 @@ describe("CampaignViewPage scene creation", () => {
             title: "The North Realm",
             tags: [],
             fields: {},
-            body: "",
             tracking: {
               slug: "north-realm",
               status: "not_played",
@@ -228,7 +225,6 @@ describe("CampaignViewPage deletions", () => {
             title: "The North Realm",
             tags: [],
             fields: {},
-            body: "",
             tracking: {
               slug: "north-realm",
               status: "not_played",
@@ -356,7 +352,6 @@ describe("CampaignViewPage deletion refusal", () => {
               title: "The North Realm",
               tags: [],
               fields: {},
-              body: "",
               tracking: {
                 slug: "north-realm",
                 status: "not_played",

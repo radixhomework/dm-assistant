@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { formString } from "../forms.js";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
@@ -19,6 +20,35 @@ const statusBadgeClass = (status: string) => {
   if (status === "in_progress") return "bg-accent text-background";
   return "border border-border text-muted";
 };
+
+function MoveButtons(props: {
+  readonly slug: string;
+  readonly onMove: (slug: string, direction: "up" | "down") => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <span className="flex items-center">
+      <button
+        type="button"
+        aria-label={t("campaigns.moveUp")}
+        title={t("campaigns.moveUp")}
+        onClick={() => props.onMove(props.slug, "up")}
+        className="rounded p-0.5 text-muted transition-colors duration-200 hover:text-accent"
+      >
+        <ArrowUp className="size-3.5" aria-hidden />
+      </button>
+      <button
+        type="button"
+        aria-label={t("campaigns.moveDown")}
+        title={t("campaigns.moveDown")}
+        onClick={() => props.onMove(props.slug, "down")}
+        className="rounded p-0.5 text-muted transition-colors duration-200 hover:text-accent"
+      >
+        <ArrowDown className="size-3.5" aria-hidden />
+      </button>
+    </span>
+  );
+}
 
 export function CampaignViewPage() {
   const { t } = useTranslation();
@@ -82,6 +112,12 @@ export function CampaignViewPage() {
         method: "POST",
         body: { parentSlug: parentForNew, kind: childType },
       });
+      // Straight into editing the freshly created chapter/scene.
+      void navigate({
+        to: "/records/$slug",
+        params: { slug: formString(form, "slug") },
+        search: { edit: "1" },
+      });
       setCreating(null);
       setParentForNew(null);
       await campaign.refetch();
@@ -97,12 +133,23 @@ export function CampaignViewPage() {
       const scene = await api<Entity>(`/api/records/${sceneSlug}`);
       await api(`/api/records/${sceneSlug}`, {
         method: "PATCH",
-        body: { fields: { ...scene.fields, status } },
+        body: { fields: { ...scene.fields, play_status: status } },
       });
       await campaign.refetch();
       await chapterTrackings.refetch();
     } catch (statusError) {
       setError(String(statusError));
+    }
+  }
+
+  async function moveChild(slug: string, direction: "up" | "down") {
+    setError(null);
+    try {
+      await api(`/api/records/${slug}/move`, { method: "POST", body: { direction } });
+      await campaign.refetch();
+      await chapterTrackings.refetch();
+    } catch (moveError) {
+      setError(String(moveError));
     }
   }
 
@@ -171,7 +218,10 @@ export function CampaignViewPage() {
             return (
               <li key={chapter.slug} className="rounded-lg border border-border bg-surface p-4">
                 <div className="flex items-baseline justify-between">
-                  <span className="font-display text-xl text-ink">{chapter.title}</span>
+                  <span className="flex items-center gap-1">
+                    <span className="font-display text-xl text-ink">{chapter.title}</span>
+                    <MoveButtons slug={chapter.slug} onMove={(slug, direction) => void moveChild(slug, direction)} />
+                  </span>
                   <span className="flex items-baseline gap-2">
                     <span className={`rounded-md px-2 py-0.5 text-sm ${statusBadgeClass(chapter.status)}`}>
                       {t(`campaigns.status.${chapter.status}`)}
@@ -194,7 +244,10 @@ export function CampaignViewPage() {
                   <ul className="mt-1 flex flex-col gap-1">
                     {(chapterTracking?.children ?? []).map((scene) => (
                       <li key={scene.slug} className="flex items-baseline justify-between rounded-md border border-border bg-background px-3 py-1">
-                        <span className="text-sm text-ink">{scene.title}</span>
+                        <span className="flex items-center gap-1">
+                          <span className="text-sm text-ink">{scene.title}</span>
+                          <MoveButtons slug={scene.slug} onMove={(slug, direction) => void moveChild(slug, direction)} />
+                        </span>
                         <span className="flex items-baseline gap-2">
                           {(["not_played", "in_progress", "played"] as const).map(
                             (status) => (
