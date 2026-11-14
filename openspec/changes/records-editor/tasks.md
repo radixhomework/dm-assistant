@@ -24,7 +24,7 @@
 
 - [x] 4.1 Generic form renderer: schema → controls (text, money, calendar date, recurrence, selects, statistics block, asset); Field/SlugTitleFields integration — the order stepper ships with the play-order fields (8.x) and reference inputs with 4.3/6.3
 - [x] 4.2 Statistics block control: raw inputs with SRD modifiers displayed on leaving edit mode
-- [ ] 4.3 Reference controls: 0..1 replace + 0..n add/remove, autocomplete against the target template
+- [x] 4.3 Reference controls: 0..1 replace + 0..n add/remove, autocomplete against the target template
 
 ## 5. Calendar
 
@@ -37,9 +37,9 @@
 
 ## 6. Relationships and backlinks
 
-- [ ] 6.1 Migration: generalize the partial unique index on `relationships (from_id, kind)`; generic reference endpoints (attach/detach by field key, validated against the template schema); service tests
-- [ ] 6.2 Backlinks endpoint (reverse references grouped by field + incoming mentions, access-filtered); service tests
-- [ ] 6.3 Wire reference fields into forms; backlinks section on the sheet scaffold
+- [x] 6.1 Migration: generalize the partial unique index on `relationships (from_id, kind)`; generic reference endpoints (attach/detach by field key, validated against the template schema); service tests
+- [x] 6.2 Backlinks endpoint (reverse references grouped by field + incoming mentions, access-filtered); service tests
+- [x] 6.3 Wire reference fields into forms; backlinks section on the sheet scaffold
 
 ## 7. Versions
 
