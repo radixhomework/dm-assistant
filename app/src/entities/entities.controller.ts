@@ -13,6 +13,7 @@ import {
 import {
   attachReferenceSchema,
   createEntitySchema,
+  moveSchema,
   parentSchema,
   updateEntitySchema,
 } from "@dm/schemas";
@@ -81,6 +82,14 @@ export class EntitiesController {
     @Param("targetSlug") targetSlug: string,
   ) {
     return this.relationshipsService.detachReference(slug, field, targetSlug);
+  }
+
+  /** Moves a child up or down in its sibling play order. */
+  @HttpCode(204)
+  @Post(":slug/move")
+  move(@Param("slug") slug: string, @Body() body: unknown) {
+    const { direction } = moveSchema.parse(body);
+    return this.relationshipsService.moveChild(slug, direction);
   }
 
   @Post()

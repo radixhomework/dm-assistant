@@ -34,6 +34,12 @@ export const attachReferenceSchema = z.object({
 });
 export type AttachReferenceInput = z.infer<typeof attachReferenceSchema>;
 
+/** Play-order move: swaps a child with its previous/next sibling. */
+export const moveSchema = z.object({
+  direction: z.enum(["up", "down"]),
+});
+export type MoveInput = z.infer<typeof moveSchema>;
+
 export const playStatuses = ["not_played", "in_progress", "played"] as const;
 export type PlayStatus = (typeof playStatuses)[number];
 

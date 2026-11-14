@@ -117,7 +117,9 @@
     "deleteCampaignConfirm": "Delete this campaign? Chapters must be deleted first.",
     "deleteConfirm": "Delete this item?",
     "setStatus": "Set status",
-    "empty": "No campaigns yet."
+    "empty": "No campaigns yet.",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "account": {
     "title": "My account",

@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { templateSchemaOf } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -91,7 +91,9 @@ export class RelationshipsService {
       .where(and(...conditions));
   }
 
-  /** Children attached through a hierarchy field, ordered by title. */
+  /** Children attached through a hierarchy field, in play order
+   * (records-editor decision 10): explicit order ascending, records
+   * without an order last, then title. */
   async listChildren(parentSlug: string, field: HierarchyField) {
     const parent = await this.entityBySlug(parentSlug);
     return this.db
@@ -105,7 +107,55 @@ export class RelationshipsService {
       .where(
         and(eq(relationships.toId, parent.id), eq(relationships.kind, field)),
       )
-      .orderBy(entities.title);
+      .orderBy(
+        sql`(entities.fields->>'order')::int NULLS LAST`,
+        entities.title,
+      );
+  }
+
+  /**
+   * Moves a child up or down within its sibling play order (records-
+   * editor decision 10): the sibling list is recomputed and every
+   * sibling's order renumbered sequentially. The hierarchy field is the
+   * child type's own parent reference.
+   */
+  async moveChild(childSlug: string, direction: "up" | "down"): Promise<void> {
+    const child = await this.entityBySlug(childSlug);
+    const field =
+      child.type === "chapter"
+        ? "campaign"
+        : child.type === "scene"
+          ? "chapter"
+          : null;
+    if (field === null) {
+      throw new ConflictException(
+        `A ${child.type} record has no play-order position`,
+      );
+    }
+    const [link] = await this.db
+      .select({ toId: relationships.toId })
+      .from(relationships)
+      .where(and(eq(relationships.fromId, child.id), eq(relationships.kind, field)))
+      .limit(1);
+    if (!link) {
+      throw new ConflictException(
+        "This record has no parent — attach it first",
+      );
+    }
+    const siblings = await this.childSlugsAndStatuses(link.toId, field);
+    const index = siblings.findIndex((sibling) => sibling.slug === childSlug);
+    const swapWith = direction === "up" ? index - 1 : index + 1;
+    if (index === -1 || swapWith < 0 || swapWith >= siblings.length) return;
+    const reordered = [...siblings];
+    [reordered[index], reordered[swapWith]] = [reordered[swapWith], reordered[index]];
+    for (let position = 0; position < reordered.length; position += 1) {
+      await this.db
+        .update(entities)
+        .set({
+          fields: { ...(reordered[position].fields ?? {}), order: position },
+        })
+        .where(eq(entities.slug, reordered[position].slug));
+    }
   }
 
   /** Refuses deletion of a record that children reference as parent. */
@@ -145,7 +195,10 @@ export class RelationshipsService {
       .where(
         and(eq(relationships.toId, parentId), eq(relationships.kind, field)),
       )
-      .orderBy(entities.title);
+      .orderBy(
+        sql`(entities.fields->>'order')::int NULLS LAST`,
+        entities.title,
+      );
     return rows.map((row) => ({
       slug: row.slug,
       title: row.title,

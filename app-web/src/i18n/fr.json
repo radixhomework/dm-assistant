@@ -117,7 +117,9 @@
     "deleteCampaignConfirm": "Supprimer cette campagne ? Les chapitres doivent être supprimés d’abord.",
     "deleteConfirm": "Supprimer cet élément ?",
     "setStatus": "Définir le statut",
-    "empty": "Aucune campagne pour l'instant."
+    "empty": "Aucune campagne pour l'instant.",
+    "moveUp": "Monter",
+    "moveDown": "Descendre"
   },
   "account": {
     "title": "Mon compte",

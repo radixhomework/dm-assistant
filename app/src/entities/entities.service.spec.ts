@@ -127,6 +127,52 @@ describe("EntitiesService", () => {
     expect(children.map((c) => c.slug)).toEqual(["chapter-one"]);
   });
 
+  it("lists children in play order (missing last, then title)", async () => {
+    await service.create(campaign);
+    // Three chapters: one ordered high, one low, one without order.
+    await service.create({ slug: "chapter-last", type: "chapter", perimeter: "campaign", title: "Alpha" });
+    await service.create({ slug: "chapter-first", type: "chapter", perimeter: "campaign", title: "Zeta" });
+    await service.create({ slug: "chapter-mid", type: "chapter", perimeter: "campaign", title: "Mid" });
+    await service.create({ slug: "chapter-none", type: "chapter", perimeter: "campaign", title: "No order" });
+    for (const [slug, order] of [
+      ["chapter-last", 3],
+      ["chapter-first", 0],
+      ["chapter-mid", 1],
+    ] as const) {
+      await service.update(slug, { fields: { order } });
+      await service.relationships.attachReference(slug, "campaign", "north-realm");
+    }
+    await service.relationships.attachReference("chapter-none", "campaign", "north-realm");
+    const children = await service.relationships.listChildren("north-realm", "campaign");
+    expect(children.map((c) => c.slug)).toEqual([
+      "chapter-first",
+      "chapter-mid",
+      "chapter-last",
+      "chapter-none",
+    ]);
+  });
+
+  it("moves a child up and down within its sibling play order", async () => {
+    await service.create(campaign);
+    await service.create(chapter);
+    await service.create({ slug: "chapter-b", type: "chapter", perimeter: "campaign", title: "B" });
+    await service.create({ slug: "chapter-c", type: "chapter", perimeter: "campaign", title: "C" });
+    for (const slug of ["chapter-one", "chapter-b", "chapter-c"]) {
+      await service.relationships.attachReference(slug, "campaign", "north-realm");
+    }
+    // All without order: title order is B, C, Chapter One.
+    const before = await service.relationships.listChildren("north-realm", "campaign");
+    expect(before.map((c) => c.slug)).toEqual(["chapter-b", "chapter-c", "chapter-one"]);
+
+    await service.relationships.moveChild("chapter-c", "up");
+    const afterUp = await service.relationships.listChildren("north-realm", "campaign");
+    expect(afterUp.map((c) => c.slug)).toEqual(["chapter-c", "chapter-b", "chapter-one"]);
+
+    await service.relationships.moveChild("chapter-c", "down");
+    const afterDown = await service.relationships.listChildren("north-realm", "campaign");
+    expect(afterDown.map((c) => c.slug)).toEqual(["chapter-b", "chapter-c", "chapter-one"]);
+  });
+
   it("resolves the owning campaign through the parent chain", async () => {
     await service.create(campaign);
     await service.create(chapter);
