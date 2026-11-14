@@ -253,7 +253,8 @@
     "dm_summary": "DM summary",
     "running_notes": "Running notes",
     "play_status": "Play status",
-    "order": "Order"
+    "order": "Order",
+    "origins": "Origins"
   },
   "enums": {
     "place_type": {

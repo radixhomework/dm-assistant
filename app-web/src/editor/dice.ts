@@ -23,12 +23,12 @@ export function parseDice(formula: string): {
   return { count, faces, modifier };
 }
 
-/** The stat-block average: the dice total is floored, then the modifier
- * added ("3d6+2" → 12; "2d8+6" → 15). */
+/** The average: ((1 + faces) / 2 × dice count) + fixed value, rounded
+ * up ("4d8" → 18; "3d6+12" → 23). */
 export function diceAverage(formula: string): number | null {
   const parsed = parseDice(formula);
   if (!parsed) return null;
   return (
-    Math.floor((parsed.count * (parsed.faces + 1)) / 2) + parsed.modifier
+    Math.ceil((parsed.count * (parsed.faces + 1)) / 2) + parsed.modifier
   );
 }

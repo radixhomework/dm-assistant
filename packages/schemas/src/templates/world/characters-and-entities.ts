@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import { assetField, proseField, refMany, refOne, template } from "../factory.js";
+import { assetField, proseField, refMany, template } from "../factory.js";
 import { statisticsSchema } from "../statistics.js";
 
 export const charactersAndEntities = template(
@@ -21,7 +21,7 @@ export const charactersAndEntities = template(
     private_description: proseField,
   },
   {
-    origin: refOne("places"),
+    origins: refMany("places"),
     species: refMany("species"),
     classes: refMany("classes"),
     languages: refMany("languages"),

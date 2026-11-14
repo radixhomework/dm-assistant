@@ -150,7 +150,7 @@ describe("RecordFormFields — statistics block", () => {
     // The PV formula computes its average automatically (17d6 avg 59 + 22).
     fireEvent.input(inputOfLabel("HP formula"), { target: { value: "17d6 + 22" } });
     expect(lastFields(onChange).statistics).toMatchObject({
-      hp: { formula: "17d6 + 22", average: 81 },
+      hp: { formula: "17d6 + 22", average: 82 },
     });
 
     fireEvent.input(inputOfLabel("Alignment"), { target: { value: "chaotic neutral" } });

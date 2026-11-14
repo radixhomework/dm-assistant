@@ -195,7 +195,7 @@ export function CharacterSheet(props: { readonly record: Entity }) {
       : undefined;
 
   const referenceGroups: Array<readonly [string, string]> = [
-    ["origin", "fields.origin"],
+    ["origins", "fields.origins"],
     ["species", "fields.species"],
     ["classes", "fields.classes"],
     ["languages", "fields.languages"],
