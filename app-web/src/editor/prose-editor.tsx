@@ -1,7 +1,10 @@
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CalendarDays } from "lucide-react";
 import { buildExtensions } from "./extensions.js";
+import { DatePickerPanel } from "./date-picker.js";
+import { useCalendarDefinition } from "../calendar/use-calendar.js";
 
 const toolButton =
   "rounded-md border border-border px-2 py-0.5 text-sm text-ink transition-colors duration-200 hover:bg-surface";
@@ -57,8 +60,11 @@ export function ProseEditor({
   readonly readonly?: boolean;
 }) {
   const { t } = useTranslation();
+  const { definition } = useCalendarDefinition();
   // Re-render the toolbar on every transaction so active states follow.
   const [renderTick, setRenderTick] = useState(0);
+  // The prose date picker anchors on the toolbar button that opened it.
+  const [datePicker, setDatePicker] = useState<{ x: number; y: number } | null>(null);
   const editor = useEditor({
     extensions: buildExtensions(),
     content: markdown,
@@ -136,20 +142,46 @@ export function ProseEditor({
               const src = window.prompt(t("editor.imagePrompt"));
               if (src) cmd().setImage({ src }).run();
             }} />
-            <ToolButton editor={editor} active={false} label="📅" title={t("editor.date")} action={() => {
-              const raw = window.prompt(t("editor.datePrompt"));
-              if (!raw) return;
-              const match = /^(-?\d{1,6})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/.exec(raw.trim());
-              if (!match) return;
-              editor.chain().focus().insertContent({
-                type: "calendarDate",
-                attrs: {
-                  year: Number(match[1]),
-                  month: match[2] === undefined ? null : Number(match[2]),
-                  day: match[3] === undefined ? null : Number(match[3]),
-                },
-              }).run();
-            }} />
+            <button
+              type="button"
+              title={t("editor.date")}
+              tabIndex={-1}
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                setDatePicker((open) =>
+                  open === null ? { x: rect.left, y: rect.bottom } : null,
+                );
+              }}
+              className={
+                datePicker !== null
+                  ? "rounded-md bg-primary px-2 py-0.5 text-sm text-background transition-colors duration-200"
+                  : toolButton
+              }
+            >
+              <CalendarDays className="size-3.5" aria-hidden />
+            </button>
+            {datePicker !== null && (
+              <DatePickerPanel
+                definition={definition}
+                anchor={datePicker}
+                onInsert={(date) => {
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent({
+                      type: "calendarDate",
+                      attrs: {
+                        year: date.year,
+                        month: date.month ?? null,
+                        day: date.day ?? null,
+                      },
+                    })
+                    .run();
+                  setDatePicker(null);
+                }}
+                onClose={() => setDatePicker(null)}
+              />
+            )}
           </div>
           <div
             className="flex flex-wrap items-center gap-1"

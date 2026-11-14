@@ -21,7 +21,12 @@
     "mentionNoResults": "No matching record",
     "highlightToolbar": "Highlight blocks",
     "date": "Date",
-    "datePrompt": "Date (year-month-day, e.g. 842-03-12; month and day optional)"
+    "dateYear": "Year",
+    "dateMonth": "Month",
+    "dateDay": "Day",
+    "dateInsert": "Insert",
+    "dateNeedsYear": "The year is required.",
+    "dateNoYearZero": "Year 0 does not exist."
   },
   "app": {
     "title": "DM Assistant",

@@ -21,7 +21,12 @@
     "mentionNoResults": "Aucune fiche correspondante",
     "highlightToolbar": "Blocs de mise en exergue",
     "date": "Date",
-    "datePrompt": "Date (année-mois-jour, ex. 842-03-12 ; mois et jour optionnels)"
+    "dateYear": "Année",
+    "dateMonth": "Mois",
+    "dateDay": "Jour",
+    "dateInsert": "Insérer",
+    "dateNeedsYear": "L'année est obligatoire.",
+    "dateNoYearZero": "L'année 0 n'existe pas."
   },
   "app": {
     "title": "DM Assistant",
