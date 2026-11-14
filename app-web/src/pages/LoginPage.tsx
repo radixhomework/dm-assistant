@@ -26,7 +26,7 @@ export function LoginPage() {
       // Refresh the cached auth state before navigating, so protected
       // pages see the session instead of bouncing back to /login.
       await queryClient.invalidateQueries({ queryKey: ["me"] });
-      void navigate({ to: "/home" });
+      void navigate({ to: "/" });
       return;
     }
     const payload = (await res.json().catch(() => null)) as { message?: string } | null;
