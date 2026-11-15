@@ -209,19 +209,36 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
         {(stats.resistances ?? []).length > 0 && (
           <p>
             <span className="font-semibold text-ink">{t("stats.resistances")}</span>{" "}
-            {(stats.resistances ?? []).join(", ")}
+            {(stats.resistances ?? [])
+              .map((entry) =>
+                t(`enums.damageTypes.${entry}`, { defaultValue: entry }),
+              )
+              .join(", ")}
           </p>
         )}
         {(stats.vulnerabilities ?? []).length > 0 && (
           <p>
             <span className="font-semibold text-ink">{t("stats.vulnerabilities")}</span>{" "}
-            {(stats.vulnerabilities ?? []).join(", ")}
+            {(stats.vulnerabilities ?? [])
+              .map((entry) =>
+                t(`enums.damageTypes.${entry}`, { defaultValue: entry }),
+              )
+              .join(", ")}
           </p>
         )}
         {(stats.immunities ?? []).length > 0 && (
           <p>
             <span className="font-semibold text-ink">{t("stats.immunities")}</span>{" "}
-            {(stats.immunities ?? []).join(", ")}
+            {(stats.immunities ?? [])
+              .map((entry) =>
+                // Immunities mix damage types and conditions.
+                t(`enums.damageTypes.${entry}`, {
+                  defaultValue: t(`enums.conditions.${entry}`, {
+                    defaultValue: entry,
+                  }),
+                }),
+              )
+              .join(", ")}
           </p>
         )}
         {senses.length > 0 && (

@@ -68,7 +68,7 @@ describe("CharacterSheet", () => {
     expect(screen.getByText(/22 \(4d8\)/)).toBeDefined();
     // Creature type on the subtitle line, damage vulnerabilities as a group.
     expect(screen.getByText(/Humanoid, Chaotic Evil/)).toBeDefined();
-    expect(screen.getByText("fire")).toBeDefined();
+    expect(screen.getByText("Fire")).toBeDefined();
   });
 
   it("renders the five senses in the DM's order", () => {

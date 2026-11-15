@@ -685,9 +685,9 @@ function StatisticsControl(props: {
             ))}
             <div className="flex flex-wrap gap-2">
               {([
-                [DAMAGE_TYPES, t("stats.damageTypes")],
-                [CONDITIONS, t("stats.conditions")],
-              ] as const).map(([entries, listLabel]) => {
+                [DAMAGE_TYPES, "damageTypes", t("stats.damageTypes")],
+                [CONDITIONS, "conditions", t("stats.conditions")],
+              ] as const).map(([entries, namespace, listLabel]) => {
                 const available = entries.filter(
                   (candidate) =>
                     !((props.value.immunities ?? []) as string[]).includes(
@@ -716,7 +716,9 @@ function StatisticsControl(props: {
                     <option value="">{t("stats.damageAdd")}</option>
                     {available.map((candidate) => (
                       <option key={candidate.key} value={candidate.key}>
-                        {t(`enums.damageTypes.${candidate.key}`, { defaultValue: candidate.key })}
+                        {t(`enums.${namespace}.${candidate.key}`, {
+                          defaultValue: candidate.key,
+                        })}
                       </option>
                     ))}
                   </select>
