@@ -5,8 +5,9 @@ import { classifyField, enumOptions } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { ReferenceInput } from "./reference-input.js";
 import { diceAverage } from "../editor/dice.js";
+import { SRD_SKILLS } from "../stats/srd-skills.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
-import type { CalendarSettings, TemplateSchema } from "@dm/schemas";
+import { abilityModifier, type CalendarSettings, type TemplateSchema } from "@dm/schemas";
 
 type Fields = Record<string, unknown>;
 
@@ -289,31 +290,11 @@ function StatisticsControl(props: {
   };
   const skills = (props.value.skills ?? []) as Array<{
     rowId: string;
-    name?: string;
-    modifier?: number;
+    name: string;
+    ability: "strength" | "dexterity" | "constitution" | "intelligence" | "wisdom" | "charisma";
   }>;
-  const setSkill = (
-    rowId: string,
-    patch: { name?: string; modifier?: number },
-  ): void => {
-    setPart(
-      "skills",
-      skills.map((skill) => (skill.rowId === rowId ? { ...skill, ...patch } : skill)),
-    );
-  };
-  const damageList = (key: "resistances" | "vulnerabilities" | "immunities") =>
-    ((props.value[key] ?? []) as string[]).join(", ");
-  const setDamageList = (
-    key: "resistances" | "vulnerabilities" | "immunities",
-    raw: string,
-  ): void => {
-    setPart(
-      key,
-      raw.trim() === ""
-        ? []
-        : raw.split(",").map((entry) => entry.trim()).filter(Boolean),
-    );
-  };
+
+
 
   return (
     <Field label={props.label}>
@@ -460,10 +441,10 @@ function StatisticsControl(props: {
         {(() => {
           const senses = (props.value.senses ?? {}) as Record<string, number | undefined>;
           const senseInputs: Array<readonly [string, string]> = [
-            ["tremorsense", t("stats.tremorsense")],
-            ["blindsight", t("stats.blindsight")],
             ["darkvision", t("stats.darkvision")],
+            ["blindsight", t("stats.blindsight")],
             ["truesight", t("stats.truesight")],
+            ["tremorsense", t("stats.tremorsense")],
           ];
           const setSense = (key: string, raw: string): void => {
             setPart("senses", {
@@ -521,73 +502,167 @@ function StatisticsControl(props: {
             </select>
           </Field>
         </div>
-        {/* Skills */}
+        {/* Skills: mastered skills picked from the SRD list — the modifier
+         * computes live (ability modifier + proficiency bonus). */}
         <Field label={t("stats.skills")}>
           <div className="flex flex-col gap-1">
-            {skills.map((skill) => (
-              <div key={skill.rowId} className="flex items-center gap-2">
-                <input
-                  placeholder={t("stats.skillName")}
-                  value={skill.name ?? ""}
-                  onChange={(event) => setSkill(skill.rowId, { name: event.target.value })}
-                  className={`${inputClass} flex-1`}
-                />
-                <input
-                  type="number"
-                  aria-label={t("stats.skillModifier")}
-                  value={typeof skill.modifier === "number" ? skill.modifier : ""}
-                  onChange={(event) =>
-                    setSkill(skill.rowId, {
-                      modifier: event.target.value === "" ? 0 : Number(event.target.value),
-                    })
-                  }
-                  className={`${inputClass} w-20`}
-                />
+            {skills.map((skill) => {
+              const score = props.value[skill.ability];
+              const base =
+                typeof score === "number" ? abilityModifier(score) : 0;
+              const prof =
+                typeof props.value.proficiencyBonus === "number"
+                  ? props.value.proficiencyBonus
+                  : 0;
+              const total = base + prof;
+              return (
+                <div key={skill.rowId} className="flex items-center gap-2 text-sm">
+                  <span className="flex-1 text-ink">{skill.name}</span>
+                  <span className="text-muted">
+                    {t(`stats.${skill.ability}`)} · {t("stats.proficiencyBonus")}{" "}
+                    {prof}
+                  </span>
+                  <span className="font-semibold text-ink">
+                    {total >= 0 ? "+" : ""}
+                    {total}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPart(
+                        "skills",
+                        skills.filter((entry) => entry.rowId !== skill.rowId),
+                      )
+                    }
+                    className="text-sm text-radish transition-colors duration-200 hover:underline"
+                  >
+                    {t("common.remove")}
+                  </button>
+                </div>
+              );
+            })}
+            {(() => {
+              const available = SRD_SKILLS.filter(
+                (srd) => !skills.some((skill) => skill.name === srd.name),
+              );
+              if (available.length === 0) return null;
+              return (
+                <select
+                  aria-label={t("stats.addSkill")}
+                  value=""
+                  onChange={(event) => {
+                    const picked = SRD_SKILLS.find((s) => s.name === event.target.value);
+                    if (!picked) return;
+                    setPart("skills", [
+                      ...skills,
+                      {
+                        rowId: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                        name: picked.name,
+                        ability: picked.ability,
+                      },
+                    ]);
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">{t("stats.addSkill")}</option>
+                  {available.map((srd) => (
+                    <option key={srd.name} value={srd.name}>
+                      {srd.name} ({t(`stats.${srd.ability}`)})
+                    </option>
+                  ))}
+                </select>
+              );
+            })()}
+          </div>
+        </Field>
+        {/* Damage lists: SRD-fed pickers (same mechanics as the origins) */}
+        {([
+          ["resistances", t("stats.resistances"), "damage-types"],
+          ["vulnerabilities", t("stats.vulnerabilities"), "damage-types"],
+        ] as const).map(([key, label, targetType]) => (
+          <Field key={key} label={label}>
+            <div className="flex flex-col gap-1">
+              {((props.value[key] ?? []) as string[]).map((entry) => (
+                <span
+                  key={entry}
+                  className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                >
+                  {entry}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPart(
+                        key,
+                        ((props.value[key] ?? []) as string[]).filter(
+                          (candidate) => candidate !== entry,
+                        ),
+                      )
+                    }
+                    className="text-sm text-radish transition-colors duration-200 hover:underline"
+                  >
+                    {t("common.remove")}
+                  </button>
+                </span>
+              ))}
+              <ReferenceInput
+                targetType={targetType}
+                placeholder={`${t("record.referenceSearch")} — ${label}`}
+                onPick={(slug, title) => {
+                  const current = (props.value[key] ?? []) as string[];
+                  if (!current.includes(title)) setPart(key, [...current, title]);
+                }}
+              />
+            </div>
+          </Field>
+        ))}
+        <Field label={t("stats.immunities")}>
+          <div className="flex flex-col gap-1">
+            {((props.value.immunities ?? []) as string[]).map((entry) => (
+              <span
+                key={entry}
+                className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
+                {entry}
                 <button
                   type="button"
                   onClick={() =>
                     setPart(
-                      "skills",
-                      skills.filter((entry) => entry.rowId !== skill.rowId),
+                      "immunities",
+                      ((props.value.immunities ?? []) as string[]).filter(
+                        (candidate) => candidate !== entry,
+                      ),
                     )
                   }
                   className="text-sm text-radish transition-colors duration-200 hover:underline"
                 >
                   {t("common.remove")}
                 </button>
-              </div>
+              </span>
             ))}
-            <button
-              type="button"
-              onClick={() =>
-                setPart("skills", [
-                  ...skills,
-                  {
-                    rowId: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                    name: "",
-                    modifier: 0,
-                  },
-                ])
-              }
-              className="w-fit text-sm text-accent transition-colors duration-200 hover:underline"
-            >
-              {t("stats.addSkill")}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <div className="flex-1">
+                <ReferenceInput
+                  targetType="damage-types"
+                  placeholder={`${t("record.referenceSearch")} — ${t("stats.damageTypes")}`}
+                  onPick={(_slug, title) => {
+                    const current = (props.value.immunities ?? []) as string[];
+                    if (!current.includes(title)) setPart("immunities", [...current, title]);
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <ReferenceInput
+                  targetType="conditions"
+                  placeholder={`${t("record.referenceSearch")} — ${t("stats.conditions")}`}
+                  onPick={(_slug, title) => {
+                    const current = (props.value.immunities ?? []) as string[];
+                    if (!current.includes(title)) setPart("immunities", [...current, title]);
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </Field>
-        {([
-          ["resistances", t("stats.resistances")],
-          ["vulnerabilities", t("stats.vulnerabilities")],
-          ["immunities", t("stats.immunities")],
-        ] as const).map(([key, label]) => (
-          <Field key={key} label={label}>
-            <input
-              value={damageList(key)}
-              onChange={(event) => setDamageList(key, event.target.value)}
-              className={inputClass}
-            />
-          </Field>
-        ))}
       </div>
     </Field>
   );

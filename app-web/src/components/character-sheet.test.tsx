@@ -30,8 +30,16 @@ const character: Entity = {
       size: "medium",
       creatureType: "humanoid",
       vulnerabilities: ["fire"],
-      senses: { darkvision: 18, tremorsense: 3 },
+      proficiencyBonus: 3,
+      wisdom: 12,
+      senses: {
+        darkvision: 18,
+        blindsight: 6,
+        truesight: 9,
+        tremorsense: 3,
+      },
       passivePerception: 13,
+      skills: [{ name: "Perception", ability: "wisdom" }],
     },
     public_description: "A tall figure.",
   },
@@ -62,11 +70,19 @@ describe("CharacterSheet", () => {
     expect(screen.getByText("fire")).toBeDefined();
   });
 
-  it("renders the five senses in the Sens line", () => {
+  it("renders the five senses in the DM's order", () => {
     renderWithProviders(<CharacterSheet record={character} />);
-    expect(screen.getByText(/Darkvision 18 m/)).toBeDefined();
-    expect(screen.getByText(/Tremorsense 3 m/)).toBeDefined();
-    expect(screen.getByText(/Passive perception 13/)).toBeDefined();
+    const sensLine = screen.getByText(/Senses/).closest("p")?.textContent ?? "";
+    const positions = ["Darkvision", "Blindsight", "Truesight", "Tremorsense", "Passive perception"].map(
+      (label) => sensLine.indexOf(label),
+    );
+    expect(positions.every((p, i) => p >= 0 && (i === 0 || p > positions[i - 1]))).toBe(true);
+  });
+
+  it("computes mastered skill modifiers (ability + proficiency)", () => {
+    renderWithProviders(<CharacterSheet record={character} />);
+    // Wisdom 12 → +1, proficiency +3 → Perception +4.
+    expect(screen.getByText("Perception +4")).toBeDefined();
   });
 
   it("renders the typed references as links", () => {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { abilityModifier } from "@dm/schemas";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { TitleLinks } from "./record-sheet.js";
+import { useDistanceUnit } from "../stats/use-distance-unit.js";
 import type { Entity } from "../types.js";
 import type { Statistics } from "@dm/schemas";
 
@@ -69,6 +70,7 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
     return mod + (mastered ? prof : 0);
   }
 
+  const unit = useDistanceUnit();
   const speed = stats.speed;
   const speedParts: string[] = speed
     ? (
@@ -83,7 +85,7 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => {
           const label = t(`stats.${key}`);
-          return `${value} m (${label})`;
+          return `${value} ${unit} (${label})`;
         })
     : [];
   const sizeLabels: Record<string, string> = Object.fromEntries(
@@ -94,10 +96,10 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
   );
   const senses: string[] = (
     [
-      ["tremorsense", stats.senses?.tremorsense, " m"],
-      ["blindsight", stats.senses?.blindsight, " m"],
       ["darkvision", stats.senses?.darkvision, " m"],
+      ["blindsight", stats.senses?.blindsight, " m"],
       ["truesight", stats.senses?.truesight, " m"],
+      ["tremorsense", stats.senses?.tremorsense, " m"],
       ["passivePerception", stats.passivePerception, ""],
     ] as const
   )
@@ -138,7 +140,9 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
         )}
         {speedParts.length > 0 && (
           <p>
-            <span className="font-semibold text-ink">{t("stats.speed")}</span>{" "}
+            <span className="font-semibold text-ink">
+              {t("stats.speed")} ({unit})
+            </span>{" "}
             {speedParts.join(", ")}
           </p>
         )}
@@ -183,10 +187,15 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
           <p className="mt-2">
             <span className="font-semibold text-ink">{t("stats.skills")}</span>{" "}
             {(stats.skills ?? [])
-              .map(
-                (skill) =>
-                  `${skill.name} ${skill.modifier >= 0 ? "+" : ""}${skill.modifier}`,
-              )
+              .map((skill) => {
+                const base = modifierOf(
+                  stats[skill.ability as keyof Statistics] as
+                    | number
+                    | undefined,
+                );
+                const total = (base ?? 0) + (stats.proficiencyBonus ?? 0);
+                return `${skill.name} ${total >= 0 ? "+" : ""}${total}`;
+              })
               .join(", ")}
           </p>
         )}
@@ -210,7 +219,9 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
         )}
         {senses.length > 0 && (
           <p>
-            <span className="font-semibold text-ink">{t("stats.senses")}</span>{" "}
+            <span className="font-semibold text-ink">
+              {t("stats.senses")} ({unit})
+            </span>{" "}
             {senses.join(" ; ")}
           </p>
         )}

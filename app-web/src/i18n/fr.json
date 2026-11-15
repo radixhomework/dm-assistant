@@ -367,7 +367,9 @@
     "carHeader": "CAR",
     "valueHeader": "Valeur",
     "characteristics": "Caractéristiques",
-    "values": "Valeurs"
+    "values": "Valeurs",
+    "damageTypes": "types de dégâts",
+    "conditions": "états"
   },
   "calendar": {
     "title": "Calendrier",

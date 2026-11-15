@@ -367,7 +367,9 @@
     "carHeader": "Ability",
     "valueHeader": "Score",
     "characteristics": "Abilities",
-    "values": "Scores"
+    "values": "Scores",
+    "damageTypes": "damage types",
+    "conditions": "conditions"
   },
   "calendar": {
     "title": "Calendar",

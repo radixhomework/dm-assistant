@@ -26,8 +26,8 @@ export class SettingsController {
   }
 }
 
-/** Authenticated read of the calendar definition (year overview, date
- * picker and date node all consume it; only the admin edits it). */
+/** Authenticated reads of world-level display settings (year overview,
+ * date picker, stat blocks; only the admin edits them). */
 @Controller("api/settings")
 export class CalendarSettingsController {
   constructor(private readonly settingsService: SettingsService) {}
@@ -35,5 +35,11 @@ export class CalendarSettingsController {
   @Get("calendar")
   getCalendar() {
     return this.settingsService.getCalendar();
+  }
+
+  @Get("display")
+  async getDisplay() {
+    const all = await this.settingsService.getAll();
+    return { distanceUnit: all.distanceUnit };
   }
 }

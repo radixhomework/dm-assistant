@@ -68,13 +68,13 @@ export const statisticsSchema = z.object({
   checksMastery: abilityFlagsSchema.optional(),
   /** JdS maîtrisés (une case par caractéristique). */
   savesMastery: abilityFlagsSchema.optional(),
-  /** Compétences maîtrisées, avec leur modificateur total tel qu'imprimé
-   * dans le bloc de stats de la source. */
+  /** Compétences maîtrisées : le modificateur n'est pas stocké — il se
+   * calcule (caractéristique associée + bonus de maîtrise). */
   skills: z
     .array(
       z.object({
         name: z.string().min(1).max(60),
-        modifier: z.number().int(),
+        ability: z.enum(abilities),
       }),
     )
     .optional(),
