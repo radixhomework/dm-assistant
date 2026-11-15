@@ -300,6 +300,12 @@ function StatisticsControl(props: {
     name: string;
     ability: "strength" | "dexterity" | "constitution" | "intelligence" | "wisdom" | "charisma";
   }>;
+  /** Résout une clé de dégât ou d'état vers son libellé, avec repli sur
+   * la chaîne stockée (données antérieures aux enums). */
+  const entryLabel = (entry: string): string =>
+    t(`enums.damageTypes.${entry}`, {
+      defaultValue: t(`enums.conditions.${entry}`, { defaultValue: entry }),
+    });
 
 
 
@@ -613,7 +619,7 @@ function StatisticsControl(props: {
                   key={entry}
                   className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
                 >
-                  {t(`enums.damageTypes.${entry}`, { defaultValue: entry })}
+                  {entryLabel(entry)}
                   <button
                     type="button"
                     onClick={() =>
@@ -666,7 +672,7 @@ function StatisticsControl(props: {
                 key={entry}
                 className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
-                {t(`enums.damageTypes.${entry}`, { defaultValue: entry })}
+                {entryLabel(entry)}
                 <button
                   type="button"
                   onClick={() =>
