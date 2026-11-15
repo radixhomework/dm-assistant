@@ -164,6 +164,44 @@ describe("RecordFormFields — statistics block", () => {
   });
 
 
+  it("adds resistances from the static SRD damage list", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <StatefulRecordFormFields schema={templateSchemaOf("monsters")!} onFields={onChange} />,
+    );
+    fireEvent.change(screen.getByLabelText("Resistances"), {
+      target: { value: "fire" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      resistances: ["fire"],
+    });
+    // Picked entries disappear from the select's available options.
+    const select = screen.getByLabelText("Resistances") as HTMLSelectElement;
+    const options = [...select.options].map(
+      (option) => option.value,
+    );
+    expect(options).not.toContain("fire");
+  });
+
+  it("adds immunities from the damage and condition lists", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <StatefulRecordFormFields schema={templateSchemaOf("monsters")!} onFields={onChange} />,
+    );
+    fireEvent.change(screen.getByLabelText("Immunities — damage types"), {
+      target: { value: "fire" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      immunities: ["fire"],
+    });
+    fireEvent.change(screen.getByLabelText("Immunities — conditions"), {
+      target: { value: "charmed" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      immunities: ["fire", "charmed"],
+    });
+  });
+
   it("translates size options", () => {
     renderWithProviders(
       <RecordFormFields schema={templateSchemaOf("monsters")!} fields={{}} onChange={vi.fn()} />,

@@ -6,6 +6,7 @@ import { ProseEditor } from "../editor/prose-editor.js";
 import { ReferenceInput } from "./reference-input.js";
 import { diceAverage } from "../editor/dice.js";
 import { SRD_SKILLS } from "../stats/srd-skills.js";
+import { CONDITIONS, DAMAGE_TYPES } from "../stats/srd-lists.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import {
   abilityModifier,
@@ -599,11 +600,12 @@ function StatisticsControl(props: {
             })()}
           </div>
         </Field>
-        {/* Damage lists: SRD-fed pickers (same mechanics as the origins) */}
+        {/* Damage lists: static SRD lists (damage types; immunities also
+         * accept the conditions). */}
         {([
-          ["resistances", t("stats.resistances"), "damage-types"],
-          ["vulnerabilities", t("stats.vulnerabilities"), "damage-types"],
-        ] as const).map(([key, label, targetType]) => (
+          ["resistances", t("stats.resistances"), DAMAGE_TYPES],
+          ["vulnerabilities", t("stats.vulnerabilities"), DAMAGE_TYPES],
+        ] as const).map(([key, label, entries]) => (
           <Field key={key} label={label}>
             <div className="flex flex-col gap-1">
               {((props.value[key] ?? []) as string[]).map((entry) => (
@@ -611,7 +613,7 @@ function StatisticsControl(props: {
                   key={entry}
                   className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
                 >
-                  {entry}
+                  {t(`enums.damageTypes.${entry}`, { defaultValue: entry })}
                   <button
                     type="button"
                     onClick={() =>
@@ -628,14 +630,32 @@ function StatisticsControl(props: {
                   </button>
                 </span>
               ))}
-              <ReferenceInput
-                targetType={targetType}
-                placeholder={`${t("record.referenceSearch")} — ${label}`}
-                onPick={(slug, title) => {
-                  const current = (props.value[key] ?? []) as string[];
-                  if (!current.includes(title)) setPart(key, [...current, title]);
-                }}
-              />
+              {(() => {
+                const current = (props.value[key] ?? []) as string[];
+                const available = entries.filter(
+                  (candidate) => !current.includes(candidate.key),
+                );
+                if (available.length === 0) return null;
+                return (
+                  <select
+                    aria-label={label}
+                    value=""
+                    onChange={(event) => {
+                      if (event.target.value !== "") {
+                        setPart(key, [...current, event.target.value]);
+                      }
+                    }}
+                    className={inputClass}
+                  >
+                    <option value="">{t("stats.damageAdd")}</option>
+                    {available.map((candidate) => (
+                      <option key={candidate.key} value={candidate.key}>
+                        {t(`enums.damageTypes.${candidate.key}`, { defaultValue: candidate.key })}
+                      </option>
+                    ))}
+                  </select>
+                );
+              })()}
             </div>
           </Field>
         ))}
@@ -646,7 +666,7 @@ function StatisticsControl(props: {
                 key={entry}
                 className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
-                {entry}
+                {t(`enums.damageTypes.${entry}`, { defaultValue: entry })}
                 <button
                   type="button"
                   onClick={() =>
@@ -664,26 +684,44 @@ function StatisticsControl(props: {
               </span>
             ))}
             <div className="flex flex-wrap gap-2">
-              <div className="flex-1">
-                <ReferenceInput
-                  targetType="damage-types"
-                  placeholder={`${t("record.referenceSearch")} — ${t("stats.damageTypes")}`}
-                  onPick={(_slug, title) => {
-                    const current = (props.value.immunities ?? []) as string[];
-                    if (!current.includes(title)) setPart("immunities", [...current, title]);
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <ReferenceInput
-                  targetType="conditions"
-                  placeholder={`${t("record.referenceSearch")} — ${t("stats.conditions")}`}
-                  onPick={(_slug, title) => {
-                    const current = (props.value.immunities ?? []) as string[];
-                    if (!current.includes(title)) setPart("immunities", [...current, title]);
-                  }}
-                />
-              </div>
+              {([
+                [DAMAGE_TYPES, t("stats.damageTypes")],
+                [CONDITIONS, t("stats.conditions")],
+              ] as const).map(([entries, listLabel]) => {
+                const available = entries.filter(
+                  (candidate) =>
+                    !((props.value.immunities ?? []) as string[]).includes(
+                      candidate.key,
+                    ),
+                );
+                if (available.length === 0) return null;
+                return (
+                  <select
+                    key={available[0].key}
+                    aria-label={`${t("stats.immunities")} — ${listLabel}`}
+                    value=""
+                    onChange={(event) => {
+                      if (event.target.value !== "") {
+                        setPart(
+                          "immunities",
+                          [
+                            ...((props.value.immunities ?? []) as string[]),
+                            event.target.value,
+                          ],
+                        );
+                      }
+                    }}
+                    className={inputClass}
+                  >
+                    <option value="">{t("stats.damageAdd")}</option>
+                    {available.map((candidate) => (
+                      <option key={candidate.key} value={candidate.key}>
+                        {t(`enums.damageTypes.${candidate.key}`, { defaultValue: candidate.key })}
+                      </option>
+                    ))}
+                  </select>
+                );
+              })}
             </div>
           </div>
         </Field>

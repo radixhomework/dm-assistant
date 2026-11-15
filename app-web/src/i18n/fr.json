@@ -329,6 +329,38 @@
       "ooze": "Limule",
       "plant": "Plante",
       "undead": "Mort-vivant"
+    },
+    "damageTypes": {
+      "acid": "Acide",
+      "bludgeoning": "Contondant",
+      "cold": "Froid",
+      "fire": "Feu",
+      "force": "Force",
+      "lightning": "Foudre",
+      "necrotic": "Nécrotique",
+      "piercing": "Perforant",
+      "poison": "Poison",
+      "psychic": "Psychique",
+      "radiant": "Radiant",
+      "slashing": "Tranchant",
+      "thunder": "Tonnerre"
+    },
+    "conditions": {
+      "blinded": "Aveuglé",
+      "charmed": "Charmé",
+      "deafened": "Assourdi",
+      "frightened": "Effrayé",
+      "grappled": "Agrippé",
+      "incapacitated": "Incapacité",
+      "invisible": "Invisible",
+      "paralyzed": "Paralysé",
+      "petrified": "Pétrifié",
+      "prone": "À terre",
+      "restrained": "Entravé",
+      "stunned": "Étourdi",
+      "unconscious": "Inconscient",
+      "poisoned": "Empoisonné",
+      "exhaustion": "Épuisement"
     }
   },
   "money": {
