@@ -11,9 +11,9 @@ type JsonNode = {
 };
 
 /**
- * The `/year-month-day + space` rule fires through the view's
+ * The `/year[-month[-day]] + space` rule fires through the view's
  * handleTextInput. The document must NOT already contain the trailing
- * space (the HtmlParser drops it): the machinery rebuilds the text
+ * space (the HTML parser drops it): the machinery rebuilds the text
  * before the cursor and appends the typed character itself.
  */
 function typeTrailingSpace(editor: Editor): void {
@@ -30,36 +30,36 @@ function editorWith(text: string): Editor {
   return editor;
 }
 
-describe("the /year-month-day date input rule", () => {
-  it("inserts a date node when typing /842-3-12 plus a space", () => {
-    const editor = editorWith("/842-3-12");
-    typeTrailingSpace(editor);
-    const paragraph = editor.getJSON().content?.[0];
-    const [node, tail] = (paragraph?.content ?? []) as JsonNode[];
-    expect(node?.type).toBe("calendarDate");
-    expect(node?.attrs).toMatchObject({ year: 842, month: 3, day: 12 });
-    // The terminating space is kept after the node.
-    expect(tail?.type).toBe("text");
-    expect(tail?.text).toBe(" ");
-    editor.destroy();
+function childrenOf(editor: Editor): JsonNode[] {
+  return (editor.getJSON().content?.[0]?.content ?? []) as JsonNode[];
+}
+
+describe("the /date input rule", () => {
+  it("accepts the full, partial and guarded forms", () => {
+    const cases = [
+      { text: "/842-3-12", type: "calendarDate", attrs: { year: 842, month: 3, day: 12 } },
+      { text: "/842", type: "calendarDate", attrs: { year: 842, month: null, day: null } },
+      { text: "/-1200-7", type: "calendarDate", attrs: { year: -1200, month: 7, day: null } },
+      { text: "/-120-7-5", type: "calendarDate", attrs: { year: -120, month: 7, day: 5 } },
+      { text: "/1", type: "calendarDate", attrs: { year: 1, month: null, day: null } },
+    ];
+    for (const c of cases) {
+      const editor = editorWith(c.text);
+      typeTrailingSpace(editor);
+      const [node, tail] = childrenOf(editor);
+      expect(node?.type, c.text).toBe("calendarDate");
+      expect(node?.attrs, c.text).toMatchObject(c.attrs);
+      expect(tail?.text, c.text).toBe(" ");
+      editor.destroy();
+    }
   });
 
-  it("accepts negative years", () => {
-    const editor = editorWith("/-120-7-5");
-    typeTrailingSpace(editor);
-    const [node] = (editor.getJSON().content?.[0]?.content ?? []) as JsonNode[];
-    expect(node?.type).toBe("calendarDate");
-    expect(node?.attrs).toMatchObject({ year: -120, month: 7, day: 5 });
-    editor.destroy();
-  });
-
-  it("keeps invalid dates as typed text", () => {
-    // Month 13 and year 0 are both outside the calendar.
-    for (const text of ["/842-13-40", "/0-3-12"]) {
+  it("keeps invalid dates and fractions as typed text", () => {
+    for (const text of ["/842-13-40", "/0-3-12", "1/2", "10/12", "895/925"]) {
       const editor = editorWith(text);
       typeTrailingSpace(editor);
-      const [node] = (editor.getJSON().content?.[0]?.content ?? []) as JsonNode[];
-      expect(node?.type).toBe("text");
+      const [node] = childrenOf(editor);
+      expect(node?.type, text).toBe("text");
       editor.destroy();
     }
   });

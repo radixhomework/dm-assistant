@@ -50,23 +50,27 @@ export const CalendarDateNode = Node.create({
     return ReactNodeViewRenderer(DateView);
   },
 
-  // Keyboard shortcut: typing `/year-month-day` followed by a space
-  // inserts the date node (the trailing space terminates the pattern so
-  // it never fires mid-typing, and is kept after the node). The year
-  // needs at least two digits so fractions like "1/2" never trigger.
-  // Invalid values (month > 12, day > 31, year 0) stay as plain text.
-  // The handler mutates state.tr — the machinery dispatches it once the
-  // typed text is part of the transaction (dispatching through commands
-  // would race the not-yet-applied typed text).
+  // Keyboard shortcut: typing `/year[-month[-day]]` followed by a space
+  // inserts the date node — partial dates are allowed (year only, or
+  // year and month), mirroring the canonical `[[date:Y-M-D]]` form. The
+  // trailing space terminates the pattern so it never fires mid-typing
+  // and is kept after the node. A digit right before the slash (as in
+  // the fractions "1/2" or "10/12") blocks the rule; invalid values
+  // (month > 12, day > 31, year 0) stay as plain text. The handler
+  // mutates state.tr — the machinery dispatches it once the typed text
+  // is part of the transaction (dispatching through commands would race
+  // the not-yet-applied typed text).
   addInputRules() {
     return [
       new InputRule({
-        find: /\/(-?\d{2,6})-(\d{1,2})-(\d{1,2})\s$/,
+        find: /(?<!\d)\/(-?\d{1,6})(?:-(\d{1,2}))?(?:-(\d{1,2}))?\s$/,
         handler: ({ state, range, match }) => {
           const year = Number(match[1]);
-          const month = Number(match[2]);
-          const day = Number(match[3]);
-          if (year === 0 || month < 1 || month > 12 || day < 1 || day > 31) {
+          const month = match[2] !== undefined ? Number(match[2]) : null;
+          const day = match[3] !== undefined ? Number(match[3]) : null;
+          const monthOk = month === null || (month >= 1 && month <= 12);
+          const dayOk = day === null || (day >= 1 && day <= 31);
+          if (year === 0 || !monthOk || !dayOk) {
             return;
           }
           const { tr } = state;

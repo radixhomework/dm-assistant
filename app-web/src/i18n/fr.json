@@ -19,7 +19,7 @@
     "attention": "Point d'attention",
     "mentionNoResults": "Aucune fiche correspondante",
     "highlightToolbar": "Blocs de mise en exergue",
-    "date": "Date (/année-mois-jour + espace)",
+    "date": "Date (/année[-mois[-jour]] + espace)",
     "dateYear": "Année",
     "dateMonth": "Mois",
     "dateDay": "Jour",
