@@ -55,7 +55,7 @@ describe("ProseEditor toolbar", () => {
     );
     const onChange = vi.fn();
     renderWithProviders(<ProseEditor markdown="" onChange={onChange} />);
-    const dateButton = [...document.querySelectorAll('button[title="Date"]')][0] as HTMLButtonElement;
+    const dateButton = [...document.querySelectorAll('button[title^="Date"]')][0] as HTMLButtonElement;
     if (!dateButton) throw new Error("date button missing");
     fireEvent.click(dateButton);
     await vi.waitFor(() =>

@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { InputRule, Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { MarkdownToken } from "@tiptap/core";
 import { DateView } from "./date-view.js";
@@ -48,6 +48,43 @@ export const CalendarDateNode = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(DateView);
+  },
+
+  // Keyboard shortcut: typing `/year-month-day` followed by a space
+  // inserts the date node (the trailing space terminates the pattern so
+  // it never fires mid-typing, and is kept after the node). The year
+  // needs at least two digits so fractions like "1/2" never trigger.
+  // Invalid values (month > 12, day > 31, year 0) stay as plain text.
+  addInputRules() {
+    return [
+      new InputRule({
+        find: /\/(-?\d{2,6})-(\d{1,2})-(\d{1,2})(\s)$/,
+        handler: ({ range, match, commands }) => {
+          const year = Number(match[1]);
+          const month = Number(match[2]);
+          const day = Number(match[3]);
+          if (
+            year === 0 ||
+            month < 1 ||
+            month > 12 ||
+            day < 1 ||
+            day > 31
+          ) {
+            return;
+          }
+          commands.insertContentAt(
+            { from: range.from, to: range.to },
+            [
+              {
+                type: this.name,
+                attrs: { year, month, day },
+              },
+              { type: "text", text: match[4] },
+            ],
+          );
+        },
+      }),
+    ];
   },
 
   markdownTokenName: "date",

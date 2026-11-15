@@ -19,7 +19,7 @@
     "attention": "Attention point",
     "mentionNoResults": "No matching record",
     "highlightToolbar": "Highlight blocks",
-    "date": "Date",
+    "date": "Date (/year-month-day + space)",
     "dateYear": "Year",
     "dateMonth": "Month",
     "dateDay": "Day",
