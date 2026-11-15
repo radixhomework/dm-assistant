@@ -55,33 +55,28 @@ export const CalendarDateNode = Node.create({
   // it never fires mid-typing, and is kept after the node). The year
   // needs at least two digits so fractions like "1/2" never trigger.
   // Invalid values (month > 12, day > 31, year 0) stay as plain text.
+  // The handler mutates state.tr — the machinery dispatches it once the
+  // typed text is part of the transaction (dispatching through commands
+  // would race the not-yet-applied typed text).
   addInputRules() {
     return [
       new InputRule({
-        find: /\/(-?\d{2,6})-(\d{1,2})-(\d{1,2})(\s)$/,
-        handler: ({ range, match, commands }) => {
+        find: /\/(-?\d{2,6})-(\d{1,2})-(\d{1,2})\s$/,
+        handler: ({ state, range, match }) => {
           const year = Number(match[1]);
           const month = Number(match[2]);
           const day = Number(match[3]);
-          if (
-            year === 0 ||
-            month < 1 ||
-            month > 12 ||
-            day < 1 ||
-            day > 31
-          ) {
+          if (year === 0 || month < 1 || month > 12 || day < 1 || day > 31) {
             return;
           }
-          commands.insertContentAt(
-            { from: range.from, to: range.to },
-            [
-              {
-                type: this.name,
-                attrs: { year, month, day },
-              },
-              { type: "text", text: match[4] },
-            ],
-          );
+          const { tr } = state;
+          const node = state.schema.nodes.calendarDate.create({
+            year,
+            month,
+            day,
+          });
+          const space = state.schema.text(" ");
+          tr.replaceWith(range.from, range.to, [node, space]);
         },
       }),
     ];
