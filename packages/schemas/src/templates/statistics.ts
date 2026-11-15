@@ -30,6 +30,37 @@ export const sizeValues = [
   "huge",
   "gargantuan",
 ] as const;
+/** SRD alignments: the law/chaos × good/evil grid plus unaligned
+ * (SRD 5.2 FR : « Loyal Bon » … « Chaotique Mauvais », « non alignée »). */
+export const alignmentValues = [
+  "lawful_good",
+  "neutral_good",
+  "chaotic_good",
+  "lawful_neutral",
+  "neutral",
+  "chaotic_neutral",
+  "lawful_evil",
+  "neutral_evil",
+  "chaotic_evil",
+  "unaligned",
+] as const;
+/** SRD creature types. */
+export const creatureTypeValues = [
+  "aberration",
+  "beast",
+  "celestial",
+  "construct",
+  "dragon",
+  "elemental",
+  "fey",
+  "fiend",
+  "giant",
+  "humanoid",
+  "monstrosity",
+  "ooze",
+  "plant",
+  "undead",
+] as const;
 export const rarityValues = [
   "common",
   "uncommon",
@@ -90,8 +121,8 @@ export const statisticsSchema = z.object({
     })
     .optional(),
   initiative: z.number().int().optional(),
-  alignment: z.string().max(80).optional(),
-  creatureType: z.string().max(80).optional(),
+  alignment: z.enum(alignmentValues).optional(),
+  creatureType: z.enum(creatureTypeValues).optional(),
   size: z.enum(sizeValues).optional(),
   /** Les cinq sens du bloc de stats SRD (la Perception passive est
    * stockée à part). */

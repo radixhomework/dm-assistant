@@ -153,10 +153,10 @@ describe("RecordFormFields — statistics block", () => {
       hp: { formula: "17d6 + 22", average: 81 },
     });
 
-    fireEvent.input(inputOfLabel("Alignment"), { target: { value: "chaotic neutral" } });
-    expect(lastFields(onChange).statistics).toMatchObject({ alignment: "chaotic neutral" });
+    fireEvent.change(selectWithValue("chaotic_neutral"), { target: { value: "chaotic_neutral" } });
+    expect(lastFields(onChange).statistics).toMatchObject({ alignment: "chaotic_neutral" });
 
-    fireEvent.input(inputOfLabel("Type"), { target: { value: "undead" } });
+    fireEvent.change(selectWithValue("undead"), { target: { value: "undead" } });
     expect(lastFields(onChange).statistics).toMatchObject({ creatureType: "undead" });
 
     fireEvent.change(selectWithValue("gargantuan"), { target: { value: "large" } });

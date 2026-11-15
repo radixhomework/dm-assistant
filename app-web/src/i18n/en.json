@@ -301,6 +301,34 @@
       "epic": "Epic",
       "legendary": "Legendary",
       "unique": "Unique"
+    },
+    "alignment": {
+      "lawful_good": "Lawful Good",
+      "neutral_good": "Neutral Good",
+      "chaotic_good": "Chaotic Good",
+      "lawful_neutral": "Lawful Neutral",
+      "neutral": "Neutral",
+      "chaotic_neutral": "Chaotic Neutral",
+      "lawful_evil": "Lawful Evil",
+      "neutral_evil": "Neutral Evil",
+      "chaotic_evil": "Chaotic Evil",
+      "unaligned": "Unaligned"
+    },
+    "creatureType": {
+      "aberration": "Aberration",
+      "beast": "Beast",
+      "celestial": "Celestial",
+      "construct": "Construct",
+      "dragon": "Dragon",
+      "elemental": "Elemental",
+      "fey": "Fey",
+      "fiend": "Fiend",
+      "giant": "Giant",
+      "humanoid": "Humanoid",
+      "monstrosity": "Monstrosity",
+      "ooze": "Ooze",
+      "plant": "Plant",
+      "undead": "Undead"
     }
   },
   "money": {

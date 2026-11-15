@@ -7,7 +7,13 @@ import { ReferenceInput } from "./reference-input.js";
 import { diceAverage } from "../editor/dice.js";
 import { SRD_SKILLS } from "../stats/srd-skills.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
-import { abilityModifier, type CalendarSettings, type TemplateSchema } from "@dm/schemas";
+import {
+  abilityModifier,
+  alignmentValues,
+  creatureTypeValues,
+  type CalendarSettings,
+  type TemplateSchema,
+} from "@dm/schemas";
 
 type Fields = Record<string, unknown>;
 
@@ -474,18 +480,36 @@ function StatisticsControl(props: {
         {/* Alignment, creature type, size */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Field label={t("stats.alignment")}>
-            <input
+            <select
               value={textPart("alignment")}
-              onChange={(event) => setPart("alignment", event.target.value)}
+              onChange={(event) =>
+                setPart("alignment", event.target.value === "" ? undefined : event.target.value)
+              }
               className={inputClass}
-            />
+            >
+              <option value="">—</option>
+              {alignmentValues.map((value) => (
+                <option key={value} value={value}>
+                  {t(`enums.alignment.${value}`)}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label={t("stats.creatureType")}>
-            <input
+            <select
               value={textPart("creatureType")}
-              onChange={(event) => setPart("creatureType", event.target.value)}
+              onChange={(event) =>
+                setPart("creatureType", event.target.value === "" ? undefined : event.target.value)
+              }
               className={inputClass}
-            />
+            >
+              <option value="">—</option>
+              {creatureTypeValues.map((value) => (
+                <option key={value} value={value}>
+                  {t(`enums.creatureType.${value}`)}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label={t("stats.size")}>
             <select

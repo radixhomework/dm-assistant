@@ -112,7 +112,14 @@ function StatisticsBlock(props: { readonly statistics: Statistics }) {
   return (
     <section className="mt-8">
       <p className="text-sm italic text-muted">
-        {[stats.creatureType, stats.alignment]
+        {[
+          stats.creatureType !== undefined
+            ? t(`enums.creatureType.${stats.creatureType}`)
+            : "",
+          stats.alignment !== undefined
+            ? t(`enums.alignment.${stats.alignment}`)
+            : "",
+        ]
           .filter(Boolean)
           .join(", ")}
         {stats.size !== undefined

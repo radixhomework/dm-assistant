@@ -29,6 +29,7 @@ const character: Entity = {
       hp: { average: 22, formula: "4d8" },
       size: "medium",
       creatureType: "humanoid",
+      alignment: "chaotic_evil",
       vulnerabilities: ["fire"],
       proficiencyBonus: 3,
       wisdom: 12,
@@ -66,7 +67,7 @@ describe("CharacterSheet", () => {
     // HP: average then formula, SRD order.
     expect(screen.getByText(/22 \(4d8\)/)).toBeDefined();
     // Creature type on the subtitle line, damage vulnerabilities as a group.
-    expect(screen.getByText(/humanoid/)).toBeDefined();
+    expect(screen.getByText(/Humanoid, Chaotic Evil/)).toBeDefined();
     expect(screen.getByText("fire")).toBeDefined();
   });
 
