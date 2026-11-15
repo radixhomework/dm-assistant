@@ -429,7 +429,8 @@
     "characteristics": "Abilities",
     "values": "Scores",
     "damageTypes": "damage types",
-    "conditions": "conditions"
+    "conditions": "conditions",
+    "damageAdd": "Add a damage type or condition..."
   },
   "calendar": {
     "title": "Calendar",

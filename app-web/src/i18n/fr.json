@@ -429,7 +429,8 @@
     "characteristics": "Caractéristiques",
     "values": "Valeurs",
     "damageTypes": "types de dégâts",
-    "conditions": "états"
+    "conditions": "états",
+    "damageAdd": "Ajouter un type de dégâts ou un état..."
   },
   "calendar": {
     "title": "Calendrier",
