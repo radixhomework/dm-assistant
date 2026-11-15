@@ -7,6 +7,7 @@ import { api } from "../api/client.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
 import { RecordSheet } from "../components/record-sheet.js";
 import { CharacterSheet } from "../components/character-sheet.js";
+import { PlaceSheet } from "../components/place-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -239,6 +240,8 @@ function RecordPage({
         slot={
           data.type === "characters-and-entities" ? (
             <CharacterSheet record={data} />
+          ) : data.type === "places" ? (
+            <PlaceSheet record={data} />
           ) : undefined
         }
       />
