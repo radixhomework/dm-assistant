@@ -208,7 +208,7 @@ describe("RecordEditPage", () => {
       recordOf(
         { population: "1M" },
         {
-          region: [
+          leaders: [
             { slug: "the-glass-region", title: "The Glass Region" },
             { slug: "alpha-isle", title: "Alpha Isle" },
           ],

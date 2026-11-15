@@ -86,7 +86,24 @@ describe("RecordEditPage delete", () => {
       button.textContent === "Delete",
     );
     if (!deleteButton) throw new Error("delete button missing");
+    // The DM confirms before the record goes.
+    vi.spyOn(window, "confirm").mockReturnValue(true);
     deleteButton.click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      expect(calls.some(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "DELETE")).toBe(true);
+    });
+
+    // A dismissed confirmation sends nothing.
+    vi.mocked(window.confirm).mockReturnValue(false);
+    deleteButton.click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      const deletions = calls.filter(
+        ([path, init]) => path === "/api/records/city-of-glass" && init?.method === "DELETE",
+      );
+      expect(deletions.length).toBe(1);
+    });
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
       const deletion = calls.find(

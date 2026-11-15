@@ -206,7 +206,8 @@
     "incomingMentions": "Mentions entrantes",
     "noBacklinks": "Rien ne pointe vers cette fiche pour l'instant.",
     "referenceSearch": "Rechercher une fiche...",
-    "noChildren": "Aucun chapitre ou scène rattaché pour l'instant."
+    "noChildren": "Aucun chapitre ou scène rattaché pour l'instant.",
+    "deleteConfirm": "Supprimer cette fiche ? Cette action est définitive."
   },
   "fields": {
     "illustration": "Illustration",

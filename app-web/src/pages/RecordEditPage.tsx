@@ -157,6 +157,8 @@ function RecordPage({
   }
 
   async function onDelete() {
+    // Guard against misclicks: the DM confirms before the record goes.
+    if (!confirm(t("record.deleteConfirm"))) return;
     setError(null);
     try {
       await api(`/api/records/${slug}`, { method: "DELETE" });

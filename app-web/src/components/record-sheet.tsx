@@ -142,7 +142,7 @@ export function RecordSheet(props: {
   const children = record.tracking?.children ?? [];
 
   return (
-    <div>
+    <div className="mt-6">
       {props.slot ?? <GenericFieldRows record={record} shape={shape} />}
       {childrenKey !== null && (
         <section className="mt-8 border-t border-border pt-6">
