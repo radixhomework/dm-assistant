@@ -157,6 +157,32 @@ describe("RecordFormFields — recurrence", () => {
   });
 });
 
+describe("RecordFormFields — single-value references", () => {
+  it("hides the search input once a 0..1 value is attached, and keeps it for 0..n", () => {
+    const onAttach = vi.fn();
+    renderWithProviders(
+      <RecordFormFields
+        schema={templateSchemaOf("nations")!}
+        fields={{}}
+        onChange={() => undefined}
+        references={{
+          capital: [{ slug: "tremling", title: "Tremling" }],
+          geography: [{ slug: "veldra", title: "Veldra" }],
+        }}
+        onAttachReference={onAttach}
+        onDetachReference={() => undefined}
+      />,
+    );
+    // The 0..1 capital shows its chip but no second-pick input.
+    expect(screen.getByText("Tremling")).toBeDefined();
+    const capitalField = screen.getByText("Tremling").closest("label")!;
+    expect(capitalField.querySelector("input[placeholder]")).toBeNull();
+    // The 0..n geography keeps its search input below the chip.
+    const geographyField = screen.getByText("Veldra").closest("label")!;
+    expect(geographyField.querySelector("input[placeholder]")).not.toBeNull();
+  });
+});
+
 describe("RecordFormFields — statistics block", () => {
   it("propagates ability, hp, alignment, creature type and size edits", () => {
     const onChange = vi.fn();

@@ -864,6 +864,12 @@ export function RecordFormFields(props: {
       {controls}
       {referenceEntries.map(([field, declaration]) => {
         const current = props.references?.[field] ?? [];
+        // A 0..1 field carries at most one value: once attached, the
+        // search input hides (attaching again would silently replace).
+        // The input returns after a removal, and 0..n fields always
+        // keep it to invite adding more.
+        const acceptsMore =
+          declaration.cardinality === "many" || current.length === 0;
         return (
           <Field key={field} label={t(`fields.${field}`)}>
             <div className="flex flex-col gap-1">
@@ -884,7 +890,7 @@ export function RecordFormFields(props: {
                   )}
                 </span>
               ))}
-              {props.onAttachReference && (
+              {props.onAttachReference && acceptsMore && (
                 <ReferenceInput
                   targetTypes={declaration.targets}
                   placeholder={t("record.referenceSearch")}
