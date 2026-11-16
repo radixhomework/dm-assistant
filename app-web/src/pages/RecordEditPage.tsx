@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formString } from "../forms.js";
 import { useNavigate, useParams, useRouterState } from "@tanstack/react-router";
+import { FilePlus, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -172,10 +173,12 @@ function RecordPage({
   if (mode === "edit") {
     return (
       <div>
-        <h1 className="font-display text-4xl font-semibold text-ink">
-          {data.title}
-        </h1>
-        <p className="mt-1 text-sm text-muted">{data.type}</p>
+        <div className="sticky top-0 z-10 -mx-6 bg-background px-6 pb-3 pt-5">
+          <h1 className="font-display text-4xl font-semibold text-ink">
+            {data.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted">{data.type}</p>
+        </div>
         <form onSubmit={onSave} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm">
             {t("common.fields.title")}
@@ -216,25 +219,43 @@ function RecordPage({
 
   return (
     <div>
-      <h1 className="font-display text-4xl font-semibold text-ink">
-        {data.title}
-      </h1>
-      <p className="mt-1 text-sm text-muted">{data.type}</p>
-      <div className="mt-4 flex gap-3">
-        <button
-          type="button"
-          onClick={enterEdit}
-          className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
-        >
-          {t("record.edit")}
-        </button>
-        <button
-          type="button"
-          onClick={() => void onDelete()}
-          className="rounded-md border border-border px-4 py-2 text-sm text-radish hover:bg-surface"
-        >
-          {t("lore.delete")}
-        </button>
+      <div className="sticky top-0 z-10 -mx-6 bg-background px-6 pb-3 pt-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-display text-4xl font-semibold text-ink">
+              {data.title}
+            </h1>
+            <p className="mt-1 text-sm text-muted">{data.type}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 pt-1.5">
+            <button
+              type="button"
+              onClick={() => void navigate({ to: "/lore", search: { new: "1" } })}
+              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm text-background transition-colors duration-200 hover:bg-accent"
+            >
+              <FilePlus className="size-4" aria-hidden />
+              {t("lore.newRecord")}
+            </button>
+            <button
+              type="button"
+              onClick={enterEdit}
+              className="rounded-md border border-border p-2 text-ink transition-colors duration-200 hover:bg-surface"
+              title={t("record.edit")}
+              aria-label={t("record.edit")}
+            >
+              <Pencil className="size-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => void onDelete()}
+              className="rounded-md border border-border p-2 text-radish transition-colors duration-200 hover:bg-surface"
+              title={t("lore.delete")}
+              aria-label={t("lore.delete")}
+            >
+              <Trash2 className="size-4" aria-hidden />
+            </button>
+          </div>
+        </div>
       </div>
       {saved && <p className="mt-3 text-sm text-primary">{t("lore.saved")}</p>}
       {error && <p className="mt-3 text-sm text-radish">{error}</p>}

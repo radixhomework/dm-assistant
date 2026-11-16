@@ -1,4 +1,5 @@
 vi.mock("@tanstack/react-router", () => ({
+  useSearch: () => ({ new: undefined }),
   useNavigate: () => ({ to: vi.fn() }),
   useParams: () => ({ slug: "city-of-glass" }),
   useRouterState: () => ({

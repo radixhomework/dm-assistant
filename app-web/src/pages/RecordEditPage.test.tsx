@@ -88,7 +88,7 @@ describe("RecordEditPage", () => {
     );
     // Opens in reading mode; entering edit mounts the form.
     expect(document.querySelector("form")).toBeNull();
-    screen.getByText("Edit").click();
+    screen.getByRole("button", { name: "Edit" }).click();
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
     const title = document.querySelector('input[name="title"]');
     expect((title as HTMLInputElement | null)?.value).toBe("City of Glass");
@@ -113,7 +113,7 @@ describe("RecordEditPage", () => {
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
-    screen.getByText("Edit").click();
+    screen.getByRole("button", { name: "Edit" }).click();
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
     const form = document.querySelector("form");
     if (!form) throw new Error("form missing");
@@ -127,8 +127,9 @@ describe("RecordEditPage", () => {
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
     expect(document.querySelector("form")).toBeNull();
-    expect(screen.getByText("Edit")).toBeDefined();
-    expect(screen.getByText("Delete")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "New record" })).toBeDefined();
   });
 
   it("opens straight into edit mode from a creation redirect", async () => {

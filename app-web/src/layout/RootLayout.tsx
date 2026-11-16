@@ -95,12 +95,12 @@ export function RootLayout() {
   const campaignsActive = mode.kind === "campaign" || pathname === "/campaigns";
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       {isSetupOrLogin ? (
         <Outlet />
       ) : (
         <>
-          <header className="sticky top-0 z-40 border-b border-[#1e211c] bg-[#2e332b]">
+          <header className="shrink-0 border-b border-[#1e211c] bg-[#2e332b]">
             <div className="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-6 py-3">
               {user && mode.kind !== "none" && (
                 <button
@@ -152,14 +152,14 @@ export function RootLayout() {
               )}
             </div>
           </header>
-          <div className="mx-auto flex w-full max-w-[1200px] flex-1 items-stretch">
+          <div className="mx-auto flex w-full max-w-[1200px] min-h-0 flex-1 items-stretch">
             {mode.kind !== "none" && (
               <aside
                 className={`${
                   sidebarOpen
                     ? "fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto bg-surface shadow-xl"
                     : "hidden"
-                } md:static md:z-auto md:flex md:w-[260px] md:shrink-0 md:border-r md:border-border`}
+                } md:static md:z-auto md:flex md:min-h-0 md:w-[260px] md:shrink-0 md:flex-col md:overflow-hidden md:border-r md:border-border`}
               >
                 <div className="flex items-center justify-end px-2 pt-3 md:hidden">
                   <button
@@ -171,7 +171,7 @@ export function RootLayout() {
                     <X className="size-5" aria-hidden />
                   </button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-4">
+                <div className="pane-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-4">
                   {mode.kind === "lore" ? (
                     <AppSidebar />
                   ) : (
@@ -192,7 +192,7 @@ export function RootLayout() {
                 className="fixed inset-0 z-40 bg-black/40 md:hidden"
               />
             )}
-            <main className="min-w-0 flex-1 px-6 py-8">
+            <main className="pane-scroll min-h-0 min-w-0 flex-1 overflow-y-auto px-6 py-8">
               <Outlet />
             </main>
           </div>

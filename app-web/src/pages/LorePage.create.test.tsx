@@ -4,6 +4,7 @@ import { LorePage } from "./LorePage";
 import { renderWithProviders } from "../testing/render.js";
 
 vi.mock("@tanstack/react-router", () => ({
+  useSearch: () => ({ new: undefined }),
   useNavigate: () => ({ to: vi.fn() }),
   Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));

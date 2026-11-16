@@ -82,8 +82,8 @@ describe("RecordEditPage delete", () => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
       expect(calls.some(([path]) => path === "/api/records/city-of-glass")).toBe(true);
     });
-    const deleteButton = [...document.querySelectorAll("button")].find((button) =>
-      button.textContent === "Delete",
+    const deleteButton = [...document.querySelectorAll("button")].find(
+      (button) => button.getAttribute("aria-label") === "Delete",
     );
     if (!deleteButton) throw new Error("delete button missing");
     // The DM confirms before the record goes.

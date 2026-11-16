@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
 import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { FilePlus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -16,13 +17,16 @@ export function LorePage() {
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
+  // A "Nouvelle fiche" button from any record page lands here with
+  // ?new=1 — the creation form opens straight away.
+  const search = useSearch({ from: "/lore" });
   const records = useQuery({
     queryKey: ["lore-records"],
     queryFn: () => api<Entity[]>("/api/records?perimeter=world"),
     enabled: ready,
     retry: false,
   });
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(search.new === true);
   // Categories start collapsed; the set tracks the expanded ones.
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export function LorePage() {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between">
+      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-4 bg-background px-6 pb-3 pt-5">
         <h1 className="font-display text-4xl font-semibold text-ink">
           {t("lore.title")}
         </h1>
@@ -76,8 +80,9 @@ export function LorePage() {
             if (!creating) slugFields.reset();
             setCreating((value) => !value);
           }}
-          className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
+          className="flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
+          <FilePlus className="size-4" aria-hidden />
           {t("lore.newRecord")}
         </button>
       </div>

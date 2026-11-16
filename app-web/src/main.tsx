@@ -48,6 +48,9 @@ const loreRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/lore",
   component: LorePage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    new: search.new === "1" || search.new === true ? true : undefined,
+  }),
 });
 const campaignsRoute = createRoute({
   getParentRoute: () => rootRoute,
