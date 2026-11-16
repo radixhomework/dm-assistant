@@ -15,7 +15,7 @@ export const beliefsMythsAndCustoms = template(
     private_description: proseField,
   },
   {
-    origin: refOne("places"),
+    origin: refOne(["places", "nations", "natural-landmarks"]),
     events: refMany("events"),
     characters: refMany("characters-and-entities"),
     organizations: refMany("organizations"),

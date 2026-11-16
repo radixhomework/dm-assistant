@@ -6,7 +6,7 @@
 
 1. **Illustration** — image of the belief, myth or custom
 2. **Follower count** — a single or approximate figure
-3. **Origin** — place of origin (single reference to a Place)
+3. **Origin** — place of origin (single reference to a Place, Nation or Natural landmark)
 4. **Public description** — description of the belief, myth or custom for the players
 5. **Private description** — secrets and details
 6. **Events** — associated events

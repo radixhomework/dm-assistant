@@ -21,7 +21,7 @@ export const events = template(
     private_description: proseField,
   },
   {
-    origin: refOne("places"),
+    origin: refOne(["places", "nations", "natural-landmarks"]),
     geography: refMany(["places", "nations", "natural-landmarks"]),
     characters: refMany("characters-and-entities"),
     events: refMany("events"),

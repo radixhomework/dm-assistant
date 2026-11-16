@@ -13,7 +13,7 @@ export const knowledgeAndTechnologies = template(
     private_description: proseField,
   },
   {
-    origin: refOne("places"),
+    origin: refOne(["places", "nations", "natural-landmarks"]),
     events: refMany("events"),
     places: refMany("places"),
     characters: refMany("characters-and-entities"),
