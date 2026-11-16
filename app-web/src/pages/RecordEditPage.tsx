@@ -12,6 +12,7 @@ import { PlaceSheet } from "../components/place-sheet.js";
 import { OrganizationSheet } from "../components/organization-sheet.js";
 import { MonsterSheet } from "../components/monster-sheet.js";
 import { NationSheet } from "../components/nation-sheet.js";
+import { NaturalLandmarkSheet } from "../components/natural-landmark-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -288,6 +289,8 @@ function RecordPage({
             <MonsterSheet record={data} />
           ) : data.type === "nations" ? (
             <NationSheet record={data} />
+          ) : data.type === "natural-landmarks" ? (
+            <NaturalLandmarkSheet record={data} />
           ) : undefined
         }
       />
