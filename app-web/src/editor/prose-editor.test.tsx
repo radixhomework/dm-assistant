@@ -3,10 +3,16 @@ import { screen } from "@testing-library/react";
 import { ProseEditor } from "./prose-editor.js";
 import { renderWithProviders } from "../testing/render.js";
 
+const { navigateSpy } = vi.hoisted(() => ({ navigateSpy: vi.fn() }));
+vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => navigateSpy,
+}));
+
 describe("ProseEditor", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     document.documentElement.lang = "en";
+    navigateSpy.mockClear();
   });
 
   it("renders the two toolbar rows in edit mode", () => {
@@ -34,8 +40,7 @@ describe("ProseEditor", () => {
     expect(markdown).toContain("hello world");
   });
 
-  it("opens the referenced record in a new tab when a mention is clicked in readonly mode", () => {
-    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+  it("navigates to the referenced record when a mention is clicked in readonly mode", () => {
     renderWithProviders(<ProseEditor markdown="" readonly />);
     const pm = document.querySelector(".ProseMirror")!;
     const span = document.createElement("span");
@@ -43,7 +48,9 @@ describe("ProseEditor", () => {
     span.setAttribute("data-id", "osgwirond");
     pm.appendChild(span);
     span.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(openSpy).toHaveBeenCalledWith("/records/osgwirond", "_blank", "noopener");
-    openSpy.mockRestore();
+    expect(navigateSpy).toHaveBeenCalledWith({
+      to: "/records/$slug",
+      params: { slug: "osgwirond" },
+    });
   });
 });

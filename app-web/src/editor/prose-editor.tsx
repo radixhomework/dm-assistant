@@ -1,4 +1,5 @@
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -133,6 +134,7 @@ export function ProseEditor({
   readonly frame?: boolean;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { definition } = useCalendarDefinition();
   // Re-render the toolbar on every transaction so active states follow.
   const [renderTick, setRenderTick] = useState(0);
@@ -159,9 +161,9 @@ export function ProseEditor({
     };
   }, [editor]);
 
-  // Reading mode: a mention click opens the referenced record in a new
-  // tab. In edit mode the click belongs to the node (selection/deletion),
-  // so the handler stays readonly-only.
+  // Reading mode: a mention click navigates to the referenced record in
+  // the same pane. In edit mode the click belongs to the node
+  // (selection/deletion), so the handler stays readonly-only.
   useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
@@ -169,11 +171,11 @@ export function ProseEditor({
       if (editor.isEditable) return;
       const mention = (event.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
       const slug = mention?.dataset.id;
-      if (slug) window.open(`/records/${slug}`, "_blank", "noopener");
+      if (slug) void navigate({ to: "/records/$slug", params: { slug } });
     };
     dom.addEventListener("click", onClick);
     return () => dom.removeEventListener("click", onClick);
-  }, [editor]);
+  }, [editor, navigate]);
 
   if (!editor) return null;
 
