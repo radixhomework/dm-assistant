@@ -80,6 +80,25 @@ describe("ProseEditor toolbar", () => {
     expect(document.querySelectorAll('select[aria-label="Month"]')).toHaveLength(0);
   });
 
+  it("inserts a dice node through the toolbar prompt", async () => {
+    const onChange = vi.fn();
+    const prompt = vi.spyOn(window, "prompt").mockReturnValue("2d6");
+    renderWithProviders(<ProseEditor markdown="" onChange={onChange} />);
+    const diceButton = document.querySelector(
+      'button[aria-label^="Dice roll"]',
+    ) as HTMLButtonElement | null;
+    if (!diceButton) throw new Error("dice button missing");
+    fireEvent.click(diceButton);
+    await vi.waitFor(() => {
+      const dice = document.querySelector(".dice-node");
+      expect(dice).not.toBeNull();
+      expect(dice!.textContent).toBe("2d6 (7)");
+    });
+    const markdown = onChange.mock.calls.at(-1)![0] as string;
+    expect(markdown).toContain("[[dice:2d6]]");
+    prompt.mockRestore();
+  });
+
   it("keeps toolbars out of the Tab order", () => {
     renderWithProviders(<ProseEditor markdown="" onChange={vi.fn()} />);
     for (const toolbar of document.querySelectorAll('[role="toolbar"]')) {

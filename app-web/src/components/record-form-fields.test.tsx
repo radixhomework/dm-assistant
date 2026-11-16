@@ -183,6 +183,36 @@ describe("RecordFormFields — single-value references", () => {
   });
 });
 
+describe("RecordFormFields — statistics rework", () => {
+  it("stores an editable skill modifier and the equipment line", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <StatefulRecordFormFields schema={templateSchemaOf("monsters")!} onFields={onChange} />,
+    );
+    // Pick a skill: the modifier prefills with ability + proficiency…
+    fireEvent.change(screen.getByLabelText("Add a skill"), {
+      target: { value: "Perception" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      skills: [{ name: "Perception", ability: "wisdom" }],
+    });
+    // …then stays editable for out-of-sheet factors.
+    fireEvent.input(screen.getByLabelText("Perception modifier"), {
+      target: { value: "7" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      skills: [{ name: "Perception", modifier: 7 }],
+    });
+    // The equipment line lives in the same block.
+    fireEvent.input(inputOfLabel("Equipment"), {
+      target: { value: "Bag of holding" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      equipment: "Bag of holding",
+    });
+  });
+});
+
 describe("RecordFormFields — statistics block", () => {
   it("propagates ability, hp, alignment, creature type and size edits", () => {
     const onChange = vi.fn();
