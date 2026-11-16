@@ -40,10 +40,25 @@ describe("EquipmentSheet", () => {
     expect(screen.getByText("5")).toBeDefined();
   });
 
-  it("renders the descriptions as headed frameless sections", () => {
-    renderWithProviders(<EquipmentSheet record={item} />);
-    expect(screen.getByText("Public description")).toBeDefined();
-    expect(screen.getByText("Une solution liquide violacée.")).toBeDefined();
+  it("renders the prose sections in template order", () => {
+    const full: Entity = {
+      ...item,
+      fields: {
+        ...item.fields,
+        characteristics: "Effets à l'ingestion.",
+        commerce: "Vendue par les herboristes de Tremling.",
+        private_description: "Secrète.",
+      },
+    };
+    renderWithProviders(<EquipmentSheet record={full} />);
+    const headings = screen
+      .getAllByRole("heading", { level: 2 })
+      .map((h) => h.textContent);
+    const positions = ["Public description", "Characteristics", "Trade", "Private description"].map(
+      (label) => headings.indexOf(label),
+    );
+    expect(positions.every((pos) => pos >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
   });
 
   it("renders the illustration as a banner image when set", () => {

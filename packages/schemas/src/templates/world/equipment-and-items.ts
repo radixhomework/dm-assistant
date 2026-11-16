@@ -3,7 +3,8 @@
  * 
  * Source of truth: templates/world/game-system/equipment-and-items.md.
  * value is currency-aware money (GP/SP/CP, factor 10 between each);
- * weight and level are free numeric strings in the world's units.
+ * weight and level are free numeric strings in the world's units;
+ * characteristics and commerce are free prose (mechanics, trade).
  */
 
 import { z } from "zod";
@@ -20,6 +21,8 @@ export const equipmentAndItems = template(
     rarity: z.enum(rarityValues).optional(),
     level: numericStringSchema.optional(),
     public_description: proseField,
+    characteristics: proseField,
+    commerce: proseField,
     private_description: proseField,
   },
 );

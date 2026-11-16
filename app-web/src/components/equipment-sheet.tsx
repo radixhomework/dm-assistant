@@ -6,8 +6,9 @@ import type { Entity } from "../types.js";
  * The bespoke sheet for "Equipment and items" (world → Game system): the
  * illustration as a banner, the mechanical traits as chips (value with
  * its currency, weight, size, rarity, level — every chip optional), and
- * the two descriptions as headed frameless prose sections. The template
- * declares no references.
+ * the prose sections in template order (public description,
+ * characteristics, commerce, private description). The template declares
+ * no references.
  */
 export function EquipmentSheet(props: { readonly record: Entity }) {
   const { t } = useTranslation();
@@ -19,6 +20,8 @@ export function EquipmentSheet(props: { readonly record: Entity }) {
     rarity?: string;
     level?: string;
     public_description?: string;
+    characteristics?: string;
+    commerce?: string;
     private_description?: string;
   };
 
@@ -55,6 +58,8 @@ export function EquipmentSheet(props: { readonly record: Entity }) {
 
   const proseBlocks: Array<readonly [string, string]> = [
     ["fields.public_description", fields.public_description ?? ""],
+    ["fields.characteristics", fields.characteristics ?? ""],
+    ["fields.commerce", fields.commerce ?? ""],
     ["fields.private_description", fields.private_description ?? ""],
   ];
 

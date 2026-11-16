@@ -254,7 +254,9 @@
     "running_notes": "Running notes",
     "play_status": "Play status",
     "order": "Order",
-    "origins": "Origins"
+    "origins": "Origins",
+    "characteristics": "Characteristics",
+    "commerce": "Trade"
   },
   "events": {
     "title": "Events",
