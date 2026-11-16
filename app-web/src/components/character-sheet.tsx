@@ -1,9 +1,8 @@
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { abilityModifier } from "@dm/schemas";
-import { ProseEditor } from "../editor/prose-editor.js";
-import { TitleLinks } from "./record-sheet.js";
 import { ActionsBlock } from "./actions-block.js";
+import { ProseSections, ReferenceGroups } from "./sheet-parts.js";
 import { useDistanceUnit } from "../stats/use-distance-unit.js";
 import type { Entity } from "../types.js";
 import type { Statistics } from "@dm/schemas";
@@ -15,31 +14,6 @@ import type { Statistics } from "@dm/schemas";
  * references as labeled link groups, and the prose blocks through the
  * readonly editor (mention links resolved, dead links marked).
  */
-
-function LabeledProse(props: { readonly label: string; readonly markdown: string }) {
-  return (
-    <section className="mt-8">
-      <h2 className="font-display text-2xl text-ink">{props.label}</h2>
-      <div className="mt-2">
-        <ProseEditor markdown={props.markdown} readonly frame={false} />
-      </div>
-    </section>
-  );
-}
-
-function ReferenceGroup(props: {
-  readonly label: string;
-  readonly targets: Array<{ slug: string; title: string }>;
-}) {
-  return (
-    <div className="record-read-field">
-      <dt>{props.label}</dt>
-      <dd>
-        <TitleLinks targets={props.targets} />
-      </dd>
-    </div>
-  );
-}
 
 /** The SRD-shaped statistics block — shared by the character and
  * monster sheets. */
@@ -323,24 +297,12 @@ export function CharacterSheet(props: { readonly record: Entity }) {
           legendary_actions: fields.legendary_actions,
         }}
       />
-      {referenceGroups.some(([key]) => (references[key] ?? []).length > 0) && (
-        <dl className="record-read-fields mt-4">
-          {referenceGroups
-            .filter(([key]) => (references[key] ?? []).length > 0)
-            .map(([key, labelKey]) => (
-              <ReferenceGroup
-                key={key}
-                label={t(labelKey)}
-                targets={references[key] ?? []}
-              />
-            ))}
-        </dl>
-      )}
-      {proseBlocks
-        .filter(([, markdown]) => markdown !== "")
-        .map(([labelKey, markdown]) => (
-          <LabeledProse key={labelKey} label={t(labelKey)} markdown={markdown} />
-        ))}
+      <ReferenceGroups
+        groups={referenceGroups}
+        references={references}
+        className="mt-4"
+      />
+      <ProseSections blocks={proseBlocks} />
     </div>
   );
 }

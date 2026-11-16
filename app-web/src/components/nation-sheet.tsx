@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { ProseEditor } from "../editor/prose-editor.js";
-import { TitleLinks } from "./record-sheet.js";
+import {
+  IllustrationBanner,
+  ProseSections,
+  ReferenceGroups,
+  SheetChips,
+} from "./sheet-parts.js";
 import type { Entity } from "../types.js";
 
 /**
@@ -8,7 +12,7 @@ import type { Entity } from "../types.js";
  * a banner, the population and political system as chips, the capital as
  * the structural reference, the two descriptions as headed frameless
  * prose sections, then the associative references just before the
- * scaffold's backlinks section.
+ * scaffold backlinks section.
  */
 export function NationSheet(props: { readonly record: Entity }) {
   const { t } = useTranslation();
@@ -21,9 +25,6 @@ export function NationSheet(props: { readonly record: Entity }) {
   };
   const references = props.record.references ?? {};
 
-  const capitalGroup: Array<readonly [string, string]> = [
-    ["capital", "fields.capital"],
-  ];
   const bottomReferenceGroups: Array<readonly [string, string]> = [
     ["geography", "fields.geography"],
     ["beliefs", "fields.beliefs"],
@@ -42,11 +43,6 @@ export function NationSheet(props: { readonly record: Entity }) {
         })
       : undefined;
 
-  const proseBlocks: Array<readonly [string, string]> = [
-    ["fields.public_description", fields.public_description ?? ""],
-    ["fields.private_description", fields.private_description ?? ""],
-  ];
-
   const chips: Array<{ readonly label: string; readonly value: string }> = [];
   if (fields.population !== undefined && fields.population !== "") {
     chips.push({ label: t("fields.population"), value: fields.population });
@@ -55,60 +51,22 @@ export function NationSheet(props: { readonly record: Entity }) {
     chips.push({ label: t("fields.political_system"), value: politicalSystem });
   }
 
-  const referenceList = (
-    groups: Array<readonly [string, string]>,
-    className: string,
-  ) => {
-    const filled = groups.filter(([key]) => (references[key] ?? []).length > 0);
-    if (filled.length === 0) return null;
-    return (
-      <dl className={`record-read-fields ${className}`}>
-        {filled.map(([key, labelKey]) => (
-          <div key={key} className="record-read-field">
-            <dt>{t(labelKey)}</dt>
-            <dd>
-              <TitleLinks targets={references[key] ?? []} />
-            </dd>
-          </div>
-        ))}
-      </dl>
-    );
-  };
-
   return (
     <div>
-      {fields.illustration !== undefined && fields.illustration !== "" && (
-        <img
-          src={fields.illustration}
-          alt={props.record.title}
-          className="mb-4 max-h-64 w-full rounded-md border border-border object-cover"
-        />
-      )}
-      {chips.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {chips.map((chip) => (
-            <span
-              key={chip.label}
-              className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-            >
-              <span className="text-muted">{chip.label} </span>
-              <span className="text-ink">{chip.value}</span>
-            </span>
-          ))}
-        </div>
-      )}
-      {referenceList(capitalGroup, "mt-4")}
-      {proseBlocks
-        .filter(([, markdown]) => markdown !== "")
-        .map(([labelKey, markdown]) => (
-          <section key={labelKey} className="mt-8">
-            <h2 className="font-display text-2xl text-ink">{t(labelKey)}</h2>
-            <div className="mt-2">
-              <ProseEditor markdown={markdown} readonly frame={false} />
-            </div>
-          </section>
-        ))}
-      {referenceList(bottomReferenceGroups, "mt-8")}
+      <IllustrationBanner record={props.record} src={fields.illustration} />
+      <SheetChips chips={chips} />
+      <ReferenceGroups
+        groups={[["capital", "fields.capital"]]}
+        references={references}
+        className="mt-4"
+      />
+      <ProseSections
+        blocks={[
+          ["fields.public_description", fields.public_description ?? ""],
+          ["fields.private_description", fields.private_description ?? ""],
+        ]}
+      />
+      <ReferenceGroups groups={bottomReferenceGroups} references={references} className="mt-8" />
     </div>
   );
 }

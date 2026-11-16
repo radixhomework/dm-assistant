@@ -1,11 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { ProseEditor } from "../editor/prose-editor.js";
-import { TitleLinks } from "./record-sheet.js";
+import { ProseSections, ReferenceGroups, SheetChips } from "./sheet-parts.js";
 import type { Entity } from "../types.js";
 
 /**
- * The bespoke sheet for "Places" (world → Geography): the place type as a
- * chip, the population, the typed references as labeled link groups, and
+ * The bespoke sheet for "Places" (world → Geography): the place type and
+ * population as chips, the typed references as labeled link groups, and
  * the two descriptions as headed frameless prose sections.
  */
 export function PlaceSheet(props: { readonly record: Entity }) {
@@ -25,6 +24,12 @@ export function PlaceSheet(props: { readonly record: Entity }) {
         })
       : undefined;
 
+  const chips: Array<{ readonly label: string; readonly value: string }> = [];
+  if (placeType !== undefined) chips.push({ label: t("fields.place_type"), value: placeType });
+  if (fields.population !== undefined && fields.population !== "") {
+    chips.push({ label: t("fields.population"), value: fields.population });
+  }
+
   const referenceGroups: Array<readonly [string, string]> = [
     ["leaders", "fields.leaders"],
     ["nations", "fields.nations"],
@@ -32,51 +37,16 @@ export function PlaceSheet(props: { readonly record: Entity }) {
     ["events", "fields.events"],
   ];
 
-  const proseBlocks: Array<readonly [string, string]> = [
-    ["fields.public_description", fields.public_description ?? ""],
-    ["fields.private_description", fields.private_description ?? ""],
-  ];
-
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
-        {placeType !== undefined && (
-          <span className="rounded-md border border-border bg-background px-2 py-1 text-sm">
-            <span className="text-muted">{t("fields.place_type")} </span>
-            <span className="text-ink">{placeType}</span>
-          </span>
-        )}
-        {fields.population !== undefined && (
-          <span className="rounded-md border border-border bg-background px-2 py-1 text-sm">
-            <span className="text-muted">{t("fields.population")} </span>
-            <span className="text-ink">{fields.population}</span>
-          </span>
-        )}
-      </div>
-      {referenceGroups.some(([key]) => (references[key] ?? []).length > 0) && (
-        <dl className="record-read-fields mt-4">
-          {referenceGroups
-            .filter(([key]) => (references[key] ?? []).length > 0)
-            .map(([key, labelKey]) => (
-              <div key={key} className="record-read-field">
-                <dt>{t(labelKey)}</dt>
-                <dd>
-                  <TitleLinks targets={references[key] ?? []} />
-                </dd>
-              </div>
-            ))}
-        </dl>
-      )}
-      {proseBlocks
-        .filter(([, markdown]) => markdown !== "")
-        .map(([labelKey, markdown]) => (
-          <section key={labelKey} className="mt-8">
-            <h2 className="font-display text-2xl text-ink">{t(labelKey)}</h2>
-            <div className="mt-2">
-              <ProseEditor markdown={markdown} readonly frame={false} />
-            </div>
-          </section>
-        ))}
+      <SheetChips chips={chips} />
+      <ReferenceGroups groups={referenceGroups} references={references} className="mt-4" />
+      <ProseSections
+        blocks={[
+          ["fields.public_description", fields.public_description ?? ""],
+          ["fields.private_description", fields.private_description ?? ""],
+        ]}
+      />
     </div>
   );
 }
