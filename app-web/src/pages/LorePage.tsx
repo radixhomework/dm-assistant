@@ -70,7 +70,7 @@ export function LorePage() {
 
   return (
     <div>
-      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-4 bg-background px-6 pb-3 pt-5">
+      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-4 border-b border-border bg-background px-6 pb-3 pt-5">
         <h1 className="font-display text-4xl font-semibold text-ink">
           {t("lore.title")}
         </h1>
@@ -80,10 +80,11 @@ export function LorePage() {
             if (!creating) slugFields.reset();
             setCreating((value) => !value);
           }}
-          className="flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
+          className="shrink-0 rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+          title={t("lore.newRecord")}
+          aria-label={t("lore.newRecord")}
         >
           <FilePlus className="size-4" aria-hidden />
-          {t("lore.newRecord")}
         </button>
       </div>
       <p className="mt-2 text-muted">{t("lore.intro")}</p>

@@ -55,9 +55,9 @@ describe("LorePage create", () => {
     vi.stubGlobal("fetch", fetchMock);
     renderWithProviders(<LorePage />, "/");
     await vi.waitFor(() =>
-      expect(screen.getByText("New record")).toBeDefined(),
+      expect(screen.getByRole("button", { name: "New record" })).toBeDefined(),
     );
-    screen.getByText("New record").click();
+    screen.getByRole("button", { name: "New record" }).click();
     await vi.waitFor(() => {
       const form = document.querySelector("form");
       expect(form).not.toBeNull();

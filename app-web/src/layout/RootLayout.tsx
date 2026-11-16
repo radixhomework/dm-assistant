@@ -192,8 +192,14 @@ export function RootLayout() {
                 className="fixed inset-0 z-40 bg-black/40 md:hidden"
               />
             )}
-            <main className="pane-scroll min-h-0 min-w-0 flex-1 overflow-y-auto px-6 py-8">
-              <Outlet />
+            {/* The scroll pane carries no padding: a padded scroll
+             * container would let content show through the strip above a
+             * sticky header (sticky pins below the top padding). Pages
+             * pad themselves through this wrapper instead. */}
+            <main className="pane-scroll min-h-0 min-w-0 flex-1 overflow-y-auto">
+              <div className="px-6 py-8">
+                <Outlet />
+              </div>
             </main>
           </div>
         </>

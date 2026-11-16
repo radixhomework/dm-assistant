@@ -173,7 +173,7 @@ function RecordPage({
   if (mode === "edit") {
     return (
       <div>
-        <div className="sticky top-0 z-10 -mx-6 bg-background px-6 pb-3 pt-5">
+        <div className="sticky top-0 z-10 -mx-6 border-b border-border bg-background px-6 pb-3 pt-5">
           <h1 className="font-display text-4xl font-semibold text-ink">
             {data.title}
           </h1>
@@ -219,7 +219,7 @@ function RecordPage({
 
   return (
     <div>
-      <div className="sticky top-0 z-10 -mx-6 bg-background px-6 pb-3 pt-5">
+      <div className="sticky top-0 z-10 -mx-6 border-b border-border bg-background px-6 pb-3 pt-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="font-display text-4xl font-semibold text-ink">
@@ -231,10 +231,11 @@ function RecordPage({
             <button
               type="button"
               onClick={() => void navigate({ to: "/lore", search: { new: "1" } })}
-              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm text-background transition-colors duration-200 hover:bg-accent"
+              className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+              title={t("lore.newRecord")}
+              aria-label={t("lore.newRecord")}
             >
               <FilePlus className="size-4" aria-hidden />
-              {t("lore.newRecord")}
             </button>
             <button
               type="button"
