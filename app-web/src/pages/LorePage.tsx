@@ -87,7 +87,7 @@ export function LorePage() {
           <FilePlus className="size-4" aria-hidden />
         </button>
       </div>
-      <p className="mt-2 text-muted">{t("lore.intro")}</p>
+
 
       {creating && (
         <form onSubmit={onCreate} className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4">

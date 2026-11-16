@@ -756,15 +756,16 @@ export function RecordFormFields(props: {
   const setField = (key: string, value: unknown) => {
     const next = { ...props.fields };
     // An absent value removes the key: JSON.stringify would otherwise
-    // turn undefined members into nulls the schema rejects. An object
-    // whose every member is undefined counts as absent too (a cleared
-    // date, a unchecked recurrence) — its members would serialize to
-    // nulls just the same.
+    // turn undefined members into nulls the schema rejects. An empty
+    // string counts as absent too (a cleared weight, level or enum
+    // select) — the schemas reject "" on constrained fields. An object
+    // whose every member is undefined counts as absent as well (a
+    // cleared date, an unchecked recurrence).
     const allUndefined =
       typeof value === "object" &&
       value !== null &&
       Object.values(value).every((part) => part === undefined);
-    if (value === undefined || value === null || allUndefined) {
+    if (value === undefined || value === null || value === "" || allUndefined) {
       delete next[key];
     } else {
       next[key] = value;

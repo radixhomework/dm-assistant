@@ -81,7 +81,6 @@
   },
   "lore": {
     "title": "Lore",
-    "intro": "World records, grouped by template type.",
     "newRecord": "New record",
     "type": "Type",
     "create": "Create",

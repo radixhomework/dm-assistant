@@ -108,6 +108,25 @@ describe("RecordFormFields", () => {
   });
 });
 
+describe("RecordFormFields — clearing optional fields", () => {
+  it("drops a cleared weight instead of sending an empty string", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <StatefulRecordFormFields
+        schema={templateSchemaOf("equipment-and-items")!}
+        onFields={onChange}
+      />,
+    );
+    const weight = inputOfLabel("Weight");
+    fireEvent.input(weight, { target: { value: "2" } });
+    expect(lastFields(onChange).weight).toBe("2");
+    // Clearing removes the key: "" would fail the schema's min length.
+    fireEvent.input(weight, { target: { value: "" } });
+    expect(lastFields(onChange).weight).toBeUndefined();
+    expect("weight" in lastFields(onChange)).toBe(false);
+  });
+});
+
 describe("RecordFormFields — recurrence", () => {
   it("has no recurrence by default; the checkbox reveals unit and interval", () => {
     const onChange = vi.fn();
