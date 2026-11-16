@@ -7,6 +7,7 @@ import {
   Dices,
   Feather,
   MessageSquareQuote,
+  Table as TableIcon,
   TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
@@ -217,6 +218,24 @@ export function ProseEditor({
               const src = window.prompt(t("editor.imagePrompt"));
               if (src) cmd().setImage({ src }).run();
             }} />
+            <IconToolButton
+              icon={TableIcon}
+              label={t("editor.table")}
+              title={t("editor.table")}
+              action={() => cmd().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            />
+            {/* Contextual table controls: only while the caret sits in a
+             * table — compact labels, full tooltips. */}
+            {editor.isActive("table") && (
+              <>
+                <ToolButton editor={editor} active={false} label="L+" title={t("editor.tableAddRow")} action={() => cmd().addRowAfter().run()} />
+                <ToolButton editor={editor} active={false} label="C+" title={t("editor.tableAddColumn")} action={() => cmd().addColumnAfter().run()} />
+                <ToolButton editor={editor} active={false} label="L−" title={t("editor.tableDeleteRow")} action={() => cmd().deleteRow().run()} />
+                <ToolButton editor={editor} active={false} label="C−" title={t("editor.tableDeleteColumn")} action={() => cmd().deleteColumn().run()} />
+                <ToolButton editor={editor} active={editor.isActive("tableHeader")} label="H" title={t("editor.tableHeader")} action={() => cmd().toggleHeaderRow().run()} />
+                <ToolButton editor={editor} active={false} label="✕" title={t("editor.tableDelete")} action={() => cmd().deleteTable().run()} />
+              </>
+            )}
             {datePicker !== null && (
               <DatePickerPanel
                 definition={definition}

@@ -29,7 +29,14 @@
     "dice": "Dice roll",
     "dicePrompt": "Dice formula, e.g. 3d6+2",
     "paraphrase": "To paraphrase",
-    "develop": "To develop"
+    "develop": "To develop",
+    "table": "Table",
+    "tableAddRow": "Add row",
+    "tableAddColumn": "Add column",
+    "tableDeleteRow": "Delete row",
+    "tableDeleteColumn": "Delete column",
+    "tableHeader": "Header row",
+    "tableDelete": "Delete table"
   },
   "app": {
     "title": "DM Assistant",

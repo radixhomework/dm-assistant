@@ -29,7 +29,14 @@
     "dice": "Jet de dés",
     "dicePrompt": "Formule de dés, ex. 3d6+2",
     "paraphrase": "À paraphraser",
-    "develop": "À développer"
+    "develop": "À développer",
+    "table": "Tableau",
+    "tableAddRow": "Ajouter une ligne",
+    "tableAddColumn": "Ajouter une colonne",
+    "tableDeleteRow": "Supprimer la ligne",
+    "tableDeleteColumn": "Supprimer la colonne",
+    "tableHeader": "Ligne d'en-tête",
+    "tableDelete": "Supprimer le tableau"
   },
   "app": {
     "title": "DM Assistant",

@@ -89,4 +89,24 @@ describe("ProseEditor toolbar", () => {
       }
     }
   });
+
+  it("inserts a table with a header row from the toolbar", async () => {
+    const onChange = vi.fn();
+    renderWithProviders(<ProseEditor markdown="" onChange={onChange} />);
+    const tableButton = document.querySelector(
+      'button[aria-label="Table"]',
+    ) as HTMLButtonElement | null;
+    if (!tableButton) throw new Error("table button missing");
+    fireEvent.click(tableButton);
+    await vi.waitFor(() => {
+      const table = document.querySelector(".ProseMirror table");
+      expect(table).not.toBeNull();
+      // A 3×3 grid whose first row is the header (rows includes it).
+      expect(table!.querySelectorAll("tr")).toHaveLength(3);
+      expect(table!.querySelectorAll("th")).toHaveLength(3);
+    });
+    // The markdown serialization emits GFM.
+    const markdown = onChange.mock.calls.at(-1)![0] as string;
+    expect(markdown).toContain("|");
+  });
 });
