@@ -16,6 +16,7 @@ import { NaturalLandmarkSheet } from "../components/natural-landmark-sheet.js";
 import { WorkSheet } from "../components/work-sheet.js";
 import { EventSheet } from "../components/event-sheet.js";
 import { EquipmentSheet } from "../components/equipment-sheet.js";
+import { BeliefSheet } from "../components/belief-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -300,6 +301,8 @@ function RecordPage({
             <EventSheet record={data} />
           ) : data.type === "equipment-and-items" ? (
             <EquipmentSheet record={data} />
+          ) : data.type === "beliefs-myths-and-customs" ? (
+            <BeliefSheet record={data} />
           ) : undefined
         }
       />
