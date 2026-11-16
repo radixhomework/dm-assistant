@@ -192,12 +192,12 @@ function DateControl(props: {
  * Recurrence: opt-in through the checkbox (none by default); when
  * checked, the event repeats every N weeks / months / years, anchored
  * on the start. Unchecking clears the recurrence value entirely (the
- * undefined keys serialize out of the payload).
+ * form drops the emptied key from the payload).
  */
 function RecurrenceControl(props: {
   readonly label: string;
   readonly value: { unit?: string; interval?: number };
-  readonly onChange: (value: Fields) => void;
+  readonly onChange: (value: Fields | undefined) => void;
 }) {
   const { t } = useTranslation();
   const recurring = props.value.unit !== undefined || props.value.interval !== undefined;
@@ -211,11 +211,7 @@ function RecurrenceControl(props: {
           type="checkbox"
           checked={recurring}
           onChange={(event) =>
-            props.onChange(
-              event.target.checked
-                ? { unit: "week", interval: 1 }
-                : { unit: undefined, interval: undefined },
-            )
+            props.onChange(event.target.checked ? { unit: "week", interval: 1 } : undefined)
           }
         />
         {t("record.recurring")}
@@ -757,7 +753,24 @@ export function RecordFormFields(props: {
     shape: Record<string, unknown>;
   }).shape;
 
-  const setField = (key: string, value: unknown) => props.onChange({ ...props.fields, [key]: value });
+  const setField = (key: string, value: unknown) => {
+    const next = { ...props.fields };
+    // An absent value removes the key: JSON.stringify would otherwise
+    // turn undefined members into nulls the schema rejects. An object
+    // whose every member is undefined counts as absent too (a cleared
+    // date, a unchecked recurrence) — its members would serialize to
+    // nulls just the same.
+    const allUndefined =
+      typeof value === "object" &&
+      value !== null &&
+      Object.values(value).every((part) => part === undefined);
+    if (value === undefined || value === null || allUndefined) {
+      delete next[key];
+    } else {
+      next[key] = value;
+    }
+    props.onChange(next);
+  };
 
   const controls: Array<ReturnType<typeof Field>> = [];
   for (const [key, schema] of Object.entries(shape)) {

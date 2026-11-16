@@ -129,12 +129,12 @@ describe("RecordFormFields — recurrence", () => {
     fireEvent.input(interval, { target: { value: "3" } });
     expect(lastFields(onChange).recurrence).toMatchObject({ interval: 3 });
 
-    // Unchecking clears the recurrence entirely.
+    // Unchecking removes the recurrence key entirely: keeping the key
+    // with undefined members would serialize to nulls the schema rejects.
     const clearCheckbox = screen.getByRole("checkbox", { name: "Recurring event" }) as HTMLInputElement;
     fireEvent.click(clearCheckbox);
-    const cleared = lastFields(onChange).recurrence as { unit?: string; interval?: number };
-    expect(cleared.unit).toBeUndefined();
-    expect(cleared.interval).toBeUndefined();
+    expect(lastFields(onChange).recurrence).toBeUndefined();
+    expect("recurrence" in lastFields(onChange)).toBe(false);
   });
 });
 
