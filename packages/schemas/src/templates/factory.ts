@@ -82,4 +82,6 @@ export const proseFieldKeys = new Set([
   "bonus_actions",
   "running_notes",
   "pitch",
+  "characteristics",
+  "commerce",
 ]);
