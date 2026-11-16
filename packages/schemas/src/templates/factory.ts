@@ -80,6 +80,8 @@ export const proseFieldKeys = new Set([
   "traits",
   "actions",
   "bonus_actions",
+  "reactions",
+  "legendary_actions",
   "running_notes",
   "pitch",
   "characteristics",

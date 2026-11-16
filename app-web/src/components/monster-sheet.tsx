@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { StatisticsBlock } from "./character-sheet.js";
+import { ActionsBlock } from "./actions-block.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { TitleLinks } from "./record-sheet.js";
 import type { Entity } from "../types.js";
@@ -8,9 +9,9 @@ import type { Statistics } from "@dm/schemas";
 /**
  * The bespoke sheet for "Monsters" (world → Bestiary), laid out like an
  * SRD stat block: the illustration as a banner, the statistics block,
- * the stat-adjacent references (languages, treasure types), then the
- * prose in SRD order — traits, actions, bonus actions, then the two
- * descriptions as headed frameless sections.
+ * the stat-adjacent references (languages, treasure types), the framed
+ * Actions block (traits, actions, bonus actions, reactions, legendary
+ * actions), then the two descriptions as headed frameless sections.
  */
 export function MonsterSheet(props: { readonly record: Entity }) {
   const { t } = useTranslation();
@@ -20,6 +21,8 @@ export function MonsterSheet(props: { readonly record: Entity }) {
     traits?: string;
     actions?: string;
     bonus_actions?: string;
+    reactions?: string;
+    legendary_actions?: string;
     public_description?: string;
     private_description?: string;
   };
@@ -31,9 +34,6 @@ export function MonsterSheet(props: { readonly record: Entity }) {
   ];
 
   const proseBlocks: Array<readonly [string, string]> = [
-    ["fields.traits", fields.traits ?? ""],
-    ["fields.actions", fields.actions ?? ""],
-    ["fields.bonus_actions", fields.bonus_actions ?? ""],
     ["fields.public_description", fields.public_description ?? ""],
     ["fields.private_description", fields.private_description ?? ""],
   ];
@@ -64,6 +64,15 @@ export function MonsterSheet(props: { readonly record: Entity }) {
             ))}
         </dl>
       )}
+      <ActionsBlock
+        fields={{
+          traits: fields.traits,
+          actions: fields.actions,
+          bonus_actions: fields.bonus_actions,
+          reactions: fields.reactions,
+          legendary_actions: fields.legendary_actions,
+        }}
+      />
       {proseBlocks
         .filter(([, markdown]) => markdown !== "")
         .map(([labelKey, markdown]) => (

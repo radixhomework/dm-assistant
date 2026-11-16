@@ -11,7 +11,7 @@ import { calendarDateSchema, moneySchema, recurrenceSchema } from "./vocabulary.
 
 const expectedKeys: Record<string, { fields: string[]; references: string[] }> = {
   "characters-and-entities": {
-    fields: ["illustration", "gender", "physical_traits", "statistics", "public_description", "private_description"],
+    fields: ["illustration", "gender", "physical_traits", "statistics", "traits", "actions", "bonus_actions", "reactions", "legendary_actions", "public_description", "private_description"],
     references: ["origins", "species", "classes", "languages", "characters", "beliefs", "organizations", "knowledge", "works"],
   },
   places: {
@@ -23,7 +23,7 @@ const expectedKeys: Record<string, { fields: string[]; references: string[] }> =
     references: ["headquarters", "leaders", "characters", "organizations", "events"],
   },
   monsters: {
-    fields: ["illustration", "statistics", "traits", "actions", "bonus_actions", "public_description", "private_description"],
+    fields: ["illustration", "statistics", "traits", "actions", "bonus_actions", "reactions", "legendary_actions", "public_description", "private_description"],
     references: ["languages", "treasure_types"],
   },
   nations: {
@@ -43,7 +43,7 @@ const expectedKeys: Record<string, { fields: string[]; references: string[] }> =
     references: ["origin", "geography", "characters", "events"],
   },
   "equipment-and-items": {
-    fields: ["illustration", "value", "weight", "size", "rarity", "level", "public_description", "private_description"],
+    fields: ["illustration", "value", "weight", "size", "rarity", "level", "public_description", "characteristics", "commerce", "private_description"],
     references: [],
   },
   "beliefs-myths-and-customs": {
@@ -110,18 +110,28 @@ describe("template registry coverage", () => {
     }
   });
 
-  it("declares single targets for 0..1 reference fields", () => {
+  it("declares the reviewed targets for reference fields", () => {
     expect(templateSchemas.places.references.leaders).toEqual({
-      target: "characters-and-entities",
+      targets: ["characters-and-entities"],
       cardinality: "many",
     });
     expect(templateSchemas.chapter.references.campaign).toEqual({
-      target: "campaign",
+      targets: ["campaign"],
       cardinality: "one",
     });
     expect(templateSchemas.scene.references.chapter).toEqual({
-      target: "chapter",
+      targets: ["chapter"],
       cardinality: "one",
+    });
+    // Multi-target references: origin and geography span places, nations
+    // and natural landmarks.
+    expect(templateSchemas.works.references.origin).toEqual({
+      targets: ["places", "nations", "natural-landmarks"],
+      cardinality: "one",
+    });
+    expect(templateSchemas["characters-and-entities"].references.origins).toEqual({
+      targets: ["places", "nations", "natural-landmarks"],
+      cardinality: "many",
     });
   });
 });

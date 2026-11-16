@@ -9,7 +9,9 @@
 3. **Traits** — monster traits
 4. **Actions** — monster actions
 5. **Bonus actions** — monster bonus actions
-6. **Public description** — description of the monster for the players
-7. **Private description** — secrets and details of the monster
-8. **Languages** — languages associated with the monster
-9. **Treasure types** — treasure types associated with the monster
+6. **Reactions** — monster reactions
+7. **Legendary actions** — monster legendary actions
+8. **Public description** — description of the monster for the players
+9. **Private description** — secrets and details of the monster
+10. **Languages** — languages associated with the monster
+11. **Treasure types** — treasure types associated with the monster

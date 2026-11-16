@@ -16,6 +16,8 @@ export const monsters = template(
     traits: proseField,
     actions: proseField,
     bonus_actions: proseField,
+    reactions: proseField,
+    legendary_actions: proseField,
     public_description: proseField,
     private_description: proseField,
   },

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { abilityModifier } from "@dm/schemas";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { TitleLinks } from "./record-sheet.js";
+import { ActionsBlock } from "./actions-block.js";
 import { useDistanceUnit } from "../stats/use-distance-unit.js";
 import type { Entity } from "../types.js";
 import type { Statistics } from "@dm/schemas";
@@ -74,6 +75,8 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
 
   const unit = useDistanceUnit();
   const speed = stats.speed;
+  // Reading mode: the unit sits beside the values only — the section
+  // titles stay plain.
   const speedParts: string[] = speed
     ? (
         [
@@ -87,7 +90,7 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => {
           const label = t(`stats.${key}`);
-          return `${value} ${unit} (${label})`;
+          return `${label} ${value} ${unit}`;
         })
     : [];
   const sizeLabels: Record<string, string> = Object.fromEntries(
@@ -98,17 +101,17 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
   );
   const senses: string[] = (
     [
-      ["darkvision", stats.senses?.darkvision, " m"],
-      ["blindsight", stats.senses?.blindsight, " m"],
-      ["truesight", stats.senses?.truesight, " m"],
-      ["tremorsense", stats.senses?.tremorsense, " m"],
+      ["darkvision", stats.senses?.darkvision, ` ${unit}`],
+      ["blindsight", stats.senses?.blindsight, ` ${unit}`],
+      ["truesight", stats.senses?.truesight, ` ${unit}`],
+      ["tremorsense", stats.senses?.tremorsense, ` ${unit}`],
       ["passivePerception", stats.passivePerception, ""],
     ] as const
   )
     .filter((pair) => pair[1] !== undefined)
-    .map(([key, value, unit]) => {
+    .map(([key, value, suffix]) => {
       const label = t(`stats.${key}`);
-      return `${label} ${value}${unit}`;
+      return `${label} ${value}${suffix}`;
     });
 
   return (
@@ -149,9 +152,7 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
         )}
         {speedParts.length > 0 && (
           <p>
-            <span className="font-semibold text-ink">
-              {t("stats.speed")} ({unit})
-            </span>{" "}
+            <span className="font-semibold text-ink">{t("stats.speed")}</span>{" "}
             {speedParts.join(", ")}
           </p>
         )}
@@ -197,12 +198,17 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
             <span className="font-semibold text-ink">{t("stats.skills")}</span>{" "}
             {(stats.skills ?? [])
               .map((skill) => {
+                // The stored modifier wins; the SRD computation
+                // (ability + proficiency) is only the fallback for
+                // records entered before it became editable.
                 const base = modifierOf(
                   stats[skill.ability as keyof Statistics] as
                     | number
                     | undefined,
                 );
-                const total = (base ?? 0) + (stats.proficiencyBonus ?? 0);
+                const total =
+                  skill.modifier ??
+                  (base ?? 0) + (stats.proficiencyBonus ?? 0);
                 return `${skill.name} ${total >= 0 ? "+" : ""}${total}`;
               })
               .join(", ")}
@@ -245,10 +251,14 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
         )}
         {senses.length > 0 && (
           <p>
-            <span className="font-semibold text-ink">
-              {t("stats.senses")} ({unit})
-            </span>{" "}
+            <span className="font-semibold text-ink">{t("stats.senses")}</span>{" "}
             {senses.join(" ; ")}
+          </p>
+        )}
+        {stats.equipment !== undefined && stats.equipment !== "" && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.equipment")}</span>{" "}
+            {stats.equipment}
           </p>
         )}
       </div>
@@ -262,6 +272,11 @@ export function CharacterSheet(props: { readonly record: Entity }) {
     gender?: string;
     physical_traits?: string;
     statistics?: Statistics;
+    traits?: string;
+    actions?: string;
+    bonus_actions?: string;
+    reactions?: string;
+    legendary_actions?: string;
     public_description?: string;
     private_description?: string;
   };
@@ -299,6 +314,15 @@ export function CharacterSheet(props: { readonly record: Entity }) {
       {fields.statistics !== undefined && (
         <StatisticsBlock statistics={fields.statistics} />
       )}
+      <ActionsBlock
+        fields={{
+          traits: fields.traits,
+          actions: fields.actions,
+          bonus_actions: fields.bonus_actions,
+          reactions: fields.reactions,
+          legendary_actions: fields.legendary_actions,
+        }}
+      />
       {referenceGroups.some(([key]) => (references[key] ?? []).length > 0) && (
         <dl className="record-read-fields mt-4">
           {referenceGroups

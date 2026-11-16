@@ -264,7 +264,9 @@
     "origins": "Origines",
     "characteristics": "Caractéristiques",
     "commerce": "Commerce",
-    "places": "Lieux"
+    "places": "Lieux",
+    "reactions": "Réactions",
+    "legendary_actions": "Actions légendaires"
   },
   "events": {
     "title": "Événements",
@@ -445,7 +447,10 @@
     "values": "Valeurs",
     "damageTypes": "types de dégâts",
     "conditions": "états",
-    "damageAdd": "Ajouter un type de dégâts ou un état..."
+    "equipment": "Équipement",
+    "damageTypeAdd": "Ajouter un type de dégâts",
+    "conditionAdd": "Ajouter un état",
+    "skillModifierOf": "Modificateur de {{skill}}"
   },
   "calendar": {
     "title": "Calendrier",

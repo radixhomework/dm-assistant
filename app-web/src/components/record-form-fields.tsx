@@ -7,6 +7,7 @@ import { ReferenceInput } from "./reference-input.js";
 import { diceAverage } from "../editor/dice.js";
 import { SRD_SKILLS } from "../stats/srd-skills.js";
 import { CONDITIONS, DAMAGE_TYPES } from "../stats/srd-lists.js";
+import { useDistanceUnit } from "../stats/use-distance-unit.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import {
   abilityModifier,
@@ -295,7 +296,11 @@ function StatisticsControl(props: {
     rowId: string;
     name: string;
     ability: "strength" | "dexterity" | "constitution" | "intelligence" | "wisdom" | "charisma";
+    modifier?: number;
   }>;
+  // The world's distance unit labels the speed and sense sections; the
+  // values themselves stay unitless inputs in edit mode.
+  const unit = useDistanceUnit();
   /** Résout une clé de dégât ou d'état vers son libellé, avec repli sur
    * la chaîne stockée (données antérieures aux enums). */
   const entryLabel = (entry: string): string =>
@@ -428,7 +433,7 @@ function StatisticsControl(props: {
             });
           };
           return (
-            <Field label={t("stats.speed")}>
+            <Field label={`${t("stats.speed")} (${unit})`}>
               <div className="flex flex-wrap gap-2">
                 {speeds.map(([key, label]) => (
                   <label key={key} className="flex items-center gap-1 text-sm">
@@ -462,7 +467,7 @@ function StatisticsControl(props: {
             });
           };
           return (
-            <Field label={t("stats.senses")}>
+            <Field label={`${t("stats.senses")} (${unit})`}>
               <div className="flex flex-wrap gap-2">
                 {senseInputs.map(([key, label]) => (
                   <label key={key} className="flex items-center gap-1 text-sm">
@@ -480,6 +485,17 @@ function StatisticsControl(props: {
             </Field>
           );
         })()}
+        {/* Equipment: the free-text line SRD stat blocks print below the
+         * senses. */}
+        <Field label={t("stats.equipment")}>
+          <input
+            value={textPart("equipment")}
+            onChange={(event) =>
+              setPart("equipment", event.target.value === "" ? undefined : event.target.value)
+            }
+            className={inputClass}
+          />
+        </Field>
         {/* Alignment, creature type, size */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Field label={t("stats.alignment")}>
@@ -541,7 +557,10 @@ function StatisticsControl(props: {
                 typeof props.value.proficiencyBonus === "number"
                   ? props.value.proficiencyBonus
                   : 0;
-              const total = base + prof;
+              // The modifier prefills with ability + proficiency but stays
+              // editable: out-of-sheet factors may adjust it.
+              const total =
+                typeof skill.modifier === "number" ? skill.modifier : base + prof;
               return (
                 <div key={skill.rowId} className="flex items-center gap-2 text-sm">
                   <span className="flex-1 text-ink">{skill.name}</span>
@@ -549,10 +568,23 @@ function StatisticsControl(props: {
                     {t(`stats.${skill.ability}`)} · {t("stats.proficiencyBonus")}{" "}
                     {prof}
                   </span>
-                  <span className="font-semibold text-ink">
-                    {total >= 0 ? "+" : ""}
-                    {total}
-                  </span>
+                  <input
+                    type="number"
+                    aria-label={`${t("stats.skillModifierOf", { skill: skill.name })}`}
+                    value={total}
+                    onChange={(event) => {
+                      const raw = event.target.value;
+                      setPart(
+                        "skills",
+                        skills.map((entry) =>
+                          entry.rowId === skill.rowId
+                            ? { ...entry, modifier: raw === "" ? undefined : Number(raw) }
+                            : entry,
+                        ),
+                      );
+                    }}
+                    className={`${inputClass} w-20`}
+                  />
                   <button
                     type="button"
                     onClick={() =>
@@ -649,7 +681,7 @@ function StatisticsControl(props: {
                     }}
                     className={inputClass}
                   >
-                    <option value="">{t("stats.damageAdd")}</option>
+                    <option value="">{t("stats.damageTypeAdd")}</option>
                     {available.map((candidate) => (
                       <option key={candidate.key} value={candidate.key}>
                         {t(`enums.damageTypes.${candidate.key}`, { defaultValue: candidate.key })}
@@ -687,8 +719,8 @@ function StatisticsControl(props: {
             ))}
             <div className="flex flex-wrap gap-2">
               {([
-                [DAMAGE_TYPES, "damageTypes", t("stats.damageTypes")],
-                [CONDITIONS, "conditions", t("stats.conditions")],
+                [DAMAGE_TYPES, "damageTypes", t("stats.damageTypeAdd")],
+                [CONDITIONS, "conditions", t("stats.conditionAdd")],
               ] as const).map(([entries, namespace, listLabel]) => {
                 const available = entries.filter(
                   (candidate) =>
@@ -715,7 +747,7 @@ function StatisticsControl(props: {
                     }}
                     className={inputClass}
                   >
-                    <option value="">{t("stats.damageAdd")}</option>
+                    <option value="">{listLabel}</option>
                     {available.map((candidate) => (
                       <option key={candidate.key} value={candidate.key}>
                         {t(`enums.${namespace}.${candidate.key}`, {

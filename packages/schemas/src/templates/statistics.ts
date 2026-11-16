@@ -99,13 +99,15 @@ export const statisticsSchema = z.object({
   checksMastery: abilityFlagsSchema.optional(),
   /** JdS maîtrisés (une case par caractéristique). */
   savesMastery: abilityFlagsSchema.optional(),
-  /** Compétences maîtrisées : le modificateur n'est pas stocké — il se
-   * calcule (caractéristique associée + bonus de maîtrise). */
+  /** Compétences maîtrisées : le modificateur est stocké — il préremplit
+   * (caractéristique associée + bonus de maîtrise) mais reste éditable,
+   * des éléments hors fiche pouvant l'ajuster. */
   skills: z
     .array(
       z.object({
         name: z.string().min(1).max(60),
         ability: z.enum(abilities),
+        modifier: z.number().int().optional(),
       }),
     )
     .optional(),
@@ -135,6 +137,9 @@ export const statisticsSchema = z.object({
     })
     .optional(),
   passivePerception: z.number().int().optional(),
+  /** Équipement porté ou détenu, tel qu'imprimé dans les blocs de stats
+   * SRD (texte libre). */
+  equipment: z.string().max(400).optional(),
   vulnerabilities: z.array(z.string()).default([]),
   resistances: z.array(z.string()).default([]),
   immunities: z.array(z.string()).default([]),

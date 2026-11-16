@@ -233,13 +233,14 @@ describe("RecordFormFields — statistics block", () => {
     renderWithProviders(
       <StatefulRecordFormFields schema={templateSchemaOf("monsters")!} onFields={onChange} />,
     );
-    fireEvent.change(screen.getByLabelText("Immunities — damage types"), {
-      target: { value: "fire" },
-    });
+    fireEvent.change(
+      screen.getByLabelText("Immunities — Add a damage type"),
+      { target: { value: "fire" } },
+    );
     expect(lastFields(onChange).statistics).toMatchObject({
       immunities: ["fire"],
     });
-    fireEvent.change(screen.getByLabelText("Immunities — conditions"), {
+    fireEvent.change(screen.getByLabelText("Immunities — Add a condition"), {
       target: { value: "charmed" },
     });
     expect(lastFields(onChange).statistics).toMatchObject({
