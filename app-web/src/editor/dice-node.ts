@@ -1,6 +1,6 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { InputRule, Node, mergeAttributes } from "@tiptap/core";
 import type { MarkdownToken } from "@tiptap/core";
-import { diceAverage } from "./dice.js";
+import { diceAverage, parseDice } from "./dice.js";
 
 /**
  * Inline dice node (DM request): stores a dice formula
@@ -70,5 +70,31 @@ export const DiceNode = Node.create({
   renderMarkdown(node): string {
     const formula = node.attrs?.formula as string | null;
     return formula === null || formula === undefined ? "" : `[[dice:${formula}]]`;
+  },
+
+  // Keyboard shortcut: typing `&formula` followed by a space inserts the
+  // dice node — "1d10+4", "2d8", "d20" — mirroring the canonical
+  // `[[dice:...]]` form. The trailing space terminates the pattern so it
+  // never fires mid-typing and is kept after the node. A word character
+  // right before the ampersand blocks the rule, and an invalid formula
+  // (count or faces 0) stays as plain text. The handler mutates state.tr
+  // — the machinery dispatches it once the typed text is part of the
+  // transaction.
+  addInputRules() {
+    return [
+      new InputRule({
+        find: /(?<!\w)&([+-]?\d{1,3})?d(\d{1,3})([+-]\d{1,3})?\s$/,
+        handler: ({ state, range, match }) => {
+          const formula = `${match[1] ?? ""}d${match[2]}${match[3] ?? ""}`;
+          if (parseDice(formula) === null) {
+            return;
+          }
+          const { tr } = state;
+          const node = state.schema.nodes.dice.create({ formula });
+          const space = state.schema.text(" ");
+          tr.replaceWith(range.from, range.to, [node, space]);
+        },
+      }),
+    ];
   },
 });

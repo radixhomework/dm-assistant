@@ -26,7 +26,7 @@
     "dateInsert": "Insérer",
     "dateNeedsYear": "L'année est obligatoire.",
     "dateNoYearZero": "L'année 0 n'existe pas.",
-    "dice": "Jet de dés",
+    "dice": "Jet de dés (&formule + espace)",
     "dicePrompt": "Formule de dés, ex. 3d6+2",
     "paraphrase": "À paraphraser",
     "develop": "À développer",

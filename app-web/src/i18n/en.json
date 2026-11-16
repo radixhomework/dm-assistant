@@ -26,7 +26,7 @@
     "dateInsert": "Insert",
     "dateNeedsYear": "The year is required.",
     "dateNoYearZero": "Year 0 does not exist.",
-    "dice": "Dice roll",
+    "dice": "Dice roll (&formula + space)",
     "dicePrompt": "Dice formula, e.g. 3d6+2",
     "paraphrase": "To paraphrase",
     "develop": "To develop",
