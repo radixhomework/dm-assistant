@@ -5,9 +5,11 @@ import type { Entity } from "../types.js";
 
 /**
  * The bespoke sheet for "Organizations" (world → Society): the
- * illustration as a banner, the member count as a chip, the typed
- * references as labeled link groups, and the two descriptions as headed
- * frameless prose sections.
+ * illustration as a banner, the member count as a chip, the structural
+ * references (headquarters, leaders) as labeled link groups, the two
+ * descriptions as headed frameless prose sections, then the associative
+ * references (characters, organizations, events) just before the
+ * scaffold's backlinks section.
  */
 export function OrganizationSheet(props: { readonly record: Entity }) {
   const { t } = useTranslation();
@@ -19,9 +21,11 @@ export function OrganizationSheet(props: { readonly record: Entity }) {
   };
   const references = props.record.references ?? {};
 
-  const referenceGroups: Array<readonly [string, string]> = [
+  const topReferenceGroups: Array<readonly [string, string]> = [
     ["headquarters", "fields.headquarters"],
     ["leaders", "fields.leaders"],
+  ];
+  const bottomReferenceGroups: Array<readonly [string, string]> = [
     ["characters", "fields.characters"],
     ["organizations", "fields.organizations"],
     ["events", "fields.events"],
@@ -31,6 +35,26 @@ export function OrganizationSheet(props: { readonly record: Entity }) {
     ["fields.public_description", fields.public_description ?? ""],
     ["fields.private_description", fields.private_description ?? ""],
   ];
+
+  const referenceList = (
+    groups: Array<readonly [string, string]>,
+    className: string,
+  ) => {
+    const filled = groups.filter(([key]) => (references[key] ?? []).length > 0);
+    if (filled.length === 0) return null;
+    return (
+      <dl className={`record-read-fields ${className}`}>
+        {filled.map(([key, labelKey]) => (
+          <div key={key} className="record-read-field">
+            <dt>{t(labelKey)}</dt>
+            <dd>
+              <TitleLinks targets={references[key] ?? []} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  };
 
   return (
     <div>
@@ -49,20 +73,7 @@ export function OrganizationSheet(props: { readonly record: Entity }) {
           </span>
         </div>
       )}
-      {referenceGroups.some(([key]) => (references[key] ?? []).length > 0) && (
-        <dl className="record-read-fields mt-4">
-          {referenceGroups
-            .filter(([key]) => (references[key] ?? []).length > 0)
-            .map(([key, labelKey]) => (
-              <div key={key} className="record-read-field">
-                <dt>{t(labelKey)}</dt>
-                <dd>
-                  <TitleLinks targets={references[key] ?? []} />
-                </dd>
-              </div>
-            ))}
-        </dl>
-      )}
+      {referenceList(topReferenceGroups, "mt-4")}
       {proseBlocks
         .filter(([, markdown]) => markdown !== "")
         .map(([labelKey, markdown]) => (
@@ -73,6 +84,7 @@ export function OrganizationSheet(props: { readonly record: Entity }) {
             </div>
           </section>
         ))}
+      {referenceList(bottomReferenceGroups, "mt-8")}
     </div>
   );
 }
