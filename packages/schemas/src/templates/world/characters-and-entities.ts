@@ -21,7 +21,7 @@ export const charactersAndEntities = template(
     private_description: proseField,
   },
   {
-    origins: refMany("places"),
+    origins: refMany(["places", "nations", "natural-landmarks"]),
     species: refMany("species"),
     classes: refMany("classes"),
     languages: refMany("languages"),

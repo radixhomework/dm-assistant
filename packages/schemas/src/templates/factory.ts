@@ -15,7 +15,8 @@ export const referenceCardinalities = ["one", "many"] as const;
 export type ReferenceCardinality = (typeof referenceCardinalities)[number];
 
 export type ReferenceDeclaration = {
-  target: string;
+  /** The template types the field may point at (one or several). */
+  targets: string[];
   cardinality: ReferenceCardinality;
 };
 
@@ -40,12 +41,15 @@ export function template(
   return { fields: z.object(fields).strict(), references };
 }
 
-export const refOne = (target: string): ReferenceDeclaration => ({
-  target,
+const toTargets = (target: string | string[]): string[] =>
+  Array.isArray(target) ? target : [target];
+
+export const refOne = (target: string | string[]): ReferenceDeclaration => ({
+  targets: toTargets(target),
   cardinality: "one",
 });
-export const refMany = (target: string): ReferenceDeclaration => ({
-  target,
+export const refMany = (target: string | string[]): ReferenceDeclaration => ({
+  targets: toTargets(target),
   cardinality: "many",
 });
 

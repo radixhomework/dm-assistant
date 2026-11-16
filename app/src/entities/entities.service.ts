@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import {
   proseFieldKeys,
   templateSchemaOf,
@@ -19,6 +19,15 @@ import { entities, mentions, relationships } from "../database/schema.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
 export type EntityRow = typeof entities.$inferSelect;
+
+/** A `type` query parameter: one template type or a comma-separated
+ * list of them (reference pickers may span several templates). */
+function parseTypeFilter(type: string | undefined): string[] {
+  return (type ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
 
 export type TrackingView = {
   slug: string;
@@ -64,14 +73,18 @@ export class EntitiesService {
 
   async list(filters?: {
     perimeter?: "world" | "campaign";
+    /** One template type or a comma-separated list of them. */
     type?: string;
   }): Promise<EntityRow[]> {
     const conditions = [];
     if (filters?.perimeter) {
       conditions.push(eq(entities.perimeter, filters.perimeter));
     }
-    if (filters?.type) {
-      conditions.push(eq(entities.type, filters.type));
+    const types = parseTypeFilter(filters?.type);
+    if (types.length === 1) {
+      conditions.push(eq(entities.type, types[0]));
+    } else if (types.length > 1) {
+      conditions.push(inArray(entities.type, types));
     }
     return this.db
       .select()
@@ -232,7 +245,12 @@ export class EntitiesService {
     const conditions = [
       or(ilike(entities.title, `%${literal}%`), ilike(entities.slug, `%${literal}%`)),
     ];
-    if (type) conditions.push(eq(entities.type, type));
+    const types = parseTypeFilter(type);
+    if (types.length === 1) {
+      conditions.push(eq(entities.type, types[0]));
+    } else if (types.length > 1) {
+      conditions.push(inArray(entities.type, types));
+    }
     return this.db
       .select({ slug: entities.slug, title: entities.title, type: entities.type })
       .from(entities)

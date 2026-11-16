@@ -872,7 +872,7 @@ export function RecordFormFields(props: {
               ))}
               {props.onAttachReference && (
                 <ReferenceInput
-                  targetType={declaration.target}
+                  targetTypes={declaration.targets}
                   placeholder={t("record.referenceSearch")}
                   onPick={(slug) => props.onAttachReference?.(field, slug)}
                 />

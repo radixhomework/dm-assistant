@@ -6,7 +6,7 @@
 
 1. **Illustration** — image of the character or entity
 2. **Gender** — one value among: Male, Female, Nonbinary
-3. **Origins** — places of origin (multiple references to Places)
+3. **Origins** — places of origin (multiple references to Places, Nations or Natural landmarks)
 4. **Physical traits** — one-line physical description
 5. **Species** — list of associated species
 6. **Classes** — list of associated classes

@@ -3,23 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client.js";
 
 /**
- * Typeahead picking a record of one target template (records-editor
- * 4.3): autocompletion on title/slug through the trigram endpoint.
- * Picking calls onPick and clears the input.
+ * Typeahead picking a record of one or several target templates
+ * (records-editor 4.3): autocompletion on title/slug through the
+ * trigram endpoint. Picking calls onPick and clears the input.
  */
 export function ReferenceInput(props: {
-  readonly targetType: string;
+  readonly targetTypes: string[];
   readonly placeholder: string;
   readonly onPick: (slug: string, title: string) => void;
 }) {
   const [query, setQuery] = useState("");
+  const types = props.targetTypes.join(",");
   const suggestions = useQuery({
-    queryKey: ["reference-search", props.targetType, query],
+    queryKey: ["reference-search", types, query],
     queryFn: () =>
       api<Array<{ slug: string; title: string }>>(
-        `/api/records?q=${encodeURIComponent(query)}&type=${props.targetType}`,
+        `/api/records?q=${encodeURIComponent(query)}&type=${encodeURIComponent(types)}`,
       ),
-    enabled: query.trim().length > 0,
+    enabled: query.trim().length > 0 && types !== "",
   });
   const matches = (suggestions.data ?? []).slice(0, 8);
   return (

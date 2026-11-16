@@ -26,7 +26,7 @@ describe("ReferenceInput", () => {
   it("suggests target-template records and picks one", async () => {
     const onPick = vi.fn();
     renderWithProviders(
-      <ReferenceInput targetType="places" placeholder="Search" onPick={onPick} />,
+      <ReferenceInput targetTypes={["places"]} placeholder="Search" onPick={onPick} />,
     );
     const input = screen.getByPlaceholderText("Search");
     fireEvent.input(input, { target: { value: "city" } });

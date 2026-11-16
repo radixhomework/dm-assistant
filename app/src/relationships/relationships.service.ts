@@ -46,9 +46,9 @@ export class RelationshipsService {
       );
     }
     const target = await this.entityBySlug(targetSlug);
-    if (target.type !== declaration.target) {
+    if (!declaration.targets.includes(target.type)) {
       throw new ConflictException(
-        `The '${field}' field of a ${child.type} expects a ${declaration.target}`,
+        `The '${field}' field of a ${child.type} expects a ${declaration.targets.join(" or a ")}`,
       );
     }
     if (declaration.cardinality === "one") {
