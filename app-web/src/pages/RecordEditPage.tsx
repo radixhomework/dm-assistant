@@ -13,6 +13,7 @@ import { OrganizationSheet } from "../components/organization-sheet.js";
 import { MonsterSheet } from "../components/monster-sheet.js";
 import { NationSheet } from "../components/nation-sheet.js";
 import { NaturalLandmarkSheet } from "../components/natural-landmark-sheet.js";
+import { WorkSheet } from "../components/work-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -291,6 +292,8 @@ function RecordPage({
             <NationSheet record={data} />
           ) : data.type === "natural-landmarks" ? (
             <NaturalLandmarkSheet record={data} />
+          ) : data.type === "works" ? (
+            <WorkSheet record={data} />
           ) : undefined
         }
       />
