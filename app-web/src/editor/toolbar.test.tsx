@@ -99,6 +99,26 @@ describe("ProseEditor toolbar", () => {
     prompt.mockRestore();
   });
 
+  it("inserts a highlight block from its icon and keeps it out of typed blocks", () => {
+    const onChange = vi.fn();
+    renderWithProviders(<ProseEditor markdown="" onChange={onChange} />);
+    const highlightToolbar = screen.getByRole("toolbar", { name: "Highlight blocks" });
+    const attention = [...highlightToolbar.querySelectorAll("button")].find(
+      (b) => b.getAttribute("aria-label") === "Attention point",
+    );
+    if (!attention) throw new Error("attention button missing");
+    fireEvent.click(attention);
+    expect(document.querySelector('[data-typed-block="attention"]')).not.toBeNull();
+    // Clicking again, with the caret inside the block, lands the new
+    // block AFTER the outermost container instead of nesting.
+    const paragraph = document.querySelector('[data-typed-block="attention"] p');
+    if (paragraph) paragraph.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    fireEvent.click(attention);
+    expect(document.querySelectorAll('[data-typed-block="attention"]')).toHaveLength(2);
+    const markdown = onChange.mock.calls.at(-1)![0] as string;
+    expect(markdown).toContain(":::attention");
+  });
+
   it("keeps toolbars out of the Tab order", () => {
     renderWithProviders(<ProseEditor markdown="" onChange={vi.fn()} />);
     for (const toolbar of document.querySelectorAll('[role="toolbar"]')) {

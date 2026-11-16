@@ -132,6 +132,39 @@ describe("RecordEditPage", () => {
     expect(screen.getByRole("button", { name: "New record" })).toBeDefined();
   });
 
+  it("saves through the header Save icon and returns to reading on Cancel", async () => {
+    const fetchMock = vi.fn(async (input: string) => {
+      if (input.endsWith("/backlinks")) {
+        return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+      }
+      return { ok: true, json: async () => recordOf({}) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    // Enter edit, then submit through the header Save icon (outside the
+    // form element, wired through the form id).
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
+    (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).click();
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      expect(calls.some(([path, i]) => path === "/api/records/city-of-glass" && i?.method === "PATCH")).toBe(true);
+    });
+    // Back in reading; the header shows the reading actions again.
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
+    // Cancel returns to reading without a PATCH.
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
+    (screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
+    const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+    const patches = calls.filter(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "PATCH");
+    expect(patches).toHaveLength(1);
+  });
+
   it("opens straight into edit mode from a creation redirect", async () => {
     // validateSearch normalizes edit=1 to the boolean true; the raw string
     // must keep working too.
@@ -145,6 +178,31 @@ describe("RecordEditPage", () => {
     searchState.edit = "1";
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
+  });
+
+  it("lists the campaign children through the tracking view", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input.endsWith("/backlinks")) {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            ...recordOf({}),
+            type: "campaign",
+            tracking: { children: [{ slug: "chap1", title: "Chap1" }] },
+          }),
+        };
+      }),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() => expect(screen.getByText("Chapters")).toBeDefined());
+    expect(screen.getByText("Chap1")).toBeDefined();
   });
 
   it("translates enum values in the reading view", async () => {
