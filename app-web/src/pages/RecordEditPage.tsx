@@ -14,6 +14,7 @@ import { MonsterSheet } from "../components/monster-sheet.js";
 import { NationSheet } from "../components/nation-sheet.js";
 import { NaturalLandmarkSheet } from "../components/natural-landmark-sheet.js";
 import { WorkSheet } from "../components/work-sheet.js";
+import { EventSheet } from "../components/event-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -294,6 +295,8 @@ function RecordPage({
             <NaturalLandmarkSheet record={data} />
           ) : data.type === "works" ? (
             <WorkSheet record={data} />
+          ) : data.type === "events" ? (
+            <EventSheet record={data} />
           ) : undefined
         }
       />

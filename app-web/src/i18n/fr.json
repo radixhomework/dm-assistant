@@ -257,6 +257,11 @@
     "order": "Ordre",
     "origins": "Origines"
   },
+  "events": {
+    "title": "Événements",
+    "period": "Période",
+    "everyInterval": "tous les {{interval}} {{unit}}"
+  },
   "enums": {
     "place_type": {
       "intangible_place": "Lieu immatériel",
