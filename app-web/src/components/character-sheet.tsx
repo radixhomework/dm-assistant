@@ -40,7 +40,9 @@ function ReferenceGroup(props: {
   );
 }
 
-function StatisticsBlock(props: { readonly statistics: Statistics }) {
+/** The SRD-shaped statistics block — shared by the character and
+ * monster sheets. */
+export function StatisticsBlock(props: { readonly statistics: Statistics }) {
   const { t } = useTranslation();
   const stats = props.statistics;
   const prof = stats.proficiencyBonus ?? 0;

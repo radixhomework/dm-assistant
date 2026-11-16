@@ -10,6 +10,7 @@ import { RecordSheet } from "../components/record-sheet.js";
 import { CharacterSheet } from "../components/character-sheet.js";
 import { PlaceSheet } from "../components/place-sheet.js";
 import { OrganizationSheet } from "../components/organization-sheet.js";
+import { MonsterSheet } from "../components/monster-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -282,6 +283,8 @@ function RecordPage({
             <PlaceSheet record={data} />
           ) : data.type === "organizations" ? (
             <OrganizationSheet record={data} />
+          ) : data.type === "monsters" ? (
+            <MonsterSheet record={data} />
           ) : undefined
         }
       />
