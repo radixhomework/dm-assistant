@@ -15,6 +15,7 @@ import { NationSheet } from "../components/nation-sheet.js";
 import { NaturalLandmarkSheet } from "../components/natural-landmark-sheet.js";
 import { WorkSheet } from "../components/work-sheet.js";
 import { EventSheet } from "../components/event-sheet.js";
+import { EquipmentSheet } from "../components/equipment-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -297,6 +298,8 @@ function RecordPage({
             <WorkSheet record={data} />
           ) : data.type === "events" ? (
             <EventSheet record={data} />
+          ) : data.type === "equipment-and-items" ? (
+            <EquipmentSheet record={data} />
           ) : undefined
         }
       />
