@@ -80,4 +80,60 @@ describe("CalendarAdminEditor", () => {
       expect(payload.currentYear).toBe(842);
     });
   });
+
+  it("adds and removes month rows and edits moon and current year", async () => {
+    const captured: Array<[string, RequestInit]> = [];
+    stubFetch(captured);
+    renderWithProviders(<CalendarAdminEditor />);
+    await vi.waitFor(() =>
+      expect(screen.getAllByPlaceholderText("Name").length).toBe(2),
+    );
+    // Add a third month, then remove the last one again.
+    fireEvent.click(screen.getByText("Add a month"));
+    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(3);
+    const removeButtons = [...screen.getAllByLabelText("Remove")];
+    fireEvent.click(removeButtons[removeButtons.length - 1]);
+    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
+    // Moon and current-year inputs flow into the saved payload.
+    fireEvent.input(screen.getByLabelText("Cycle (days)"), { target: { value: "31" } });
+    fireEvent.input(screen.getByLabelText("Current year"), { target: { value: "900" } });
+    fireEvent.click(screen.getByText("Save"));
+    await vi.waitFor(() => {
+      const patch = captured.find(([_path, init]) => init?.method === "PATCH");
+      expect(patch).toBeDefined();
+      const payload = JSON.parse(String(patch![1].body)) as { moon: { cycleDays: number }; currentYear: number };
+      expect(payload.moon.cycleDays).toBe(31);
+      expect(payload.currentYear).toBe(900);
+      expect(screen.getByText("Calendar saved.")).toBeDefined();
+    });
+  });
+
+  it("starts from a blank draft when no definition exists yet", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/settings/calendar") {
+          return { ok: true, json: async () => null };
+        }
+        return { ok: true, status: 204, json: async () => ({}) };
+      }),
+    );
+    renderWithProviders(<CalendarAdminEditor />);
+    await vi.waitFor(() =>
+      expect(screen.getAllByPlaceholderText("Name").length).toBeGreaterThan(0),
+    );
+    expect((screen.getByLabelText("Days per week") as HTMLInputElement).value).toBe("7");
+    // A failed save surfaces the error instead of the saved banner.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (init?.method === "PATCH") {
+          return { ok: false, status: 500, json: async () => ({}) };
+        }
+        return { ok: true, json: async () => null };
+      }),
+    );
+    fireEvent.click(screen.getByText("Save"));
+    await vi.waitFor(() => expect(document.body.textContent).toContain("Error"));
+  });
 });
