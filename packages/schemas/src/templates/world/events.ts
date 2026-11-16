@@ -22,7 +22,7 @@ export const events = template(
   },
   {
     origin: refOne("places"),
-    geography: refMany("places"),
+    geography: refMany(["places", "nations", "natural-landmarks"]),
     characters: refMany("characters-and-entities"),
     events: refMany("events"),
   },

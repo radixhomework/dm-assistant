@@ -38,7 +38,7 @@ export const nations = template(
   },
   {
     capital: refOne("places"),
-    geography: refMany("places"),
+    geography: refMany(["places", "nations", "natural-landmarks"]),
     beliefs: refMany("beliefs-myths-and-customs"),
     works: refMany("works"),
     knowledge: refMany("knowledge-and-technologies"),
