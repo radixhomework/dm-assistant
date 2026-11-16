@@ -263,7 +263,8 @@
     "order": "Ordre",
     "origins": "Origines",
     "characteristics": "Caractéristiques",
-    "commerce": "Commerce"
+    "commerce": "Commerce",
+    "places": "Lieux"
   },
   "events": {
     "title": "Événements",

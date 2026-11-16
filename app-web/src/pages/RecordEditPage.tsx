@@ -17,6 +17,8 @@ import { WorkSheet } from "../components/work-sheet.js";
 import { EventSheet } from "../components/event-sheet.js";
 import { EquipmentSheet } from "../components/equipment-sheet.js";
 import { BeliefSheet } from "../components/belief-sheet.js";
+import { KnowledgeSheet } from "../components/knowledge-sheet.js";
+import { GameRuleSheet } from "../components/game-rule-sheet.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -303,6 +305,10 @@ function RecordPage({
             <EquipmentSheet record={data} />
           ) : data.type === "beliefs-myths-and-customs" ? (
             <BeliefSheet record={data} />
+          ) : data.type === "knowledge-and-technologies" ? (
+            <KnowledgeSheet record={data} />
+          ) : data.type === "game-rules" ? (
+            <GameRuleSheet record={data} />
           ) : undefined
         }
       />

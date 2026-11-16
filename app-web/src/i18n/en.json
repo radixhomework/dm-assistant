@@ -263,7 +263,8 @@
     "order": "Order",
     "origins": "Origins",
     "characteristics": "Characteristics",
-    "commerce": "Trade"
+    "commerce": "Trade",
+    "places": "Places"
   },
   "events": {
     "title": "Events",
