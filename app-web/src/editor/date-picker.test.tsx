@@ -80,10 +80,14 @@ describe("DatePickerPanel", () => {
   });
 });
 
-function renderPickerWith(definition: typeof definition | null, onInsert: (d: unknown) => void, onClose?: () => void) {
+function renderPickerWith(
+  pickDefinition: typeof definition | null,
+  onInsert: (d: unknown) => void,
+  onClose?: () => void,
+) {
   return renderWithProviders(
     <DatePickerPanel
-      definition={definition}
+      definition={pickDefinition}
       anchor={{ x: 10, y: 10 }}
       onInsert={onInsert}
       onClose={onClose ?? (() => undefined)}

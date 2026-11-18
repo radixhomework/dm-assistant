@@ -150,7 +150,7 @@ describe("RecordEditPage", () => {
     await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
     (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).click();
     await vi.waitFor(() => {
-      const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+      const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
       expect(calls.some(([path, i]) => path === "/api/records/city-of-glass" && i?.method === "PATCH")).toBe(true);
     });
     // Back in reading; the header shows the reading actions again.
@@ -160,7 +160,7 @@ describe("RecordEditPage", () => {
     await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
     (screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
-    const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
     const patches = calls.filter(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "PATCH");
     expect(patches).toHaveLength(1);
   });

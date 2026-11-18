@@ -20,13 +20,13 @@ function stubFetch(captured: Array<[string, RequestInit]>) {
     "fetch",
     vi.fn(async (input: string, init?: RequestInit) => {
       if (input === "/api/settings/calendar") {
-        return { ok: true, json: async () => definition };
+        return { ok: true, json: async (): Promise<CalendarSettings> => definition };
       }
       if (input === "/api/admin/settings/calendar" && init?.method === "PATCH") {
         captured.push([input, init]);
-        return { ok: true, json: async () => definition };
+        return { ok: true, json: async (): Promise<CalendarSettings> => definition };
       }
-      return { ok: true, status: 204, json: async () => ({}) };
+      return { ok: true, status: 204, json: async (): Promise<Record<string, never>> => ({}) };
     }),
   );
 }
@@ -113,9 +113,9 @@ describe("CalendarAdminEditor", () => {
       "fetch",
       vi.fn(async (input: string) => {
         if (input === "/api/settings/calendar") {
-          return { ok: true, json: async () => null };
+          return { ok: true, json: async (): Promise<null> => null };
         }
-        return { ok: true, status: 204, json: async () => ({}) };
+        return { ok: true, status: 204, json: async (): Promise<Record<string, never>> => ({}) };
       }),
     );
     renderWithProviders(<CalendarAdminEditor />);
@@ -128,9 +128,9 @@ describe("CalendarAdminEditor", () => {
       "fetch",
       vi.fn(async (input: string, init?: RequestInit) => {
         if (init?.method === "PATCH") {
-          return { ok: false, status: 500, json: async () => ({}) };
+          return { ok: false, status: 500, json: async (): Promise<Record<string, never>> => ({}) };
         }
-        return { ok: true, json: async () => null };
+        return { ok: true, json: async (): Promise<null> => null };
       }),
     );
     fireEvent.click(screen.getByText("Save"));
