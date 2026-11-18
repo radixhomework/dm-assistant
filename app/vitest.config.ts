@@ -5,6 +5,11 @@ export default defineConfig({
     // DB-backed tests share one Postgres: file workers must not race on
     // TRUNCATE-based isolation.
     fileParallelism: false,
+    // The TRUNCATE-based isolation and migration hooks occasionally
+    // exceed vitest's 5s defaults on cold CI runners — the whole DB
+    // suite then cascades into timeouts. Give them headroom instead.
+    testTimeout: 20000,
+    hookTimeout: 30000,
     exclude: ["**/node_modules/**", "dist/**"],
     // postgres v4 is ESM-only; inline it so the CJS-compiled app can load
     // it through the vitest transform pipeline (runtime uses require(esm)).
