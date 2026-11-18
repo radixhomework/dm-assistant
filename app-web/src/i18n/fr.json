@@ -193,7 +193,8 @@
       "currentYear": "Année en cours"
     },
     "password": "Mot de passe",
-    "emailOptional": "(facultatif)"
+    "emailOptional": "(facultatif)",
+    "worldName": "Nom du monde"
   },
   "health": {
     "title": "État de l'API",

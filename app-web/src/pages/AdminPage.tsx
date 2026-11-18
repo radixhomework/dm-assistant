@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { useState } from "react";
@@ -12,6 +12,7 @@ import type { SafeUserLike } from "../types.js";
 export function AdminPage() {
   const { t } = useTranslation();
   const { ready, user } = useRequireAuth();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -117,6 +118,7 @@ export function AdminPage() {
       await api("/api/admin/settings", {
         method: "PATCH",
         body: {
+          worldName: formString(form, "worldName"),
           distanceUnit: formString(form, "distanceUnit"),
           weightUnit: formString(form, "weightUnit"),
           volumeUnit: formString(form, "volumeUnit"),
@@ -124,6 +126,9 @@ export function AdminPage() {
       });
       setSaved(true);
       await settings.refetch();
+      // The header brands itself with the world name from the bootstrap
+      // cache — refresh it so the rename is immediate.
+      await queryClient.invalidateQueries({ queryKey: ["bootstrap"] });
     } catch (saveError) {
       setError(String(saveError));
     }
@@ -249,6 +254,16 @@ export function AdminPage() {
         ) : (
         <form onSubmit={onSaveSettings} className="mt-4 flex max-w-md flex-col gap-3">
 
+          <Field label={t("admin.worldName")}>
+            <input
+              name="worldName"
+              required
+              minLength={1}
+              maxLength={80}
+              defaultValue={settings.data?.worldName ?? ""}
+              className={inputClass}
+            />
+          </Field>
           <Field label={t("admin.distanceUnit")}>
             <select name="distanceUnit" defaultValue={settings.data?.distanceUnit ?? "m"} className={inputClass}>
               <option value="m">m</option>

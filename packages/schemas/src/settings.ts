@@ -7,6 +7,7 @@ export const volumeUnits = ["L", "gal"] as const;
 
 export const updateSettingsSchema = z
   .object({
+    worldName: z.string().min(1).max(80),
       distanceUnit: z.enum(distanceUnits),
     weightUnit: z.enum(weightUnits),
     volumeUnit: z.enum(volumeUnits),
