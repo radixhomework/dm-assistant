@@ -30,6 +30,39 @@ describe("ProseEditor toolbar", () => {
     const link = [...toolbar.querySelectorAll("button")].find((b) => b.title === "Link")!;
     link.click();
     expect(onChange.mock.calls.at(-1)![0] as string).toContain("https://example.com");
+    // An empty prompt removes the link instead of setting an empty href.
+    const emptyPrompt = vi.spyOn(window, "prompt").mockReturnValue("");
+    link.click();
+    const markdown = onChange.mock.calls.at(-1)![0] as string;
+    expect(markdown).not.toContain("https://example.com");
+    emptyPrompt.mockRestore();
+  });
+
+  it("inserts an image through the prompt", () => {
+    const onChange = vi.fn();
+    renderWithProviders(<ProseEditor markdown="" onChange={onChange} />);
+    vi.spyOn(window, "prompt").mockReturnValue("/assets/map.png");
+    const toolbar = screen.getByRole("toolbar", { name: "Formatting toolbar" });
+    const image = [...toolbar.querySelectorAll("button")].find((b) => b.title === "Image")!;
+    image.click();
+    const markdown = onChange.mock.calls.at(-1)![0] as string;
+    expect(markdown).toContain("![](/assets/map.png)");
+  });
+
+  it("does not insert a dice node when the prompt is cancelled", () => {
+    const onChange = vi.fn();
+    const prompt = vi.spyOn(window, "prompt").mockReturnValue(null);
+    renderWithProviders(<ProseEditor markdown="" onChange={onChange} />);
+    const highlightToolbar = screen.getByRole("toolbar", { name: "Highlight blocks" });
+    const dice = [...highlightToolbar.querySelectorAll("button")].find(
+      (b) => (b.getAttribute("aria-label") ?? "").startsWith("Dice roll"),
+    )!;
+    dice.click();
+    // No node, and the markdown stayed empty (ProseEditor emits an
+    // initial "" through onChange on mount — only the node matters).
+    expect(document.querySelector(".dice-node")).toBeNull();
+    expect((onChange.mock.calls.at(-1)?.[0] as string) ?? "").toBe("");
+    prompt.mockRestore();
   });
 
   it("inserts a date node through the calendar picker", async () => {
