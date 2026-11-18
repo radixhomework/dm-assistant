@@ -142,10 +142,10 @@ describe("ProseEditor toolbar", () => {
     if (!attention) throw new Error("attention button missing");
     fireEvent.click(attention);
     expect(document.querySelector('[data-typed-block="attention"]')).not.toBeNull();
-    // Clicking again, with the caret inside the block, lands the new
-    // block AFTER the outermost container instead of nesting.
-    const paragraph = document.querySelector('[data-typed-block="attention"] p');
-    if (paragraph) paragraph.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    // Clicking again — the caret still sits inside the inserted block —
+    // lands the new block AFTER the outermost container instead of
+    // nesting inside it. (No synthetic mousedown here: ProseMirror's
+    // positioning code needs elementFromPoint, missing in jsdom.)
     fireEvent.click(attention);
     expect(document.querySelectorAll('[data-typed-block="attention"]')).toHaveLength(2);
     const markdown = onChange.mock.calls.at(-1)![0] as string;
