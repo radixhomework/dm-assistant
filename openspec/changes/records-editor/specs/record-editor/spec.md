@@ -43,6 +43,10 @@ Typing `@` at a word start (preceded by space, punctuation or line start) SHALL 
 - **WHEN** a prose field contains an email address
 - **THEN** no mention is parsed from it
 
+#### Scenario: A trigger inside a word stays text
+- **WHEN** a mention trigger directly follows a word character (a digit before `@choice`, a letter inside an address)
+- **THEN** the whole sequence stays plain text at load, at edit and across the round-trip
+
 ### Requirement: Typed blocks
 The editor SHALL offer the `:::attention` fenced-container block (generalizing the spike probe), visually distinct at render time, for the Scene running-notes pattern. The block SHALL round-trip byte-for-byte through the round-trip harness.
 
