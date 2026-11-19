@@ -240,13 +240,17 @@ describe("RecordFormFields — hp formula lifecycle", () => {
     // An emptied formula drops the HP block entirely — and with no
     // other statistics member, the whole block key disappears.
     fireEvent.input(inputOfLabel("HP formula"), { target: { value: "" } });
-    expect(lastFields(onChange).statistics).toBeUndefined();
+    expect(
+      (lastFields(onChange).statistics as Record<string, unknown> | undefined),
+    ).toBeUndefined();
     // An unparseable formula keeps its text without an invented average.
     fireEvent.input(inputOfLabel("HP formula"), { target: { value: "2d6x" } });
     expect(lastFields(onChange).statistics).toMatchObject({
       hp: { formula: "2d6x" },
     });
-    expect(lastFields(onChange).statistics.hp.average).toBeUndefined();
+    expect(
+      (lastFields(onChange).statistics as { hp: { average?: number } }).hp.average,
+    ).toBeUndefined();
   });
 });
 
