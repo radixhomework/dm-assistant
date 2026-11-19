@@ -34,13 +34,14 @@ jobs:
       - run: npm run build
       - run: npm run db:migrate -w app
       - run: npm run lint
-      # Surface tsc errors as step annotations: the job log is not
-      # readable without a token.
+      # Surface tsc errors in the step summary: the job log itself is
+      # not readable without a token, the summary is.
       - name: Typecheck
         run: |
           npm run typecheck 2>&1 | tee /tmp/tc.out
           EXIT=${PIPESTATUS[0]}
           grep -E "error TS" /tmp/tc.out | sed 's/^/::error ::/' || true
+          tail -40 /tmp/tc.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
           exit $EXIT
       - run: npm run test
       - name: SonarQube scan
