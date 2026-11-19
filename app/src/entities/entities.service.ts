@@ -15,6 +15,9 @@ import {
 } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
+
+/** The transaction handle a drizzle transaction callback receives. */
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 import { entities, mentions, relationships } from "../database/schema.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
@@ -46,12 +49,16 @@ export class EntitiesService {
   async create(input: CreateEntityInput, createdBy?: string): Promise<EntityRow> {
     const fields = validateFields(input.type, input.fields ?? {});
     try {
-      const [row] = await this.db
-        .insert(entities)
-        .values({ ...input, fields, createdBy: createdBy ?? null })
-        .returning();
-      await this.replaceMentions(row.id, fields);
-      return row;
+      // The record and its mention set commit together: a failed mention
+      // insert rolls the record back instead of stranding it.
+      return await this.db.transaction(async (tx) => {
+        const [row] = await tx
+          .insert(entities)
+          .values({ ...input, fields, createdBy: createdBy ?? null })
+          .returning();
+        await this.replaceMentions(tx, row.id, fields);
+        return row;
+      });
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new ConflictException(`Slug '${input.slug}' already exists`);
@@ -96,20 +103,24 @@ export class EntitiesService {
   async update(slug: string, input: UpdateEntityInput): Promise<EntityRow> {
     const existing = await this.getBySlug(slug);
     const fields = input.fields === undefined ? undefined : validateFields(existing.type, input.fields);
-    const [row] = await this.db
-      .update(entities)
-      .set({
-        ...(input.title !== undefined ? { title: input.title } : {}),
-        ...(input.tags !== undefined ? { tags: input.tags } : {}),
-        ...(fields !== undefined ? { fields } : {}),
-        updatedAt: new Date(),
-      })
-      .where(eq(entities.id, existing.id))
-      .returning();
-    // Mentions rebuild from the fields as saved (the payload always
-    // carries the full fields object when provided).
-    await this.replaceMentions(row.id, row.fields as Record<string, unknown>);
-    return row;
+    // The field write and the mention rebuild commit together — the
+    // previous mention set restores itself if the rebuild fails.
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(entities)
+        .set({
+          ...(input.title !== undefined ? { title: input.title } : {}),
+          ...(input.tags !== undefined ? { tags: input.tags } : {}),
+          ...(fields !== undefined ? { fields } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(entities.id, existing.id))
+        .returning();
+      // Mentions rebuild from the fields as saved (the payload always
+      // carries the full fields object when provided).
+      await this.replaceMentions(tx, row.id, row.fields as Record<string, unknown>);
+      return row;
+    });
   }
 
   /**
@@ -117,6 +128,7 @@ export class EntitiesService {
    * its prose field values (descriptions, running notes…).
    */
   private async replaceMentions(
+    tx: Tx,
     entityId: string,
     fields: Record<string, unknown>,
   ): Promise<void> {
@@ -125,9 +137,9 @@ export class EntitiesService {
       .map(([, value]) => value as string)
       .join("\n");
     const slugs = parseMentionSlugs(proseText);
-    await this.db.delete(mentions).where(eq(mentions.entityId, entityId));
+    await tx.delete(mentions).where(eq(mentions.entityId, entityId));
     if (slugs.length > 0) {
-      await this.db.insert(mentions).values(slugs.map((slug) => ({ entityId, targetSlug: slug })));
+      await tx.insert(mentions).values(slugs.map((slug) => ({ entityId, targetSlug: slug })));
     }
   }
 
