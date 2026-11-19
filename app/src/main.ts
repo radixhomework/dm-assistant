@@ -62,7 +62,9 @@ async function bootstrap(): Promise<void> {
       next();
       return;
     }
-    void res.sendFile(path.join(dist, "index.html"));
+    res.sendFile(path.join(dist, "index.html"), (sendError) => {
+      if (sendError) next(sendError);
+    });
   });
 
   await app.listen(env.PORT);

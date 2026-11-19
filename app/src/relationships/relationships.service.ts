@@ -165,14 +165,18 @@ export class RelationshipsService {
     // snapshot replacement would resurrect a stale prose draft saved by
     // a concurrent request between the read and the write).
     await this.db.transaction(async (tx) => {
-      for (const [position, sibling] of reordered.entries()) {
-        await tx
-          .update(entities)
-          .set({
-            fields: sql`jsonb_set(coalesce(${entities.fields}, '{}'::jsonb), '{order}', to_jsonb(${position}::int))`,
-          })
-          .where(eq(entities.slug, sibling.slug));
-      }
+      // The row updates touch distinct rows: one statement set inside
+      // the transaction, run concurrently.
+      await Promise.all(
+        reordered.map((sibling, position) =>
+          tx
+            .update(entities)
+            .set({
+              fields: sql`jsonb_set(coalesce(${entities.fields}, '{}'::jsonb), '{order}', to_jsonb(${position}::int))`,
+            })
+            .where(eq(entities.slug, sibling.slug)),
+        ),
+      );
     });
   }
 

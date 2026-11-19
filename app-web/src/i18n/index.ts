@@ -18,7 +18,7 @@ void i18n.use(initReactI18next).init({
 });
 
 // Keep the document language in sync with the active UI locale (a11y).
-void i18n.on("languageChanged", (lng) => {
+i18n.on("languageChanged", (lng) => {
   document.documentElement.lang = lng;
 });
 document.documentElement.lang = i18n.language;
