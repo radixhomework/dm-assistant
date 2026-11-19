@@ -93,35 +93,35 @@ describe("CharacterSheet", () => {
     assert();
   });
 
-  it("computes mastered skill modifiers (ability + proficiency)", () => {
-    renderWithProviders(<CharacterSheet record={character} />);
-    // Wisdom 12 → +1, proficiency +3 → Perception +4.
-    expect(screen.getByText("Perception +4")).toBeDefined();
-  });
-
-  it("marks mastered saves and skills as unknown when the proficiency bonus is absent", () => {
-    // Gap marking (charter rule 2): mastery without a known bonus never
-    // renders as +0.
-    const noBonus: Entity = {
-      ...character,
-      fields: {
-        gender: "female",
-        statistics: {
-          strength: 18,
-          dexterity: 8,
-          wisdom: 12,
-          charisma: 6,
-          savesMastery: { strength: true },
-          skills: [{ name: "Perception", ability: "wisdom" }],
-        } as never,
-      },
-    };
-    renderWithProviders(<CharacterSheet record={noBonus} />);
-    // The mastered save and the mastered skill read as unknown ("?");
-    // the raw ability modifier (+4 for Strength 18) still shows.
-    // The save cell renders "?"; the skill reads "Perception ?".
-    expect(screen.getAllByText("?").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Perception ?")).toBeDefined();
+  it.each([
+    {
+      name: "computes mastered skill modifiers (ability + proficiency)",
+      record: character,
+      expected: "Perception +4",
+    },
+    {
+      name: "marks mastered saves and skills as unknown when the proficiency bonus is absent",
+      // Gap marking (charter rule 2): mastery without a known bonus
+      // never renders as +0.
+      record: {
+        ...character,
+        fields: {
+          gender: "female",
+          statistics: {
+            strength: 18,
+            dexterity: 8,
+            wisdom: 12,
+            charisma: 6,
+            savesMastery: { strength: true },
+            skills: [{ name: "Perception", ability: "wisdom" }],
+          } as never,
+        },
+      } as Entity,
+      expected: "Perception ?",
+    },
+  ])("$name", ({ record, expected }) => {
+    renderWithProviders(<CharacterSheet record={record} />);
+    expect(screen.getByText(expected)).toBeDefined();
   });
 
   it("renders the typed references as links", () => {

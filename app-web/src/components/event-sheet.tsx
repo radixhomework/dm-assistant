@@ -9,6 +9,18 @@ import {
 import type { Entity } from "../types.js";
 import type { CalendarDate, Recurrence } from "@dm/schemas";
 
+/** The date chip text: a period renders both bounds, a punctual event
+ * renders the start only, no start means no chip. */
+function dateChipOf(
+  start: CalendarDate | undefined,
+  end: CalendarDate | undefined,
+  dateText: (date: CalendarDate) => string,
+): string | undefined {
+  if (start === undefined) return undefined;
+  if (end === undefined) return dateText(start);
+  return `${dateText(start)} → ${dateText(end)}`;
+}
+
 /**
  * The bespoke sheet for "Events" (world → Chronicle): the illustration
  * as a banner, the calendar dates and recurrence as header chips, the
@@ -46,12 +58,7 @@ export function EventSheet(props: { readonly record: Entity }) {
     return prefix + t("calendar.formatYear", params);
   }
 
-  const dateChip: string | undefined =
-    fields.start === undefined
-      ? undefined
-      : fields.end !== undefined
-        ? `${dateText(fields.start)} → ${dateText(fields.end)}`
-        : dateText(fields.start);
+  const dateChip = dateChipOf(fields.start, fields.end, dateText);
 
   const unitLabels: Record<string, string> = {
     week: t("recurrence.weeks"),

@@ -86,7 +86,7 @@ describe("CalendarAdminEditor", () => {
     stubFetch(captured);
     renderWithProviders(<CalendarAdminEditor />);
     await vi.waitFor(() =>
-      expect(screen.getAllByPlaceholderText("Name").length).toBe(2),
+      expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2),
     );
     // Add a third month, then remove the last one again.
     fireEvent.click(screen.getByText("Add a month"));
