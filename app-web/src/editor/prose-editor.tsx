@@ -153,6 +153,17 @@ export function ProseEditor({
     editor?.setEditable(!readonly);
   }, [editor, readonly]);
 
+  // Keep the editor in sync with externally supplied markdown: a record
+  // refetch can change the prose while this editor stays mounted, and
+  // TipTap otherwise keeps its stale document (the next edit would emit
+  // it back). Skipped while the field is focused — in-progress typing
+  // must never be clobbered.
+  useEffect(() => {
+    if (!editor || editor.isFocused) return;
+    if (editor.getMarkdown() === markdown) return;
+    editor.commands.setContent(markdown, { contentType: "markdown" });
+  }, [editor, markdown]);
+
   useEffect(() => {
     if (!editor) return;
     const rerender = () => setRenderTick((value) => value + 1);

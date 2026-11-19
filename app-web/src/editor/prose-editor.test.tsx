@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../i18n/index.js";
 import { ProseEditor } from "./prose-editor.js";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -38,6 +42,28 @@ describe("ProseEditor", () => {
     await vi.waitFor(() => expect(onChange).toHaveBeenCalled());
     const markdown = onChange.mock.calls.at(-1)![0] as string;
     expect(markdown).toContain("hello world");
+  });
+
+  it("syncs the document when the markdown prop changes while mounted", async () => {
+    const onChange = vi.fn();
+    const { rerender } = renderWithProviders(
+      <ProseEditor markdown="First prose." readonly onChange={onChange} />,
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelector(".ProseMirror")).not.toBeNull(),
+    );
+    expect(document.querySelector(".ProseMirror")!.textContent).toBe("First prose.");
+    // A refetch supplies new prose: the mounted editor follows it.
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <I18nextProvider i18n={i18n}>
+          <ProseEditor markdown="Second prose." readonly onChange={onChange} />
+        </I18nextProvider>
+      </QueryClientProvider>,
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelector(".ProseMirror")!.textContent).toBe("Second prose."),
+    );
   });
 
   it("navigates to the referenced record when a mention is clicked in readonly mode", () => {
