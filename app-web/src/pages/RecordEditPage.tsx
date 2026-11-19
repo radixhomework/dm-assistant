@@ -96,12 +96,15 @@ function RecordPage({
 
   // Field values flow through onChange instead of FormData once the
   // record is loaded (one state source of truth per control). Hooks stay
-  // above the early returns.
+  // above the early returns. The draft initializes once per loaded
+  // record and is then re-seeded only when an edit session starts or is
+  // cancelled — a reference attach/detach refetch must never overwrite
+  // unsaved field edits.
   useEffect(() => {
-    if (record.data) {
+    if (record.data && fields === null) {
       setFields(record.data.fields);
     }
-  }, [record.data]);
+  }, [record.data, fields]);
 
   // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
   useEffect(() => {
@@ -130,7 +133,17 @@ function RecordPage({
   function enterEdit() {
     setSaved(false);
     setError(null);
+    // A fresh session seeds the draft from the saved record: a previous
+    // cancelled draft never leaks into the next edit.
+    if (record.data) setFields(record.data.fields);
     setMode("edit");
+  }
+
+  function cancelEdit() {
+    // Discard the draft: the next edit seeds again from the saved
+    // record.
+    if (record.data) setFields(record.data.fields);
+    setMode("read");
   }
 
   async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
@@ -205,7 +218,7 @@ function RecordPage({
               </button>
               <button
                 type="button"
-                onClick={() => setMode("read")}
+                onClick={cancelEdit}
                 className="rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface"
               >
                 {t("common.cancel")}

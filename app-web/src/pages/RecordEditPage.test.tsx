@@ -205,6 +205,33 @@ describe("RecordEditPage", () => {
     expect(screen.getByText("Chap1")).toBeDefined();
   });
 
+  it("discards the field draft on cancel instead of leaking it back", async () => {
+    stubFetch(recordOf({ population: "1M" }));
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
+    const populationInput = document.querySelector(
+      'input[name="population"]',
+    ) as HTMLInputElement;
+    expect(populationInput.value).toBe("1M");
+    fireEvent.input(populationInput, { target: { value: "2M" } });
+    expect(
+      (document.querySelector('input[name="population"]') as HTMLInputElement).value,
+    ).toBe("2M");
+    // Cancel discards the draft — re-editing seeds from the saved
+    // record, not from the abandoned "2M".
+    (screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
+    expect(
+      (document.querySelector('input[name="population"]') as HTMLInputElement).value,
+    ).toBe("1M");
+  });
+
   it("translates enum values in the reading view", async () => {
     stubFetch(recordOf({ place_type: "intangible_place", population: "1M" }));
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
