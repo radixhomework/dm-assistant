@@ -22,6 +22,10 @@ A date SHALL be an optional era, a signed year (negatives allowed, no year 0), a
 - **WHEN** a date carries only a year
 - **THEN** it is valid; when it carries a month without a year it is rejected
 
+#### Scenario: Partial dates display at their own granularity
+- **WHEN** a stored date carries only a year, or a year and a month
+- **THEN** reading sheets render it with the matching format — the month parameter stays absent for a year-only date (era prefix included) — and never invent the missing parts
+
 #### Scenario: No year zero
 - **WHEN** a date is entered with year 0
 - **THEN** it is rejected — the calendar counts from 1 (and −1) with no intervening zero
