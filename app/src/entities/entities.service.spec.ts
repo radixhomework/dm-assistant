@@ -155,8 +155,20 @@ describe("EntitiesService", () => {
   it("moves a child up and down within its sibling play order", async () => {
     await service.create(campaign);
     await service.create(chapter);
-    await service.create({ slug: "chapter-b", type: "chapter", perimeter: "campaign", title: "B" });
-    await service.create({ slug: "chapter-c", type: "chapter", perimeter: "campaign", title: "C" });
+    await service.create({
+      slug: "chapter-b",
+      type: "chapter",
+      perimeter: "campaign",
+      title: "B",
+      fields: { dm_summary: "Prose of B." },
+    });
+    await service.create({
+      slug: "chapter-c",
+      type: "chapter",
+      perimeter: "campaign",
+      title: "C",
+      fields: { dm_summary: "Prose of C." },
+    });
     for (const slug of ["chapter-one", "chapter-b", "chapter-c"]) {
       await service.relationships.attachReference(slug, "campaign", "north-realm");
     }
@@ -167,7 +179,11 @@ describe("EntitiesService", () => {
     await service.relationships.moveChild("chapter-c", "up");
     const afterUp = await service.relationships.listChildren("north-realm", "campaign");
     expect(afterUp.map((c) => c.slug)).toEqual(["chapter-c", "chapter-b", "chapter-one"]);
-
+    // The move writes only the order key: the sibling prose survives the
+    // renumbering.
+    const movedSibling = await service.getBySlug("chapter-b");
+    expect(movedSibling.fields.dm_summary).toBe("Prose of B.");
+    expect(movedSibling.fields.order).toBe(1);
     await service.relationships.moveChild("chapter-c", "down");
     const afterDown = await service.relationships.listChildren("north-realm", "campaign");
     expect(afterDown.map((c) => c.slug)).toEqual(["chapter-b", "chapter-c", "chapter-one"]);

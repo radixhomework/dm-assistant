@@ -43,6 +43,34 @@ describe("RelationshipsService", () => {
     expect(rows[0]).toMatchObject({ count: 1 });
   });
 
+  it("refuses to delete a chapter that scenes still reference", async () => {
+    // A scene attached through the 'chapter' hierarchy field blocks the
+    // parent's deletion just like a campaign's chapter does.
+    await testDb.execute(
+      sql`insert into entities (id, slug, type, perimeter, title) values (gen_random_uuid(), 'scene-a', 'scene', 'campaign', 'S')`,
+    );
+    await service.attachReference("scene-a", "chapter", "chapter-a");
+    await expect(
+      service.assertNoChildren(
+        (
+          await testDb.execute(
+            sql`select id from entities where slug = 'chapter-a'`,
+          )
+        )[0].id,
+      ),
+    ).rejects.toThrow(/has children attached/);
+    await service.detachReference("scene-a", "chapter");
+    await expect(
+      service.assertNoChildren(
+        (
+          await testDb.execute(
+            sql`select id from entities where slug = 'chapter-a'`,
+          )
+        )[0].id,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
   it("detaches the field's reference", async () => {
     await service.attachReference("chapter-a", "campaign", "campaign-a");
     await service.detachReference("chapter-a", "campaign");

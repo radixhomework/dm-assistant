@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { templateSchemaOf } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -52,27 +52,36 @@ export class RelationshipsService {
       );
     }
     if (declaration.cardinality === "one") {
-      // 0..1: the previous link, if any, is replaced.
-      await this.db
-        .delete(relationships)
-        .where(and(eq(relationships.fromId, child.id), eq(relationships.kind, field)));
-    } else {
-      const [existing] = await this.db
-        .select({ id: relationships.id })
-        .from(relationships)
-        .where(
-          and(
-            eq(relationships.fromId, child.id),
-            eq(relationships.kind, field),
-            eq(relationships.toId, target.id),
-          ),
-        )
-        .limit(1);
-      if (existing) {
-        throw new ConflictException(
-          `${targetSlug} is already attached to '${field}'`,
-        );
-      }
+      // 0..1: the previous link, if any, is replaced — delete and insert
+      // run in one transaction so a failed insert cannot leave the record
+      // detached.
+      await this.db.transaction(async (tx) => {
+        await tx
+          .delete(relationships)
+          .where(and(eq(relationships.fromId, child.id), eq(relationships.kind, field)));
+        await tx
+          .insert(relationships)
+          .values({ fromId: child.id, toId: target.id, kind: field });
+      });
+      return;
+    }
+    // 0..n: a duplicate target is refused, the single insert is its own
+    // atomic unit.
+    const [existing] = await this.db
+      .select({ id: relationships.id })
+      .from(relationships)
+      .where(
+        and(
+          eq(relationships.fromId, child.id),
+          eq(relationships.kind, field),
+          eq(relationships.toId, target.id),
+        ),
+      )
+      .limit(1);
+    if (existing) {
+      throw new ConflictException(
+        `${targetSlug} is already attached to '${field}'`,
+      );
     }
     await this.db
       .insert(relationships)
@@ -151,17 +160,24 @@ export class RelationshipsService {
     if (index === -1 || swapWith < 0 || swapWith >= siblings.length) return;
     const reordered = [...siblings];
     [reordered[index], reordered[swapWith]] = [reordered[swapWith], reordered[index]];
-    await Promise.all(
-      reordered.map((sibling, position) =>
-        this.db
+    // One transaction, and each sibling keeps its own fields: the update
+    // writes only the order key into the current database JSON (a full
+    // snapshot replacement would resurrect a stale prose draft saved by
+    // a concurrent request between the read and the write).
+    await this.db.transaction(async (tx) => {
+      for (const [position, sibling] of reordered.entries()) {
+        await tx
           .update(entities)
-          .set({ fields: { ...sibling.fields, order: position } })
-          .where(eq(entities.slug, sibling.slug)),
-      ),
-    );
+          .set({
+            fields: sql`jsonb_set(coalesce(${entities.fields}, '{}'::jsonb), '{order}', to_jsonb(${position}::int))`,
+          })
+          .where(eq(entities.slug, sibling.slug));
+      }
+    });
   }
 
-  /** Refuses deletion of a record that children reference as parent. */
+  /** Refuses deletion of a record that children reference as campaign
+   * parent or as chapter — both hierarchy fields block the deletion. */
   async assertNoChildren(entityId: string): Promise<void> {
     const [row] = await this.db
       .select({ fromId: relationships.fromId })
@@ -169,7 +185,7 @@ export class RelationshipsService {
       .where(
         and(
           eq(relationships.toId, entityId),
-          eq(relationships.kind, "campaign"),
+          inArray(relationships.kind, ["campaign", "chapter"]),
         ),
       )
       .limit(1);
