@@ -49,6 +49,10 @@ Characters and entities, Monsters, Fauna and Flora SHALL embed the reusable Stat
 - **WHEN** the vulnerabilities/resistances/immunities lists are submitted
 - **THEN** each entry must reference the Damage types catalog — immunities also accept Conditions
 
+#### Scenario: Unknown mastery stays unknown
+- **WHEN** a save is mastered or a mastered skill is listed while the proficiency bonus is absent
+- **THEN** the sheet marks the total as unknown instead of computing it with an assumed bonus — modifiers and totals carry their sign on negatives
+
 ### Requirement: Template-derived labels stay data
 Field labels, named blocks and enum values coming from `templates/` SHALL be kept verbatim in English as data and SHALL NOT be translated by the i18n catalogs; the reading and editing views SHALL render them verbatim.
 

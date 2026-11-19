@@ -33,6 +33,7 @@ const character: Entity = {
       vulnerabilities: ["fire"],
       proficiencyBonus: 3,
       wisdom: 12,
+      charisma: 6,
       senses: {
         darkvision: 18,
         blindsight: 6,
@@ -56,6 +57,9 @@ describe("CharacterSheet", () => {
     expect(screen.getByText("STR")).toBeDefined();
     expect(screen.getByText("18")).toBeDefined();
     expect(screen.getAllByText("+4").length).toBeGreaterThanOrEqual(1);
+    // Negative modifiers carry their sign without a doubled plus.
+    expect(screen.getAllByText("-2").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("+-2")).toBeNull();
     expect(screen.getAllByText("MOD")).toHaveLength(3);
     expect(screen.getAllByText("Save")).toHaveLength(3);
   });
@@ -84,6 +88,31 @@ describe("CharacterSheet", () => {
     renderWithProviders(<CharacterSheet record={character} />);
     // Wisdom 12 → +1, proficiency +3 → Perception +4.
     expect(screen.getByText("Perception +4")).toBeDefined();
+  });
+
+  it("marks mastered saves and skills as unknown when the proficiency bonus is absent", () => {
+    // Gap marking (charter rule 2): mastery without a known bonus never
+    // renders as +0.
+    const noBonus: Entity = {
+      ...character,
+      fields: {
+        gender: "female",
+        statistics: {
+          strength: 18,
+          dexterity: 8,
+          wisdom: 12,
+          charisma: 6,
+          savesMastery: { strength: true },
+          skills: [{ name: "Perception", ability: "wisdom" }],
+        } as never,
+      },
+    };
+    renderWithProviders(<CharacterSheet record={noBonus} />);
+    // The mastered save and the mastered skill read as unknown ("?");
+    // the raw ability modifier (+4 for Strength 18) still shows.
+    // The save cell renders "?"; the skill reads "Perception ?".
+    expect(screen.getAllByText("?").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Perception ?")).toBeDefined();
   });
 
   it("renders the typed references as links", () => {

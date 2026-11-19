@@ -20,7 +20,14 @@ import type { Statistics } from "@dm/schemas";
 export function StatisticsBlock(props: { readonly statistics: Statistics }) {
   const { t } = useTranslation();
   const stats = props.statistics;
-  const prof = stats.proficiencyBonus ?? 0;
+  // An absent proficiency bonus is a gap the sheet never fills: mastery
+  // then renders as unknown instead of silently adding zero.
+  const prof = typeof stats.proficiencyBonus === "number" ? stats.proficiencyBonus : null;
+  const signed = (value: number | "?" | null): string => {
+    if (value === null) return "—";
+    if (value === "?") return "?";
+    return value >= 0 ? `+${value}` : String(value);
+  };
   const abilities: Array<readonly [string, number | undefined]> = [
     ["strength", stats.strength],
     ["dexterity", stats.dexterity],
@@ -39,12 +46,14 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
   function saveOf(
     key: keyof NonNullable<Statistics["savesMastery"]>,
     mod: number | null,
-  ): number | null {
+  ): number | "?" | null {
     if (mod === null) return null;
     const mastered =
       stats.savesMastery?.[key as keyof NonNullable<Statistics["savesMastery"]>] ===
       true;
-    return mod + (mastered ? prof : 0);
+    if (!mastered) return mod;
+    // Mastery adds the proficiency bonus — unknown bonus, unknown save.
+    return prof === null ? "?" : mod + prof;
   }
 
   const unit = useDistanceUnit();
@@ -161,8 +170,8 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
                   {t(`stats.abbr.${key}`)}
                 </span>
                 <span className="text-ink">{score ?? "—"}</span>
-                <span className="text-ink">{mod === null ? "—" : `+${mod}`}</span>
-                <span className="text-ink">{save === null ? "—" : `+${save}`}</span>
+                <span className="text-ink">{signed(mod)}</span>
+                <span className="text-ink">{signed(save)}</span>
               </Fragment>
             );
           })}
@@ -182,8 +191,8 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
                 );
                 const total =
                   skill.modifier ??
-                  (base ?? 0) + (stats.proficiencyBonus ?? 0);
-                return `${skill.name} ${total >= 0 ? "+" : ""}${total}`;
+                  (base !== null && prof !== null ? base + prof : "?");
+                return `${skill.name} ${signed(total)}`;
               })
               .join(", ")}
           </p>
