@@ -45,6 +45,12 @@ Characters and entities, Monsters, Fauna and Flora SHALL embed the reusable Stat
 - **WHEN** the DM adds a mastered skill from the SRD list
 - **THEN** its modifier prefills with the associated ability modifier plus the proficiency bonus, and the DM can adjust it — out-of-sheet factors may modify the total
 
+#### Scenario: A formula without a computable average stores no average
+- **WHEN** the DM empties the HP formula
+- **THEN** the whole HP value is omitted from the record
+- **WHEN** the DM types a formula the application cannot parse
+- **THEN** the formula text is stored without an average — none is invented
+
 #### Scenario: Damage-type references validated
 - **WHEN** the vulnerabilities/resistances/immunities lists are submitted
 - **THEN** each entry must reference the Damage types catalog — immunities also accept Conditions

@@ -112,7 +112,12 @@ export const statisticsSchema = z.object({
     )
     .optional(),
   ac: z.number().int().optional(),
-  hp: z.object({ average: z.number().int(), formula: z.string() }).optional(),
+  hp: z
+    .object({
+      average: z.number().int().optional(),
+      formula: z.string(),
+    })
+    .optional(),
   speed: z
     .object({
       walk: z.number().optional(),

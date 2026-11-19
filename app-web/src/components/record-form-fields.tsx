@@ -417,8 +417,16 @@ function StatisticsControl(props: {
               value={hp?.formula ?? ""}
               onChange={(event) => {
                 const formula = event.target.value;
-                const average = formula.trim() === "" ? undefined : diceAverage(formula);
-                setPart("hp", { formula, average: average ?? 0 });
+                if (formula.trim() === "") {
+                  // An emptied formula drops the HP block entirely.
+                  setPart("hp", undefined);
+                  return;
+                }
+                // The average stores only when the formula parses — an
+                // unsupported formula keeps its text without an invented
+                // average.
+                const average = diceAverage(formula);
+                setPart("hp", { formula, average: average ?? undefined });
               }}
               className={inputClass}
             />

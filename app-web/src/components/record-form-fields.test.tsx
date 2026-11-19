@@ -227,6 +227,29 @@ describe("RecordFormFields — single-value references", () => {
   });
 });
 
+describe("RecordFormFields — hp formula lifecycle", () => {
+  it("drops the hp block when emptied and keeps unparseable formulas without an average", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <StatefulRecordFormFields schema={templateSchemaOf("monsters")!} onFields={onChange} />,
+    );
+    fireEvent.input(inputOfLabel("HP formula"), { target: { value: "17d6 + 22" } });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      hp: { formula: "17d6 + 22", average: 81 },
+    });
+    // An emptied formula drops the HP block entirely — and with no
+    // other statistics member, the whole block key disappears.
+    fireEvent.input(inputOfLabel("HP formula"), { target: { value: "" } });
+    expect(lastFields(onChange).statistics).toBeUndefined();
+    // An unparseable formula keeps its text without an invented average.
+    fireEvent.input(inputOfLabel("HP formula"), { target: { value: "2d6x" } });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      hp: { formula: "2d6x" },
+    });
+    expect(lastFields(onChange).statistics.hp.average).toBeUndefined();
+  });
+});
+
 describe("RecordFormFields — statistics rework", () => {
   it("stores an editable skill modifier and the equipment line", () => {
     const onChange = vi.fn();
@@ -271,6 +294,7 @@ describe("RecordFormFields — statistics block", () => {
     expect(lastFields(onChange).statistics).toMatchObject({
       hp: { formula: "17d6 + 22", average: 81 },
     });
+
 
     fireEvent.change(selectWithValue("chaotic_neutral"), { target: { value: "chaotic_neutral" } });
     expect(lastFields(onChange).statistics).toMatchObject({ alignment: "chaotic_neutral" });

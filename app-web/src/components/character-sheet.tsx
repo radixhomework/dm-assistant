@@ -130,7 +130,9 @@ export function StatisticsBlock(props: { readonly statistics: Statistics }) {
         {stats.hp !== undefined && (
           <p>
             <span className="font-semibold text-ink">{t("stats.hpShort")}</span>{" "}
-            {stats.hp.average} ({stats.hp.formula})
+            {stats.hp.average !== undefined
+              ? `${stats.hp.average} (${stats.hp.formula})`
+              : `(${stats.hp.formula})`}
           </p>
         )}
         {speedParts.length > 0 && (
