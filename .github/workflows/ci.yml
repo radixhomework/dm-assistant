@@ -34,7 +34,14 @@ jobs:
       - run: npm run build
       - run: npm run db:migrate -w app
       - run: npm run lint
-      - run: npm run typecheck
+      # Surface tsc errors as step annotations: the job log is not
+      # readable without a token.
+      - name: Typecheck
+        run: |
+          npm run typecheck 2>&1 | tee /tmp/tc.out
+          EXIT=${PIPESTATUS[0]}
+          grep -E "error TS" /tmp/tc.out | sed 's/^/::error ::/' || true
+          exit $EXIT
       - run: npm run test
       - name: SonarQube scan
         uses: sonarsource/sonarqube-scan-action@v8
