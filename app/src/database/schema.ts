@@ -35,11 +35,11 @@ export const users = pgTable("users", {
   /** Per-account UI language (null = instance default from UI_LOCALE). */
   uiLocale: text("ui_locale", { enum: ["en", "fr"] }),
   /** Login name — unique, lowercase; the email stays a profile field. */
-  username: text("username"),
+  username: text("username").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [uniqueIndex("users_username_uq").on(t.username)]);
 
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
@@ -90,9 +90,9 @@ export const relationships = pgTable(
     kind: text("kind").notNull(),
   },
   (t) => [
-    uniqueIndex("relationships_child_role_uq")
+    uniqueIndex("relationships_one_ref_uq")
       .on(t.fromId, t.kind)
-      .where(sql`kind in ('chapter', 'scene')`),
+      .where(sql`kind in ('campaign', 'chapter', 'origin', 'capital', 'headquarters')`),
     index("relationships_to_idx").on(t.toId, t.kind),
   ],
 );
