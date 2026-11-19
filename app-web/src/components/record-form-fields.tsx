@@ -65,8 +65,9 @@ function MoneyControl(props: {
             props.onChange({
               ...props.value,
               amount: event.target.value === "" ? undefined : Number(event.target.value),
-              // The GP default applies as soon as the amount exists.
-              currency: event.target.value === "" ? props.value.currency : "gp",
+              // The selected currency survives amount edits; the GP
+              // default only fills in when none was ever chosen.
+              currency: event.target.value === "" ? props.value.currency : (props.value.currency ?? "gp"),
             })
           }
           className={inputClass}
@@ -292,7 +293,19 @@ function StatisticsControl(props: {
   ): void => {
     setPart(key, { ...masteryFlags(key), [ability]: checked });
   };
-  const skills = (props.value.skills ?? []) as Array<{
+  type SkillEntry = {
+    rowId?: string;
+    name: string;
+    ability: "strength" | "dexterity" | "constitution" | "intelligence" | "wisdom" | "charisma";
+    modifier?: number;
+  };
+  const skills = ((props.value.skills ?? []) as SkillEntry[]).map((entry) => {
+    // Stable ids derived from the name: records store no rowId, and an
+    // id minted with Math.random() at render would churn every render.
+    const rowId =
+      entry.rowId ?? `skill-${entry.name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`;
+    return { ...entry, rowId };
+  }) as Array<{
     rowId: string;
     name: string;
     ability: "strength" | "dexterity" | "constitution" | "intelligence" | "wisdom" | "charisma";

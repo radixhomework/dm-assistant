@@ -157,6 +157,50 @@ describe("RecordFormFields — recurrence", () => {
   });
 });
 
+describe("RecordFormFields — control robustness", () => {
+  it("preserves the selected currency when the amount changes", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <RecordFormFields
+        schema={templateSchemaOf("equipment-and-items")!}
+        fields={{ value: { amount: 5, currency: "sp" } }}
+        onChange={onChange}
+      />,
+    );
+    const amount = document.querySelector('input[name="value"]')
+      ? (inputOfLabel("Value") as HTMLInputElement)
+      : (screen.getByLabelText("Value") as HTMLInputElement);
+    fireEvent.input(amount, { target: { value: "6" } });
+    expect(lastFields(onChange).value).toMatchObject({ amount: 6, currency: "sp" });
+  });
+
+  it("derives a stable rowId for skills loaded from a record", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <RecordFormFields
+        schema={templateSchemaOf("monsters")!}
+        fields={{
+          statistics: {
+            skills: [{ name: "Perception", ability: "wisdom", modifier: 3 }],
+          } as never,
+        }}
+        onChange={onChange}
+      />,
+    );
+    // Removing the loaded skill works through its derived id — the row
+    // disappears from the picker list.
+    fireEvent.change(screen.getByLabelText("Add a skill"), {
+      target: { value: "Stealth" },
+    });
+    expect(lastFields(onChange).statistics).toMatchObject({
+      skills: [
+        { name: "Perception", modifier: 3 },
+        { name: "Stealth" },
+      ],
+    });
+  });
+});
+
 describe("RecordFormFields — single-value references", () => {
   it("hides the search input once a 0..1 value is attached, and keeps it for 0..n", () => {
     const onAttach = vi.fn();
