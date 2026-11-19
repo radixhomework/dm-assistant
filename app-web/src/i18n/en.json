@@ -68,7 +68,8 @@
       "slug": "Slug"
     },
     "close": "Close",
-    "remove": "Remove"
+    "remove": "Remove",
+    "retry": "Retry"
   },
   "setup": {
     "title": "Welcome to your instance",
@@ -474,6 +475,7 @@
     "format": "{{month}} {{day}}, {{year}}",
     "formatDay": "{{month}} {{day}}, {{year}}",
     "formatMonth": "{{month}} {{year}}",
-    "formatYear": "{{year}}"
+    "formatYear": "{{year}}",
+    "loadError": "Loading the calendar or the events failed."
   }
 }

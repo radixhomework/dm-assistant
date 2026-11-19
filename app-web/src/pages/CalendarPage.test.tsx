@@ -62,6 +62,26 @@ describe("CalendarPage", () => {
     vi.stubGlobal("fetch", vi.fn());
   });
 
+  it("shows a load error with a retry button when a query fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        // Both page queries fail: no empty year, no "not defined".
+        return { ok: false, status: 500, json: async () => ({}) };
+      }),
+    );
+    renderWithProviders(<CalendarPage />, "/calendar");
+    await vi.waitFor(() =>
+      expect(screen.getByText("Loading the calendar or the events failed.")).toBeDefined(),
+    );
+    expect(screen.getByText("Retry")).toBeDefined();
+    // Neither the empty grid nor the not-defined hint leaks through.
+    expect(screen.queryByText(/not defined/i)).toBeNull();
+  });
+
   it("shows the empty state before the calendar is defined", async () => {
     stubFetch({ definition: null, events: [] });
     renderWithProviders(<CalendarPage />);

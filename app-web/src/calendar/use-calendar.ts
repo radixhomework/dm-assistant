@@ -23,6 +23,9 @@ export function isCalendarDefinition(
 export function useCalendarDefinition(enabled = true) {
   const calendar = useQuery({
     queryKey: ["calendar-settings"],
+    // Failures surface immediately (the page offers a manual retry)
+    // instead of three invisible backoff retries.
+    retry: false,
     // react-query v5 treats an undefined queryFn result as an error; the
     // api client answers undefined on the empty 200 body (no definition
     // yet) — normalize it to null.

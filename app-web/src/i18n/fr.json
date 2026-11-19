@@ -68,7 +68,8 @@
       "slug": "Slug"
     },
     "close": "Fermer",
-    "remove": "Retirer"
+    "remove": "Retirer",
+    "retry": "Réessayer"
   },
   "setup": {
     "title": "Bienvenue sur votre instance",
@@ -474,6 +475,7 @@
     "format": "{{day}} {{month}} {{year}}",
     "formatDay": "{{day}} {{month}} {{year}}",
     "formatMonth": "{{month}} {{year}}",
-    "formatYear": "{{year}}"
+    "formatYear": "{{year}}",
+    "loadError": "Échec du chargement du calendrier ou des événements."
   }
 }

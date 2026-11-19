@@ -89,6 +89,9 @@ export function CalendarPage() {
   const [error, setError] = useState<string | null>(null);
   const calendar = useQuery({
     queryKey: ["calendar-settings"],
+    // Failures surface immediately (the page offers a manual retry)
+    // instead of invisible backoff retries.
+    retry: false,
     queryFn: () => api<CalendarSettings | null>("/api/settings/calendar"),
     enabled: ready,
   });
@@ -99,6 +102,7 @@ export function CalendarPage() {
     queryKey: ["calendar-events"],
     queryFn: () => api<Entity[]>("/api/records?type=events&perimeter=world"),
     enabled: ready,
+    retry: false,
   });
 
   // Default year: the world's current year from the definition.
@@ -123,6 +127,28 @@ export function CalendarPage() {
   if (!ready) return null;
   if (calendar.isPending || events.isPending)
     return <p className="text-muted">{t("common.loading")}</p>;
+  // Query failures come before every empty state: a failed load must
+  // never render as an empty year or as an undefined calendar.
+  if (calendar.isError || events.isError) {
+    return (
+      <div>
+        <h1 className="font-display text-4xl font-semibold text-ink">
+          {t("calendar.title")}
+        </h1>
+        <p className="mt-3 text-sm text-radish">{t("calendar.loadError")}</p>
+        <button
+          type="button"
+          onClick={() => {
+            void calendar.refetch();
+            void events.refetch();
+          }}
+          className="mt-3 rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface"
+        >
+          {t("common.retry")}
+        </button>
+      </div>
+    );
+  }
   if (definition === null) {
     return (
       <div>
