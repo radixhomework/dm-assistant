@@ -38,10 +38,23 @@ export const RecordMention = Mention.extend({
       const match = re.exec(src);
       return match === null ? -1 : match.index + (match[0].length - 1);
     },
-    tokenize(src: string): MarkdownToken | undefined {
+    tokenize(
+      src: string,
+      tokens: MarkdownToken[] = [],
+    ): MarkdownToken | undefined {
       if (!src.startsWith("@")) return undefined;
       const match = /^@([a-z0-9-]+)/.exec(src);
       if (!match) return undefined;
+      // Word-start rule, enforced at tokenization: marked advances one
+      // character at a time through plain text, so the sliced src the
+      // tokenizer receives carries no preceding context — the character
+      // before the trigger lives at the end of the last text token. A
+      // word character there (a digit before a mention, a letter inside
+      // an email) keeps the whole thing as text.
+      const last = tokens.at(-1) as { type?: string; text?: string } | undefined;
+      if (last?.type === "text" && /[a-zA-Z0-9-]$/.test(last.text ?? "")) {
+        return undefined;
+      }
       return {
         type: "mention",
         raw: match[0],
