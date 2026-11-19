@@ -35,11 +35,15 @@ export function EventSheet(props: { readonly record: Entity }) {
         ? definition.months[date.month - 1]?.name
         : undefined;
     const params: Record<string, string | number> = { year: date.year };
+    const monthValue = monthName ?? date.month;
     if (date.day !== undefined) params.day = date.day;
-    params.month = monthName ?? date.month ?? "";
-    if (params.day !== undefined) return t("calendar.formatDay", params);
-    if (date.month !== undefined) return t("calendar.formatMonth", params);
-    return t("calendar.formatYear", params);
+    // Partial dates render at their own granularity — year-only dates
+    // keep the month parameter absent — and the era prefixes the whole.
+    if (monthValue !== undefined) params.month = monthValue;
+    const prefix = date.era ? `${date.era} ` : "";
+    if (params.day !== undefined) return prefix + t("calendar.formatDay", params);
+    if (date.month !== undefined) return prefix + t("calendar.formatMonth", params);
+    return prefix + t("calendar.formatYear", params);
   }
 
   const dateChip: string | undefined =
