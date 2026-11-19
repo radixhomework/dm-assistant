@@ -102,7 +102,7 @@ describe("RecordEditPage delete", () => {
       const deletions = calls.filter(
         ([path, init]) => path === "/api/records/city-of-glass" && init?.method === "DELETE",
       );
-      expect(deletions.length).toBe(1);
+      expect(deletions).toHaveLength(1);
     });
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;

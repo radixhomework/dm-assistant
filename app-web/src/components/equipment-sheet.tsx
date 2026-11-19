@@ -26,10 +26,9 @@ export function EquipmentSheet(props: { readonly record: Entity }) {
   };
 
   const currency = fields.value?.currency ?? "gp";
+  const currencyLabel = t(`money.${currency}`, { defaultValue: currency.toUpperCase() });
   const value =
-    fields.value?.amount !== undefined
-      ? `${fields.value.amount} ${t(`money.${currency}`, { defaultValue: currency.toUpperCase() })}`
-      : undefined;
+    fields.value?.amount !== undefined ? `${fields.value.amount} ${currencyLabel}` : undefined;
 
   const chips: Array<{ readonly label: string; readonly value: string }> = [];
   if (value !== undefined) chips.push({ label: t("fields.value"), value });

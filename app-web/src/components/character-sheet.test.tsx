@@ -51,37 +51,46 @@ const character: Entity = {
 };
 
 describe("CharacterSheet", () => {
-  it("renders the SRD-style ability table with modifiers and saves", () => {
+  it.each([
+    {
+      name: "renders the SRD-style ability table with modifiers and saves",
+      assert: () => {
+        // FOR 18 → MOD +4; no save mastery → JS = MOD.
+        expect(screen.getByText("STR")).toBeDefined();
+        expect(screen.getByText("18")).toBeDefined();
+        expect(screen.getAllByText("+4").length).toBeGreaterThanOrEqual(1);
+        // Negative modifiers carry their sign without a doubled plus.
+        expect(screen.getAllByText("-2").length).toBeGreaterThanOrEqual(1);
+        expect(screen.queryByText("+-2")).toBeNull();
+        expect(screen.getAllByText("MOD")).toHaveLength(3);
+        expect(screen.getAllByText("Save")).toHaveLength(3);
+      },
+    },
+    {
+      name: "renders the SRD-style stat block lines",
+      assert: () => {
+        expect(screen.getByText("AC")).toBeDefined();
+        expect(screen.getByText("15")).toBeDefined();
+        // HP: average then formula, SRD order.
+        expect(screen.getByText(/22 \(4d8\)/)).toBeDefined();
+        // Creature type on the subtitle line, damage vulnerabilities as a group.
+        expect(screen.getByText(/Humanoid, Chaotic Evil/)).toBeDefined();
+        expect(screen.getByText("Fire")).toBeDefined();
+      },
+    },
+    {
+      name: "renders the five senses in the DM's order",
+      assert: () => {
+        const sensLine = screen.getByText(/Senses/).closest("p")?.textContent ?? "";
+        const positions = ["Darkvision", "Blindsight", "Truesight", "Tremorsense", "Passive perception"].map(
+          (label) => sensLine.indexOf(label),
+        );
+        expect(positions.every((p, i) => p >= 0 && (i === 0 || p > positions[i - 1]))).toBe(true);
+      },
+    },
+  ])("$name", ({ assert }) => {
     renderWithProviders(<CharacterSheet record={character} />);
-    // FOR 18 → MOD +4; no save mastery → JS = MOD.
-    expect(screen.getByText("STR")).toBeDefined();
-    expect(screen.getByText("18")).toBeDefined();
-    expect(screen.getAllByText("+4").length).toBeGreaterThanOrEqual(1);
-    // Negative modifiers carry their sign without a doubled plus.
-    expect(screen.getAllByText("-2").length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByText("+-2")).toBeNull();
-    expect(screen.getAllByText("MOD")).toHaveLength(3);
-    expect(screen.getAllByText("Save")).toHaveLength(3);
-  });
-
-  it("renders the SRD-style stat block lines", () => {
-    renderWithProviders(<CharacterSheet record={character} />);
-    expect(screen.getByText("AC")).toBeDefined();
-    expect(screen.getByText("15")).toBeDefined();
-    // HP: average then formula, SRD order.
-    expect(screen.getByText(/22 \(4d8\)/)).toBeDefined();
-    // Creature type on the subtitle line, damage vulnerabilities as a group.
-    expect(screen.getByText(/Humanoid, Chaotic Evil/)).toBeDefined();
-    expect(screen.getByText("Fire")).toBeDefined();
-  });
-
-  it("renders the five senses in the DM's order", () => {
-    renderWithProviders(<CharacterSheet record={character} />);
-    const sensLine = screen.getByText(/Senses/).closest("p")?.textContent ?? "";
-    const positions = ["Darkvision", "Blindsight", "Truesight", "Tremorsense", "Passive perception"].map(
-      (label) => sensLine.indexOf(label),
-    );
-    expect(positions.every((p, i) => p >= 0 && (i === 0 || p > positions[i - 1]))).toBe(true);
+    assert();
   });
 
   it("computes mastered skill modifiers (ability + proficiency)", () => {

@@ -53,18 +53,17 @@ export function EventSheet(props: { readonly record: Entity }) {
         ? `${dateText(fields.start)} → ${dateText(fields.end)}`
         : dateText(fields.start);
 
+  const unitLabels: Record<string, string> = {
+    week: t("recurrence.weeks"),
+    month: t("recurrence.months"),
+    year: t("recurrence.years"),
+  };
   const recurrenceChip: string | undefined =
     fields.recurrence === undefined
       ? undefined
       : t("events.everyInterval", {
           interval: fields.recurrence.interval,
-          unit: t(
-            fields.recurrence.unit === "week"
-              ? "recurrence.weeks"
-              : fields.recurrence.unit === "month"
-                ? "recurrence.months"
-                : "recurrence.years",
-          ),
+          unit: unitLabels[fields.recurrence.unit] ?? fields.recurrence.unit,
         });
 
   const chips: Array<{ readonly label: string; readonly value: string }> = [];

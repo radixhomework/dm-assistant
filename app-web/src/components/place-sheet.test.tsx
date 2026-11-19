@@ -30,21 +30,30 @@ const place: Entity = {
 };
 
 describe("PlaceSheet", () => {
-  it("renders the place type and population as chips", () => {
+  it.each([
+    {
+      name: "renders the place type and population as chips",
+      assert: () => {
+        expect(screen.getByText("City")).toBeDefined();
+        expect(screen.getByText("180 000")).toBeDefined();
+      },
+    },
+    {
+      name: "renders the typed references as link groups",
+      assert: () => {
+        expect(screen.getByText("Leaders")).toBeDefined();
+        expect(screen.getByText("The Mayor")).toBeDefined();
+      },
+    },
+    {
+      name: "renders the descriptions as headed frameless sections",
+      assert: () => {
+        expect(screen.getByText("Public description")).toBeDefined();
+        expect(screen.getByText("A coastal city.")).toBeDefined();
+      },
+    },
+  ])("$name", ({ assert }) => {
     renderWithProviders(<PlaceSheet record={place} />);
-    expect(screen.getByText("City")).toBeDefined();
-    expect(screen.getByText("180 000")).toBeDefined();
-  });
-
-  it("renders the typed references as link groups", () => {
-    renderWithProviders(<PlaceSheet record={place} />);
-    expect(screen.getByText("Leaders")).toBeDefined();
-    expect(screen.getByText("The Mayor")).toBeDefined();
-  });
-
-  it("renders the descriptions as headed frameless sections", () => {
-    renderWithProviders(<PlaceSheet record={place} />);
-    expect(screen.getByText("Public description")).toBeDefined();
-    expect(screen.getByText("A coastal city.")).toBeDefined();
+    assert();
   });
 });
