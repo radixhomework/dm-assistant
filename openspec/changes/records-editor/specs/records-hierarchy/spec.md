@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Records CRUD
-Authenticated users SHALL create, read, update and delete records — each holding an immutable unique slug, a title, a type (one of the templates or catalogs), a perimeter (`world` or `campaign`), tags, typed template fields (JSONB validated against the record's template schema per the `template-schemas` capability) and a free markdown body. Deleting a record that is referenced as a parent by children SHALL be refused with an explicit error.
+Authenticated users SHALL create, read, update and delete records — each holding an immutable unique slug, a title, a type (one of the templates or catalogs), a perimeter (`world` or `campaign`), tags and typed template fields (JSONB validated against the record's template schema per the `template-schemas` capability). Deleting a record that is referenced as a parent by children SHALL be refused with an explicit error — both hierarchy links (a Campaign's chapters and a Chapter's scenes) block the deletion.
 
 #### Scenario: Create and read a record
 - **WHEN** an authenticated user creates a record with a unique slug and reads it back
@@ -16,7 +16,7 @@ Authenticated users SHALL create, read, update and delete records — each holdi
 - **THEN** the creation is refused with a clear error
 
 #### Scenario: Deleting a parent refused
-- **WHEN** a user deletes a record that children reference as parent
+- **WHEN** a user deletes a record that children reference as parent — through either hierarchy field (a Campaign's chapters or a Chapter's scenes)
 - **THEN** the deletion is refused with an explicit error naming the constraint
 
 #### Scenario: Fields validated against the template
@@ -40,4 +40,4 @@ The hierarchy SHALL be carried by child→parent references: a Chapter reference
 
 #### Scenario: Reorder through the parent sheet
 - **WHEN** the DM moves a child up or down on the parent sheet
-- **THEN** the `Order` fields are updated and the new play order persists
+- **THEN** the sibling orders are renumbered in one transaction, writing only each sibling's `Order` key — their other fields are untouched — and the new play order persists

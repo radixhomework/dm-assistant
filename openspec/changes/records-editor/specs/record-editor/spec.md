@@ -5,7 +5,7 @@ Defines the editing experience of a record: the TipTap prose editor with its too
 ## ADDED Requirements
 
 ### Requirement: Prose editor with toolbar
-Prose fields declared by the record's template SHALL be edited through a TipTap rich-text editor offering: bold, italic, strikethrough, headings, inline code, fenced code, hard breaks, ordered/unordered/nested lists, blockquotes, GFM tables, links, images, and horizontal rules. The editor SHALL load the stored markdown and serialize back on save through the same parse → serialize contract the round-trip suite gates; every construct the toolbar offers SHALL be covered by the corpus. The record form SHALL NOT offer a generic body field — the templates define every field of a record, and none declares a body.
+Prose fields declared by the record's template SHALL be edited through a TipTap rich-text editor offering: bold, italic, strikethrough, headings, inline code, fenced code, hard breaks, ordered/unordered/nested lists, blockquotes, GFM tables, links, images, and horizontal rules. The editor SHALL load the stored markdown and serialize back on save through the same parse → serialize contract the round-trip suite gates; every construct the toolbar offers SHALL be covered by the corpus. The record form SHALL NOT offer a generic body field — the templates define every field of a record, and none declares a body. A mounted editor SHALL also follow externally supplied markdown changes (a record refetch while it stays mounted): the displayed document updates to the new content unless the DM is actively typing in that field — in-progress input is never clobbered.
 
 #### Scenario: Prose round-trips through the editor
 - **WHEN** a prose field is loaded into the editor and saved without edits
@@ -14,6 +14,10 @@ Prose fields declared by the record's template SHALL be edited through a TipTap 
 #### Scenario: No generic body field
 - **WHEN** any record edit form or reading view is rendered
 - **THEN** no body field or body editor appears — only template-declared fields
+
+#### Scenario: Mounted editor follows a refetch
+- **WHEN** a record refetch changes a prose field while its editor stays mounted
+- **THEN** the editor displays the new content; while the DM is typing in that field the draft is left untouched
 
 
 #### Scenario: Toolbar constructs stay covered
@@ -53,6 +57,10 @@ The editor SHALL offer the editorial blocks the DM requested: a **dice node** st
 - **WHEN** the DM inserts the dice node `[[dice:3d6+2]]`
 - **THEN** the reading and editing views display the formula with its round-down average (12)
 
+#### Scenario: Dice and dates insert from the keyboard
+- **WHEN** the DM types a dice formula (`&1d10+4`) or a calendar date (`/year-month-day`, partial forms allowed) in a prose field, followed by a space
+- **THEN** the pattern converts into the corresponding node — the terminating space is kept — and an invalid or guarded pattern (a formula at zero, a fraction, a slash preceded by a digit, year 0) stays as typed text
+
 #### Scenario: Editorial blocks round-trip
 - **WHEN** a document carrying `:::paraphrase` and `:::develop` blocks is loaded and saved without edits
 - **THEN** the stored markdown is byte-identical (canonical form)
@@ -67,3 +75,14 @@ Opening a record SHALL show a reading view: fields rendered per the record's tem
 #### Scenario: Save returns to reading view
 - **WHEN** the DM saves the edit form
 - **THEN** the reading view of the record is shown, with a success confirmation
+
+### Requirement: Edit-session field draft
+The edit form SHALL keep the DM's unsaved field edits stable across reference attach/detach operations (their record refresh never rewrites the draft), and SHALL seed a fresh draft from the saved record when an edit session starts. Cancelling SHALL discard the draft — the next edit session seeds again from the saved record.
+
+#### Scenario: Reference refresh keeps the draft
+- **WHEN** the DM attaches or removes a reference after editing fields in the same session
+- **THEN** the edited field values remain in the form
+
+#### Scenario: Cancel discards the draft
+- **WHEN** the DM cancels an edit session after changing fields
+- **THEN** returning to edit mode shows the saved record's values, not the abandoned draft

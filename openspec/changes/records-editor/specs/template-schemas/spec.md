@@ -24,22 +24,30 @@ The schemas SHALL express the field-type vocabulary of `PRE-SPEC.md` §5: prose,
 
 #### Scenario: Money respects the barème
 - **WHEN** a money field is validated
-- **THEN** the value carries its currency (GP, SP or CP) and the schema converts consistently within the ×10 chain
+- **THEN** the value carries its currency (GP, SP or CP) and the schema converts consistently within the ×10 chain; editing the amount preserves the selected currency
+
+#### Scenario: Cleared optional fields are omitted
+- **WHEN** a form edit empties an optional field or an object whose members are all empty (a cleared weight, an unchecked recurrence, an emptied date)
+- **THEN** the write omits the key entirely instead of sending empty strings or nulls the schema rejects
 
 #### Scenario: References are typed
 - **WHEN** a reference field is validated
 - **THEN** the schema declares the single target template the field may point to
 
 ### Requirement: Statistics block
-Characters and entities, Monsters, Fauna and Flora SHALL embed the reusable Statistics block: six ability scores with the SRD-calculated modifier shown after leaving edit mode, optional saving throws carrying both raw score and modifier, AC, HP (average and formula), multi-mode speed, initiative modifier, SRD alignment/type/size enums, darkvision in the world's distance unit, passive perception, and 0..n damage-type references. Mechanical values SHALL never be invented by the application — they come from the DM's input or the SRD import only.
+Characters and entities, Monsters, Fauna and Flora SHALL embed the reusable Statistics block: six ability scores with the SRD-calculated modifier shown after leaving edit mode, optional saving throws carrying both raw score and modifier, AC, HP (average and formula), multi-mode speed, initiative modifier, SRD alignment/type/size enums, darkvision in the world's distance unit, passive perception, mastered skills (SRD list, associated ability, an editable modifier prefilled with ability + proficiency bonus), an equipment line, and 0..n damage-type references (immunities also accept conditions). Mechanical values SHALL never be invented by the application — they come from the DM's input or the SRD import only.
 
 #### Scenario: Modifier is computed for display
 - **WHEN** a Statistics block with ability scores is edited and the edit mode is left
 - **THEN** each ability score displays its SRD-calculated modifier in parentheses
 
+#### Scenario: Skill modifier prefilled then editable
+- **WHEN** the DM adds a mastered skill from the SRD list
+- **THEN** its modifier prefills with the associated ability modifier plus the proficiency bonus, and the DM can adjust it — out-of-sheet factors may modify the total
+
 #### Scenario: Damage-type references validated
 - **WHEN** the vulnerabilities/resistances/immunities lists are submitted
-- **THEN** each entry must reference the Damage types catalog
+- **THEN** each entry must reference the Damage types catalog — immunities also accept Conditions
 
 ### Requirement: Template-derived labels stay data
 Field labels, named blocks and enum values coming from `templates/` SHALL be kept verbatim in English as data and SHALL NOT be translated by the i18n catalogs; the reading and editing views SHALL render them verbatim.

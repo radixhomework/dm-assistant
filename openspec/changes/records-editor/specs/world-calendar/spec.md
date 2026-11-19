@@ -77,3 +77,7 @@ The application SHALL offer a year overview page, reachable from the navigation 
 #### Scenario: Empty state before definition
 - **WHEN** no calendar definition exists
 - **THEN** the year overview shows an explicit prompt to define the calendar (admins) or an informational empty state (other accounts)
+
+#### Scenario: Load failure shows an error with a retry
+- **WHEN** the calendar definition or the events query fails
+- **THEN** the page shows an explicit load error with a Retry action — the failure never renders as an empty year grid or as an undefined-calendar state
