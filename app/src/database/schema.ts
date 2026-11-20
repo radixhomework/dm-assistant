@@ -74,8 +74,10 @@ export const entities = pgTable("entities", {
 });
 
 /**
- * Typed relationships. Hierarchy kinds (`chapter`, `scene`) carry the
- * child→parent link and are unique per child (partial unique index).
+ * Typed relationships. Hierarchy kinds (`campaign`, `chapter`) carry the
+ * child→parent link and are unique per child (partial unique index); a
+ * target can be attached only once per field — enforced in the database
+ * so concurrent attachments cannot double-link a record.
  */
 export const relationships = pgTable(
   "relationships",
@@ -90,9 +92,10 @@ export const relationships = pgTable(
     kind: text("kind").notNull(),
   },
   (t) => [
+    uniqueIndex("relationships_target_uq").on(t.fromId, t.kind, t.toId),
     uniqueIndex("relationships_one_ref_uq")
       .on(t.fromId, t.kind)
-      .where(sql`kind in ('campaign', 'chapter', 'origin', 'capital', 'headquarters')`),
+      .where(sql`kind in ('campaign', 'chapter', 'capital', 'headquarters', 'origin')`),
     index("relationships_to_idx").on(t.toId, t.kind),
   ],
 );

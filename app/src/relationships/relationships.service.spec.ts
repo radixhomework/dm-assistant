@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import { resetTables, testDb } from "../testing/test-db.js";
+import { isUniqueViolation } from "../database/unique-violation.js";
 import { RelationshipsService } from "./relationships.service.js";
 
 describe("RelationshipsService", () => {
@@ -78,5 +79,46 @@ describe("RelationshipsService", () => {
       sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'chapter-a') and kind = 'campaign'`,
     );
     expect(rows[0]).toMatchObject({ count: 0 });
+  });
+
+  it("refuses a concurrent duplicate 0..n attachment exactly once", async () => {
+    // Both requests can pass the pre-check before either inserts: the
+    // database constraint settles the race, the service translates it.
+    const outcomes = await Promise.allSettled([
+      service.attachReference("nation-a", "geography", "place-a"),
+      service.attachReference("nation-a", "geography", "place-a"),
+    ]);
+    const fulfilled = outcomes.filter(
+      (outcome) => outcome.status === "fulfilled",
+    );
+    const rejected = outcomes.filter(
+      (outcome) => outcome.status === "rejected",
+    ) as PromiseRejectedResult[];
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(String(rejected[0].reason)).toMatch(/already attached/);
+    const rows = await testDb.execute(
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'nation-a') and kind = 'geography'`,
+    );
+    expect(rows[0]).toMatchObject({ count: 1 });
+    await service.detachReference("nation-a", "geography");
+  });
+
+  it("stores each target at most once per field in the database", async () => {
+    // The unique constraint is the authority: a direct duplicate insert
+    // (the race's losing write) is refused by the schema itself, and the
+    // drizzle-wrapped rejection is one the service helper recognizes.
+    await service.attachReference("nation-a", "geography", "place-a");
+    const failure = await testDb
+      .execute(
+        sql`insert into relationships (from_id, to_id, kind) values ((select id from entities where slug = 'nation-a'), (select id from entities where slug = 'place-a'), 'geography')`,
+      )
+      .then(
+        () => null,
+        (insertError: unknown) => insertError,
+      );
+    expect(failure).toBeInstanceOf(Error);
+    expect(isUniqueViolation(failure)).toBe(true);
+    await service.detachReference("nation-a", "geography");
   });
 });

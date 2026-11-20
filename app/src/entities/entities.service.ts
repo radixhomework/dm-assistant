@@ -15,6 +15,7 @@ import {
 } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
+import { isUniqueViolation } from "../database/unique-violation.js";
 
 /** The transaction handle a drizzle transaction callback receives. */
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -370,17 +371,4 @@ function validateFields(
     });
   }
   return parsed.data as Record<string, unknown>;
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: string; cause?: { code?: string } }).code ===
-      "23505" ||
-    (error as { cause?: { code?: string } }).cause?.code === "23505" ||
-    /duplicate key|unique constraint/i.test(
-      error instanceof Error ? error.message : String(error),
-    )
-  );
 }

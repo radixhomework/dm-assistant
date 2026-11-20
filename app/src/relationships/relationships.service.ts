@@ -3,6 +3,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { templateSchemaOf } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
+import { isUniqueViolation } from "../database/unique-violation.js";
 import { entities, relationships } from "../database/schema.js";
 
 /**
@@ -66,7 +67,10 @@ export class RelationshipsService {
       return;
     }
     // 0..n: a duplicate target is refused, the single insert is its own
-    // atomic unit.
+    // atomic unit. The pre-check gives the friendly message; the unique
+    // constraint `relationships_target_uq` is the authority — two
+    // concurrent attachments can both pass the pre-check, only one
+    // insert survives.
     const [existing] = await this.db
       .select({ id: relationships.id })
       .from(relationships)
@@ -83,9 +87,18 @@ export class RelationshipsService {
         `${targetSlug} is already attached to '${field}'`,
       );
     }
-    await this.db
-      .insert(relationships)
-      .values({ fromId: child.id, toId: target.id, kind: field });
+    try {
+      await this.db
+        .insert(relationships)
+        .values({ fromId: child.id, toId: target.id, kind: field });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(
+          `${targetSlug} is already attached to '${field}'`,
+        );
+      }
+      throw error;
+    }
   }
 
   /** Detaches one target of a field, or all of them when no target. */
