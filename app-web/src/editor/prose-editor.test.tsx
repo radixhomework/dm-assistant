@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { screen } from "@testing-library/react";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../i18n/index.js";
 import { ProseEditor } from "./prose-editor.js";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -52,17 +49,17 @@ describe("ProseEditor", () => {
       expect(document.querySelector(".ProseMirror")).not.toBeNull(),
     );
     expect(document.querySelector(".ProseMirror")!.textContent).toBe("First prose.");
-    // A refetch supplies new prose: the mounted editor follows it.
-    rerender(
-      <QueryClientProvider client={new QueryClient()}>
-        <I18nextProvider i18n={i18n}>
-          <ProseEditor markdown="Second prose." readonly onChange={onChange} />
-        </I18nextProvider>
-      </QueryClientProvider>,
-    );
+    // A refetch supplies new prose: the mounted editor follows it. The
+    // rerender carries the same provider tree as the initial render (the
+    // helper's wrapper keeps it) — a tree change would remount the
+    // editor and let the assertion pass vacuously.
+    const editorBefore = document.querySelector(".ProseMirror");
+    rerender(<ProseEditor markdown="Second prose." readonly onChange={onChange} />);
     await vi.waitFor(() =>
       expect(document.querySelector(".ProseMirror")!.textContent).toBe("Second prose."),
     );
+    // Same editor instance: the sync happened on the mounted editor.
+    expect(document.querySelector(".ProseMirror")).toBe(editorBefore);
   });
 
   it("navigates to the referenced record when a mention is clicked in readonly mode", () => {

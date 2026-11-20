@@ -3,9 +3,14 @@ import { screen } from "@testing-library/react";
 import { LorePage } from "./LorePage";
 import { renderWithProviders } from "../testing/render.js";
 
+// A callable navigation mock: LorePage.onCreate navigates after the POST
+// and refetch — a non-callable mock made that call throw, and the test
+// passed on the POST assertion alone.
+const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
+
 vi.mock("@tanstack/react-router", () => ({
   useSearch: () => ({ new: undefined }),
-  useNavigate: () => ({ to: vi.fn() }),
+  useNavigate: () => navigate,
   Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));
 
@@ -83,5 +88,13 @@ describe("LorePage create", () => {
       );
       expect(post).toBeDefined();
     });
+    // The complete success path: straight into editing the record.
+    await vi.waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({
+        to: "/records/$slug",
+        params: { slug: "city-of-glass" },
+        search: { edit: "1" },
+      }),
+    );
   });
 });
