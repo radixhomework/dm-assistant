@@ -19,6 +19,10 @@ Prose fields declared by the record's template SHALL be edited through a TipTap 
 - **WHEN** a record refetch changes a prose field while its editor stays mounted
 - **THEN** the editor displays the new content; while the DM is typing in that field the draft is left untouched
 
+#### Scenario: Mention navigation resolves the target's domain URL
+- **WHEN** the DM activates a mention in a reading view
+- **THEN** the application resolves the target by its slug and navigates to its domain URL — /lore/<uuid> for world records, the campaign hierarchy URL for campaign records
+
 
 #### Scenario: Toolbar constructs stay covered
 - **WHEN** a new construct is added to the toolbar or as a custom node

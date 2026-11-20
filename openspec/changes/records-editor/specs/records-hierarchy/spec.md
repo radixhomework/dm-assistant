@@ -34,6 +34,10 @@ The hierarchy SHALL be carried by child→parent references: a Chapter reference
 - **WHEN** a user attempts to attach a Scene to two Chapters
 - **THEN** the second attachment is refused
 
+#### Scenario: Parent immutable after creation
+- **WHEN** a Chapter already has a Campaign and a re-attachment is attempted (or a Scene already has a Chapter)
+- **THEN** the re-assignment is refused with an explicit error — the hierarchy is frozen at creation; moving a record between parents means deleting and recreating it
+
 #### Scenario: Children in play order
 - **WHEN** a parent sheet lists its children
 - **THEN** they appear ordered by their `Order` field, missing orders last, then by title
