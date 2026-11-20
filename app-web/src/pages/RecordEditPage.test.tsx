@@ -348,4 +348,93 @@ describe("RecordEditPage", () => {
     const link = screen.getByText("The Glass Region").closest("a");
     expect(link?.getAttribute("href")).toBe("#the-glass-region");
   });
+
+  it("shows the error state when the record request fails", async () => {
+    // The failure must surface even though the field draft can never
+    // initialize: the error check precedes the draft-initialization wait.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input === "/api/records/city-of-glass") {
+          return { ok: false, status: 500, json: async () => ({ message: "boom" }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      }),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("Something went wrong")).toBeDefined(),
+    );
+    // Never stuck on the loading message.
+    expect(screen.queryByText("Loading…")).toBeNull();
+  });
+
+  it("pins the edit session while a save is pending", async () => {
+    let resolvePatch!: (response: unknown) => void;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input.endsWith("/backlinks")) {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
+        if (input === "/api/records/city-of-glass" && init?.method === "PATCH") {
+          // Hang until the test resolves it: the save is pending.
+          return new Promise((resolve) => {
+            resolvePatch = resolve;
+          });
+        }
+        return { ok: true, json: async () => recordOf({}) };
+      }),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
+    (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).click();
+    await vi.waitFor(() => {
+      expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
+      expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+    });
+    // The completing save closes THIS session and no other: no newer
+    // session can open while the controls are pinned.
+    resolvePatch({ ok: true, json: async () => recordOf({}) });
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
+    expect((screen.getByRole("button", { name: "Edit" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+  it("restores the save and cancel controls when the save fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input.endsWith("/backlinks")) {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
+        if (input === "/api/records/city-of-glass" && init?.method === "PATCH") {
+          return { ok: false, status: 500, json: async () => ({ message: "boom" }) };
+        }
+        return { ok: true, json: async () => recordOf({}) };
+      }),
+    );
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() =>
+      expect(screen.getByText("City of Glass")).toBeDefined(),
+    );
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).not.toBeNull());
+    (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(screen.getByText(/boom/)).toBeDefined());
+    // The failure leaves the session open with working controls.
+    expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(false);
+  });
 });

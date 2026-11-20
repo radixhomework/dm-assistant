@@ -114,6 +114,7 @@ function RecordEditView(props: {
   readonly fields: Record<string, unknown>;
   readonly setFields: (fields: Record<string, unknown>) => void;
   readonly error: string | null;
+  readonly saving: boolean;
   readonly onSave: (event: React.SubmitEvent<HTMLFormElement>) => void;
   readonly onCancel: () => void;
   readonly onAttachReference: (field: string, targetSlug: string) => Promise<void>;
@@ -132,7 +133,8 @@ function RecordEditView(props: {
             <button
               type="submit"
               form="record-edit-form"
-              className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+              disabled={props.saving}
+              className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
               title={t("lore.save")}
               aria-label={t("lore.save")}
             >
@@ -141,7 +143,8 @@ function RecordEditView(props: {
             <button
               type="button"
               onClick={props.onCancel}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface"
+              disabled={props.saving}
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("common.cancel")}
             </button>
@@ -190,6 +193,10 @@ function RecordPage({
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
+  // While a save is pending the edit session is pinned: Save and Cancel
+  // are disabled so a completing save can never close a *newer* edit
+  // session and silently discard its draft.
+  const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
   const record = useQuery({
     queryKey: ["record", slug],
@@ -222,10 +229,10 @@ function RecordPage({
   }, [record.data]);
 
   if (!ready) return null;
-  if (record.isPending || fields === null)
-    return <p className="text-muted">{t("common.loading")}</p>;
+  if (record.isPending) return <p className="text-muted">{t("common.loading")}</p>;
   if (record.isError || !record.data)
     return <p className="text-radish">{t("common.error")}</p>;
+  if (fields === null) return <p className="text-muted">{t("common.loading")}</p>;
 
   const data = record.data;
 
@@ -277,6 +284,7 @@ function RecordPage({
 
   async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     setError(null);
     setSaved(false);
     const form = new FormData(event.currentTarget);
@@ -292,6 +300,7 @@ function RecordPage({
         return;
       }
     }
+    setSaving(true);
     try {
       await api(`/api/records/${slug}`, {
         method: "PATCH",
@@ -307,6 +316,8 @@ function RecordPage({
       setMode("read");
     } catch (saveError) {
       setError(String(saveError));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -329,6 +340,7 @@ function RecordPage({
         fields={fields}
         setFields={setFields}
         error={error}
+        saving={saving}
         onSave={onSave}
         onCancel={cancelEdit}
         onAttachReference={attachReference}
