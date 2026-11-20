@@ -46,7 +46,7 @@ const character: Entity = {
     public_description: "A tall figure.",
   },
   references: {
-    species: [{ slug: "humans", title: "Humans" }],
+    species: [{ id: "id-humans", slug: "humans", title: "Humans" }],
   },
 };
 
@@ -149,8 +149,8 @@ describe("RecordSheet", () => {
         slug: "campagne-1",
         status: "not_played",
         children: [
-          { slug: "chap1", title: "Chap1", status: "not_played" },
-          { slug: "chap2", title: "Chap2", status: "not_played" },
+          { id: "id-chap1", slug: "chap1", title: "Chap1", status: "not_played" },
+          { id: "id-chap2", slug: "chap2", title: "Chap2", status: "not_played" },
         ],
       },
     };

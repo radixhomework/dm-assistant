@@ -19,7 +19,11 @@ import { CalendarPage } from "./pages/CalendarPage";
 import { HomePage } from "./pages/HomePage";
 import { AdminPage } from "./pages/AdminPage";
 import { AccountPage } from "./pages/AccountPage";
-import { RecordEditPage } from "./pages/RecordEditPage";
+import {
+  ChapterRecordPage,
+  LoreRecordPage,
+  SceneRecordPage,
+} from "./pages/RecordEditPage";
 import { fetchBootstrapState, type BootstrapState } from "./api/auth.js";
 import { queryClient } from "./query-client.js";
 import "./i18n";
@@ -58,18 +62,37 @@ const campaignsRoute = createRoute({
   path: "/campaigns",
   component: CampaignsPage,
 });
-const recordEditRoute = createRoute({
+const loreRecordRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/records/$slug",
-  component: RecordEditPage,
+  path: "/lore/$id",
+  component: LoreRecordPage,
   validateSearch: (search: Record<string, unknown>) => ({
     edit: searchFlagTrue(search, "edit"),
   }),
 });
 const campaignViewRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/campaigns/$slug",
+  path: "/campaigns/$id",
   component: CampaignViewPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
+});
+const chapterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/campaigns/$id/$chapterId",
+  component: ChapterRecordPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
+});
+const sceneRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/campaigns/$id/$chapterId/$sceneId",
+  component: SceneRecordPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
 });
 const calendarRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -104,9 +127,11 @@ const setupRoute = createRoute({
 const router = createRouter({
   routeTree: rootRoute.addChildren([
     loreRoute,
-    recordEditRoute,
+    loreRecordRoute,
     campaignsRoute,
     campaignViewRoute,
+    chapterRoute,
+    sceneRoute,
     calendarRoute,
     homeRoute,
     adminRoute,
