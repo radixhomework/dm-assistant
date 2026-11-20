@@ -11,6 +11,8 @@ import { EquipmentSheet } from "./equipment-sheet.js";
 import { BeliefSheet } from "./belief-sheet.js";
 import { KnowledgeSheet } from "./knowledge-sheet.js";
 import { GameRuleSheet } from "./game-rule-sheet.js";
+import { ChapterSheet } from "./chapter-sheet.js";
+import { SceneSheet } from "./scene-sheet.js";
 import type { Entity } from "../types.js";
 
 /**
@@ -31,6 +33,8 @@ const registry: Record<string, ComponentType<{ readonly record: Entity }>> = {
   "beliefs-myths-and-customs": BeliefSheet,
   "knowledge-and-technologies": KnowledgeSheet,
   "game-rules": GameRuleSheet,
+  chapter: ChapterSheet,
+  scene: SceneSheet,
 };
 
 /** The bespoke sheet component for a record type, null when the generic

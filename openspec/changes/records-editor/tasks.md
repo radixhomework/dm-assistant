@@ -58,6 +58,7 @@
 - [x] 9.1 Reading-view scaffold: template-shaped fields (empty-means-hidden), children + backlinks + versions at the end; open = read mode, save returns to read mode with confirmation
 - [x] 9.2 First bespoke sheet: Characters and entities (statistics, references, public/private prose, self-references) — DM review gate before batching
 - [ ] 9.3 Remaining sheets in batches (12 world templates, 2 campaign, 8 catalogs — 22 after the first), each through the impeccable skills and DM review
+  - [x] 9.3a World templates (12/12) and the campaign pair (Chapter, Scene) — batched across the DM's per-sheet reviews; catalogs remain
 - [ ] 9.4 i18n: every new interface label in fr+en, parity test green
 - [x] 9.6 Review-feedback sweep (CodeRabbit majors + Sonar gate): recurrence walk rewritten from the anchor, atomic relationship/mention writes, scoped sibling reorders, chapter deletion guard, edit-session draft lifecycle, mounted-editor refetch sync, calendar load errors, form control hardening, Drizzle declarations aligned with the applied migrations — plus the statistics/actions block rework (equipment, editable skill modifiers, reactions and legendary actions) reviewed with the DM
 - [ ] 9.5 Final verification: full suites (app, app-web), typecheck, lint, Sonar gate on new code, round-trip suite green with all new fixtures; `openspec validate records-editor --strict`
