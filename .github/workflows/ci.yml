@@ -40,12 +40,11 @@ jobs:
         run: |
           npm run build 2>&1 | tee /tmp/build.out
           EXIT=${PIPESTATUS[0]}
-          # Emit the tail as annotations and summary: the job log is not
-          # readable without a token, both these surfaces are.
-          tail -40 /tmp/build.out | while IFS= read -r line; do
-            echo "::error::$line"
-          done
-          tail -40 /tmp/build.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
+          # Emit every numbered line as annotations and summary: the job
+          # log is not readable without a token, both these surfaces are.
+          awk '{ printf "::error::%04d %s
+", NR, $0 }' /tmp/build.out
+          cat /tmp/build.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
           exit $EXIT
       - run: npm run db:migrate -w app
       - run: npm run lint
