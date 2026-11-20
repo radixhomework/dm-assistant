@@ -13,6 +13,10 @@ export function useDistanceUnit(enabled = true): DistanceUnit {
     queryFn: () => api<{ distanceUnit: DistanceUnit }>("/api/settings/display"),
     enabled,
   });
-  if (query.isSuccess && (query.data?.distanceUnit === "ft")) return "ft";
+  // No isSuccess gate: after a failed refetch TanStack Query keeps the
+  // cached data but clears the success flag — gating would relabel
+  // unchanged values ("30 ft" as "30 m"). The fallback covers only the
+  // no-data case.
+  if (query.data?.distanceUnit === "ft") return "ft";
   return "m";
 }

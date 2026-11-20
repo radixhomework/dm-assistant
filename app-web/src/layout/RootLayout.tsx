@@ -6,7 +6,7 @@ import { BookOpen, CalendarDays, Menu, Shield, Swords, X } from "lucide-react";
 import { AppSidebar } from "../components/app-sidebar.js";
 import { CampaignSidebar } from "../components/campaign-sidebar.js";
 import { api } from "../api/client.js";
-import { fetchMe, getWorldName, logout } from "../api/auth.js";
+import { fetchBootstrapState, fetchMe, logout } from "../api/auth.js";
 import type { Entity } from "../types.js";
 
 const navItemClass = (active: boolean) =>
@@ -27,14 +27,24 @@ export function RootLayout() {
 
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe, retry: false });
   const user = me.data;
+  // The world name through a live subscription: the header re-renders as
+  // soon as the ["bootstrap"] cache updates (a rename on /admin
+  // invalidates it), where the previous getWorldName() cache read was a
+  // one-shot snapshot.
+  const bootstrap = useQuery({
+    queryKey: ["bootstrap"],
+    queryFn: fetchBootstrapState,
+    retry: false,
+  });
+  const worldName = bootstrap.data?.worldName ?? null;
 
   // Tab title: white-labeled with the world name; record pages override
   // with their own title (RecordEditPage).
   useEffect(() => {
     if (!pathname.startsWith("/records/")) {
-      document.title = getWorldName() ?? "DM Assistant";
+      document.title = worldName ?? "DM Assistant";
     }
-  }, [pathname, me.data]);
+  }, [pathname, me.data, worldName]);
 
   // Apply the account's UI language at load (null = instance default).
   useEffect(() => {
@@ -114,7 +124,7 @@ export function RootLayout() {
                 </button>
               )}
               <Link to="/" className="font-display text-2xl font-semibold text-background">
-                {getWorldName() ?? t("app.title")}
+                {worldName ?? t("app.title")}
               </Link>
               <nav className="ml-4 flex items-center gap-2">
                 <Link to="/lore" className={navItemClass(loreActive)}>

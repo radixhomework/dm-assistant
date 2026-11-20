@@ -92,7 +92,12 @@ export function CalendarPage() {
     // Failures surface immediately (the page offers a manual retry)
     // instead of invisible backoff retries.
     retry: false,
-    queryFn: () => api<CalendarSettings | null>("/api/settings/calendar"),
+    queryFn: async () =>
+      // react-query v5 treats an undefined queryFn result as an error;
+      // the api client answers undefined on the empty 200 body (no
+      // calendar defined) — normalize like useCalendarDefinition does.
+      ((await api<CalendarSettings | null>("/api/settings/calendar")) ??
+        null),
     enabled: ready,
   });
   const definition = isCalendarDefinition(calendar.data)
