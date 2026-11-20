@@ -752,7 +752,7 @@ function StatisticsControl(props: {
                 if (available.length === 0) return null;
                 return (
                   <select
-                    key={available[0].key}
+                    key={namespace}
                     aria-label={`${t("stats.immunities")} — ${listLabel}`}
                     value=""
                     onChange={(event) => {

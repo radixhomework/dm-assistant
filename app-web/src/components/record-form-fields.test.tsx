@@ -350,6 +350,24 @@ describe("RecordFormFields — statistics block", () => {
     });
   });
 
+  it("keeps the immunity selector mounted when entries are picked", () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <StatefulRecordFormFields schema={templateSchemaOf("monsters")!} onFields={onChange} />,
+    );
+    const selector = screen.getByLabelText(
+      "Immunities — Add a damage type",
+    ) as HTMLSelectElement;
+    // Picking the first available entry changes available[0].key: the
+    // selector must keep its React identity, not remount and drop focus.
+    fireEvent.change(selector, { target: { value: "fire" } });
+    const after = screen.getByLabelText(
+      "Immunities — Add a damage type",
+    ) as HTMLSelectElement;
+    expect(after).toBe(selector);
+    expect(lastFields(onChange).statistics).toMatchObject({ immunities: ["fire"] });
+  });
+
   it("translates size options", () => {
     renderWithProviders(
       <RecordFormFields schema={templateSchemaOf("monsters")!} fields={{}} onChange={vi.fn()} />,
