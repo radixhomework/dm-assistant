@@ -6,7 +6,7 @@ import { renderWithProviders } from "../testing/render.js";
 
 // Mutable search state the mocked router hook exposes; tests set the edit
 // flag to simulate navigation straight from a creation form.
-const searchState: { edit?: string | boolean } = {};
+const searchState: { edit?: string | boolean | number } = {};
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>();
@@ -166,8 +166,9 @@ describe("RecordEditPage", () => {
   });
 
   it("opens straight into edit mode from a creation redirect", async () => {
-    // validateSearch normalizes edit=1 to the boolean true; the raw string
-    // must keep working too.
+    // The router parses the raw search (edit=1 arrives as the number 1);
+    // the boolean and string spellings keep working through the same
+    // searchFlagTrue helper the route validator uses.
     searchState.edit = true;
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() =>
@@ -176,6 +177,10 @@ describe("RecordEditPage", () => {
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
 
     searchState.edit = "1";
+    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
+
+    searchState.edit = 1;
     renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
   });

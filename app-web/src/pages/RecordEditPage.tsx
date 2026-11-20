@@ -10,6 +10,7 @@ import { RecordSheet } from "../components/record-sheet.js";
 import { bespokeSheetFor } from "../components/record-sheet-registry.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
+import { searchFlagTrue } from "../router/search-flag.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { Entity } from "../types.js";
 
@@ -372,10 +373,15 @@ function RecordPage({
  * state through the component lifecycle. */
 export function RecordEditPage() {
   const { slug } = useParams({ from: "/records/$slug" });
-  // validateSearch normalizes the edit=1 query flag to the boolean true;
-  // accept both spellings so the creation forms' edit intent survives.
+  // The selector reads the RAW parsed search (edit=1 arrives as the
+  // number 1), not the validated route value — normalize with the same
+  // helper the route's validateSearch uses.
   const initialEdit = useRouterState({
-    select: (s) => s.location.search?.edit === "1" || s.location.search?.edit === true,
+    select: (s) =>
+      searchFlagTrue(
+        (s.location.search ?? {}) as Record<string, unknown>,
+        "edit",
+      ) === true,
   });
   return <RecordPage key={slug} slug={slug} initialEdit={initialEdit} />;
 }
