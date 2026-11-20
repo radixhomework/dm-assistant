@@ -9,6 +9,7 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { RootLayout } from "./layout/RootLayout";
+import { searchFlagTrue } from "./router/search-flag.js";
 import { SetupPage } from "./pages/SetupPage";
 import { LoginPage } from "./pages/LoginPage";
 import { LorePage } from "./pages/LorePage";
@@ -49,7 +50,7 @@ const loreRoute = createRoute({
   path: "/lore",
   component: LorePage,
   validateSearch: (search: Record<string, unknown>) => ({
-    new: search.new === "1" || search.new === true ? true : undefined,
+    new: searchFlagTrue(search, "new"),
   }),
 });
 const campaignsRoute = createRoute({
@@ -62,7 +63,7 @@ const recordEditRoute = createRoute({
   path: "/records/$slug",
   component: RecordEditPage,
   validateSearch: (search: Record<string, unknown>) => ({
-    edit: search.edit === "1" || search.edit === true ? true : undefined,
+    edit: searchFlagTrue(search, "edit"),
   }),
 });
 const campaignViewRoute = createRoute({
