@@ -59,7 +59,11 @@ export class RelationshipsService {
         // The hierarchy keeps the child→parent link deliberate: an
         // existing parent is never silently replaced (design decision 8's
         // hierarchy exception, the records-hierarchy capability's
-        // "Single parent enforced" scenario).
+        // "Single parent enforced" scenario). The pre-check gives the
+        // friendly message; the one-per-child partial unique index is the
+        // authority — this path inserts without deleting, so two
+        // concurrent parents mean the losing insert violates it instead
+        // of replacing the winner through a delete+insert.
         const [current] = await this.db
           .select({ toId: relationships.toId })
           .from(relationships)
@@ -72,6 +76,19 @@ export class RelationshipsService {
             "This record already has a parent there — detach it first",
           );
         }
+        try {
+          await this.db
+            .insert(relationships)
+            .values({ fromId: child.id, toId: target.id, kind: field });
+        } catch (error) {
+          if (isUniqueViolation(error)) {
+            throw new ConflictException(
+              "This record already has a parent there — detach it first",
+            );
+          }
+          throw error;
+        }
+        return;
       }
       // 0..1: the previous link, if any, is replaced — delete and insert
       // run in one transaction so a failed insert cannot leave the record

@@ -70,6 +70,33 @@ describe("RelationshipsService", () => {
     await service.detachReference("scene-b", "chapter");
   });
 
+  it("refuses a concurrent second hierarchy parent exactly once", async () => {
+    // The pre-check cannot reserve the observed state: two concurrent
+    // parents for one scene must be settled by the one-per-child index —
+    // one insert wins, the other is refused instead of replacing it.
+    await testDb.execute(
+      sql`insert into entities (id, slug, type, perimeter, title) values (gen_random_uuid(), 'scene-c', 'scene', 'campaign', 'S3')`,
+    );
+    const outcomes = await Promise.allSettled([
+      service.attachReference("scene-c", "chapter", "chapter-a"),
+      service.attachReference("scene-c", "chapter", "chapter-b"),
+    ]);
+    const fulfilled = outcomes.filter(
+      (outcome) => outcome.status === "fulfilled",
+    );
+    const rejected = outcomes.filter(
+      (outcome) => outcome.status === "rejected",
+    ) as PromiseRejectedResult[];
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(String(rejected[0].reason)).toMatch(/detach it first/);
+    const rows = await testDb.execute(
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'scene-c') and kind = 'chapter'`,
+    );
+    expect(rows[0]).toMatchObject({ count: 1 });
+    await service.detachReference("scene-c", "chapter");
+  });
+
   it("refuses to delete a chapter that scenes still reference", async () => {
     // A scene attached through the 'chapter' hierarchy field blocks the
     // parent's deletion just like a campaign's chapter does.
