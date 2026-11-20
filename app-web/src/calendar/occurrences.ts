@@ -110,9 +110,10 @@ function dateToPoint(date: CalendarDate, calendar: CalendarSettings): Point | nu
   return { year: date.year, month: date.month, day: date.day };
 }
 
-export type EventRef = { slug: string; title: string };
+export type EventRef = { id: string; slug: string; title: string };
 
 export type EventInput = {
+  id: string;
   slug: string;
   title: string;
   fields: {
@@ -129,7 +130,7 @@ function collectEvent(
   window: { startAbs: number; endAbs: number },
   add: (point: Point, ref: EventRef) => void,
 ): void {
-  const ref: EventRef = { slug: event.slug, title: event.title };
+  const ref: EventRef = { id: event.id, slug: event.slug, title: event.title };
   const start = event.fields.start
     ? dateToPoint(event.fields.start, calendar)
     : null;

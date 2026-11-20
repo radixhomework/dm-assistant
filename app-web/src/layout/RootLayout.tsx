@@ -5,9 +5,7 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, CalendarDays, Menu, Shield, Swords, X } from "lucide-react";
 import { AppSidebar } from "../components/app-sidebar.js";
 import { CampaignSidebar } from "../components/campaign-sidebar.js";
-import { api } from "../api/client.js";
 import { fetchBootstrapState, fetchMe, logout } from "../api/auth.js";
-import type { Entity } from "../types.js";
 
 const navItemClass = (active: boolean) =>
   `flex items-center gap-1.5 font-display text-xl px-3 py-1 rounded-md transition-colors duration-200 ${
@@ -64,22 +62,17 @@ export function RootLayout() {
     setSidebarOpen(false);
   }, [pathname]);
 
-  // Contextual sidebar, resolved from the route and the record metadata
-  // (perimeter + owning campaign). The record is read through the shared
-  // ["record", slug] query — reactive on direct loads, one cache entry
-  // shared with the record page.
-  const recordMatch = /^\/records\/([^/]+)$/.exec(pathname);
-  const campaignViewMatch = /^\/campaigns\/([^/]+)$/.exec(pathname);
-  const decodedSlug = recordMatch ? decodeURIComponent(recordMatch[1]) : null;
-  const recordMeta = useQuery({
-    queryKey: ["record", decodedSlug],
-    queryFn: () => api<Entity>(`/api/records/${decodedSlug}`),
-    enabled: decodedSlug !== null,
-    retry: false,
-  });
+  // Contextual sidebar, resolved straight from the URL shape: lore
+  // records live at /lore/<uuid> and campaign records inside their
+  // /campaigns/<uuid>[/<chapter>[/<scene>]] hierarchy — no record fetch
+  // needed to pick the mode.
+  const loreRecordMatch = /^\/lore\/([^/]+)$/.exec(pathname);
+  const campaignPathMatch = /^\/campaigns\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/.exec(
+    pathname,
+  );
   type SidebarMode =
     | { kind: "lore" }
-    | { kind: "campaign"; slug: string }
+    | { kind: "campaign"; id: string }
     | { kind: "none" };
   let mode: SidebarMode = { kind: "lore" };
   if (
@@ -91,15 +84,13 @@ export function RootLayout() {
     pathname === "/calendar"
   ) {
     mode = { kind: "none" };
-  } else if (campaignViewMatch) {
-    mode = { kind: "campaign", slug: decodeURIComponent(campaignViewMatch[1]) };
-  } else if (recordMatch && recordMeta.data?.perimeter === "campaign") {
-    const campaignSlug =
-      recordMeta.data.type === "campaign"
-        ? recordMeta.data.slug
-        : recordMeta.data.campaign?.slug ?? null;
-    mode = campaignSlug ? { kind: "campaign", slug: campaignSlug } : { kind: "none" };
+  } else if (campaignPathMatch) {
+    mode = { kind: "campaign", id: campaignPathMatch[1] };
+  } else if (loreRecordMatch) {
+    mode = { kind: "lore" };
   }
+  const activeRecordId =
+    loreRecordMatch?.[1] ?? campaignPathMatch?.[3] ?? campaignPathMatch?.[2] ?? null;
 
   const loreActive = pathname === "/lore" || mode.kind === "lore";
   const campaignsActive = mode.kind === "campaign" || pathname === "/campaigns";
@@ -186,10 +177,10 @@ export function RootLayout() {
                     <AppSidebar />
                   ) : (
                     <CampaignSidebar
-                      campaignSlug={mode.slug}
+                      campaignId={mode.id}
                       // The campaign view highlights the campaign header;
-                      // record pages highlight their own entry.
-                      activeSlug={decodedSlug ?? mode.slug}
+                      // chapter/scene pages highlight their own entry.
+                      activeId={activeRecordId ?? mode.id}
                     />
                   )}
                 </div>

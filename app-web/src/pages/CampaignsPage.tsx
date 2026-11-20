@@ -48,7 +48,7 @@ export function CampaignsPage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
-      await api("/api/records", {
+      const created = await api<{ id: string }>("/api/records", {
         method: "POST",
         body: {
           slug: formString(form, "slug"),
@@ -58,9 +58,9 @@ export function CampaignsPage() {
         },
       });
       void navigate({
-        to: "/records/$slug",
-        params: { slug: formString(form, "slug") },
-        search: { edit: "1" },
+        to: "/campaigns/$id",
+        params: { id: created.id },
+        search: { edit: true },
       });
       await campaigns.refetch();
     } catch (submitError) {
@@ -114,8 +114,8 @@ export function CampaignsPage() {
                 {t(`campaigns.status.${campaign.tracking.status}`)}
               </span>
               <Link
-                to="/campaigns/$slug"
-                params={{ slug: campaign.slug }}
+                to="/campaigns/$id"
+                params={{ id: campaign.id }}
                 className="text-sm text-accent hover:underline"
               >
                 {t("campaigns.open")}

@@ -44,7 +44,7 @@ export function SheetChips(props: {
 }
 
 /** One labeled group of record links (one <dl> entry). */
-function ReferenceGroup(props: { readonly label: string; readonly targets: Array<{ slug: string; title: string }> }) {
+function ReferenceGroup(props: { readonly label: string; readonly targets: Array<{ id: string; slug: string; title: string }> }) {
   return (
     <div className="record-read-field">
       <dt>{props.label}</dt>
@@ -62,7 +62,7 @@ function ReferenceGroup(props: { readonly label: string; readonly targets: Array
  */
 export function ReferenceGroups(props: {
   readonly groups: Array<readonly [string, string]>;
-  readonly references: Record<string, Array<{ slug: string; title: string }>>;
+  readonly references: Record<string, Array<{ id: string; slug: string; title: string }>>;
   readonly className?: string;
 }) {
   const { t } = useTranslation();
@@ -119,7 +119,7 @@ export function ProseSections(props: {
  * guards the sheets repeat around their structural sections. */
 export function hasFilledGroups(
   groups: Array<readonly [string, string]>,
-  references: Record<string, Array<{ slug: string; title: string }>>,
+  references: Record<string, Array<{ id: string; slug: string; title: string }>>,
 ): boolean {
   return groups.some(([key]) => (references[key] ?? []).length > 0);
 }

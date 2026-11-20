@@ -62,7 +62,29 @@ describe("ProseEditor", () => {
     expect(document.querySelector(".ProseMirror")).toBe(editorBefore);
   });
 
-  it("navigates to the referenced record when a mention is clicked in readonly mode", () => {
+  it("navigates to the referenced record when a mention is clicked in readonly mode", async () => {
+    // The click resolves the target by slug first: the stub answers a
+    // world record, so the route is /lore/<uuid>.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/records/osgwirond") {
+          return {
+            ok: true,
+            json: async () => ({
+              id: "uuid-osgwirond",
+              slug: "osgwirond",
+              type: "places",
+              perimeter: "world",
+              title: "Osgwirond",
+              tags: [],
+              fields: {},
+            }),
+          };
+        }
+        return { ok: true, status: 204, json: async () => ({}) };
+      }),
+    );
     renderWithProviders(<ProseEditor markdown="" readonly />);
     const pm = document.querySelector(".ProseMirror")!;
     const span = document.createElement("span");
@@ -70,9 +92,11 @@ describe("ProseEditor", () => {
     span.setAttribute("data-id", "osgwirond");
     pm.appendChild(span);
     span.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(navigateSpy).toHaveBeenCalledWith({
-      to: "/records/$slug",
-      params: { slug: "osgwirond" },
-    });
+    await vi.waitFor(() =>
+      expect(navigateSpy).toHaveBeenCalledWith({
+        to: "/lore/$id",
+        params: { id: "uuid-osgwirond" },
+      }),
+    );
   });
 });

@@ -153,19 +153,11 @@ describe("RootLayout navigation", () => {
     expect(screen.getByText("Chapter One")).toBeDefined();
   });
 
-  it("shows the campaign tree on a chapter record page", async () => {
+  it("shows the campaign tree on a chapter page", async () => {
     mockSession("admin");
-    queryClient.setQueryData(["record", "chapter-one"], {
-      id: "2",
-      slug: "chapter-one",
-      type: "chapter",
-      perimeter: "campaign",
-      title: "Chapter One",
-      tags: [],
-      fields: {},
-      campaign: { slug: "war-of-embers", title: "War of Embers" },
-    });
-    routerState.pathname = "/records/chapter-one";
+    // The sidebar mode resolves from the URL shape alone: the chapter
+    // hierarchy path carries the campaign id.
+    routerState.pathname = "/campaigns/war-of-embers/chapter-one";
     renderWithProviders(<RootLayout />);
     await vi.waitFor(() =>
       expect(screen.getByText("War of Embers")).toBeDefined(),

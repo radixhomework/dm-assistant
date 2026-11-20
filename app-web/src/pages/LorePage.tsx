@@ -45,7 +45,7 @@ export function LorePage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
-      await api("/api/records", {
+      const created = await api<{ id: string }>("/api/records", {
         method: "POST",
         body: {
           slug: formString(form, "slug"),
@@ -59,9 +59,9 @@ export function LorePage() {
       await records.refetch();
       // Straight into editing the freshly created record.
       void navigate({
-        to: "/records/$slug",
-        params: { slug: formString(form, "slug") },
-        search: { edit: "1" },
+        to: "/lore/$id",
+        params: { id: created.id },
+        search: { edit: true },
       });
     } catch (submitError) {
       setError(String(submitError));
@@ -143,8 +143,8 @@ export function LorePage() {
                   <li key={record.slug} className="flex items-baseline justify-between rounded-md border border-border bg-surface px-4 py-2">
                     <span className="text-ink">{record.title}</span>
                     <Link
-                      to="/records/$slug"
-                      params={{ slug: record.slug }}
+                      to="/lore/$id"
+                      params={{ id: record.id }}
                       className="text-sm text-accent hover:underline"
                     >
                       {t("lore.open")}

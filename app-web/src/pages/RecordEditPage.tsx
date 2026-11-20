@@ -10,18 +10,20 @@ import { RecordSheet } from "../components/record-sheet.js";
 import { bespokeSheetFor } from "../components/record-sheet-registry.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { getWorldName } from "../api/auth.js";
-import { searchFlagTrue } from "../router/search-flag.js";
 import { useRequireAuth } from "./useRequireAuth.js";
+import { recordRoute } from "../urls.js";
 import type { Entity } from "../types.js";
 
 /**
- * Record page: opens in reading mode (PRE-SPEC.md §5 rule 10 flow) and an
- * explicit Edit action leads to the edit form; saving or cancelling
- * returns to the reading view. The bespoke per-template sheet replaces
- * the interim field rows at phase 9. The page splits into a state-owning
- * RecordPage and the two view components below — each stays under the
- * cognitive-complexity gate.
+ * Record pages: uuid-addressed, opening in reading mode (PRE-SPEC.md §5
+ * rule 10 flow) with an explicit Edit action leading to the edit form;
+ * saving or cancelling returns to the reading view. The bespoke
+ * per-template sheet replaces the generic field rows. The page splits
+ * into a state-owning RecordPage and the two view components — each
+ * stays under the cognitive-complexity gate.
  */
+
+export type RecordPageKind = "lore" | "chapter" | "scene";
 
 /** The sticky page header shared by both modes, with mode-specific
  * actions on the right. */
@@ -51,11 +53,11 @@ function RecordReadView(props: {
   readonly data: Entity;
   readonly saved: boolean;
   readonly error: string | null;
-  readonly onNewRecord: () => void;
   readonly onEnterEdit: () => void;
   readonly onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const Sheet = bespokeSheetFor(props.data.type);
   return (
     <div>
@@ -66,7 +68,7 @@ function RecordReadView(props: {
           <>
             <button
               type="button"
-              onClick={props.onNewRecord}
+              onClick={() => void navigate({ to: "/lore", search: { new: true } })}
               className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
               title={t("lore.newRecord")}
               aria-label={t("lore.newRecord")}
@@ -98,11 +100,7 @@ function RecordReadView(props: {
       {props.error && <p className="mt-3 text-sm text-radish">{props.error}</p>}
       <RecordSheet
         record={props.data}
-        slot={
-          Sheet ? (
-            <Sheet record={props.data} />
-          ) : undefined
-        }
+        slot={Sheet ? <Sheet record={props.data} /> : undefined}
       />
     </div>
   );
@@ -115,11 +113,12 @@ function RecordEditView(props: {
   readonly fields: Record<string, unknown>;
   readonly setFields: (fields: Record<string, unknown>) => void;
   readonly error: string | null;
-  readonly saving: boolean;
   readonly onSave: (event: React.SubmitEvent<HTMLFormElement>) => void;
   readonly onCancel: () => void;
   readonly onAttachReference: (field: string, targetSlug: string) => Promise<void>;
   readonly onDetachReference: (field: string, targetSlug: string) => Promise<void>;
+  readonly hideReferenceFields?: readonly string[];
+  readonly saving: boolean;
 }) {
   const { t } = useTranslation();
   const schema = templateSchemaOf(props.data.type);
@@ -172,6 +171,7 @@ function RecordEditView(props: {
             references={(props.data.references ?? {}) as Record<string, Array<{ slug: string; title: string }>>}
             onAttachReference={(field, targetSlug) => void props.onAttachReference?.(field, targetSlug)}
             onDetachReference={(field, targetSlug) => void props.onDetachReference?.(field, targetSlug)}
+            hideReferenceFields={props.hideReferenceFields}
           />
         ) : (
           <label className="flex flex-col gap-1 text-sm">
@@ -186,18 +186,23 @@ function RecordEditView(props: {
 }
 
 /** The state-owning record page: query, draft lifecycle and the record
- * mutations; the views receive callbacks. */
-function RecordPage({
-  slug,
-  initialEdit,
-}: {
-  readonly slug: string;
+ * mutations; the views receive callbacks. Every API call carries the
+ * uuid — the backend resolves it like the slug. */
+function RecordPage(props: {
+  readonly id: string;
   readonly initialEdit: boolean;
+  readonly kind: RecordPageKind;
+  /** Where a successful delete navigates back to (the parent page for
+   * hierarchy records, the Lore index for world records). */
+  readonly afterDeleteTo: { to: string; params?: Record<string, string> };
+  /** The hierarchy reference pickers hidden in edit mode (parents are
+   * immutable). */
+  readonly hideReferenceFields?: readonly string[];
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
-  const [mode, setMode] = useState<"read" | "edit">(initialEdit ? "edit" : "read");
+  const [mode, setMode] = useState<"read" | "edit">(props.initialEdit ? "edit" : "read");
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
@@ -207,8 +212,8 @@ function RecordPage({
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
   const record = useQuery({
-    queryKey: ["record", slug],
-    queryFn: () => api<Entity>(`/api/records/${slug}`),
+    queryKey: ["record", props.id],
+    queryFn: () => api<Entity>(`/api/records/${props.id}`),
     enabled: ready,
     retry: false,
   });
@@ -238,6 +243,9 @@ function RecordPage({
 
   if (!ready) return null;
   if (record.isPending) return <p className="text-muted">{t("common.loading")}</p>;
+  // The error state precedes the draft wait: a failed request never
+  // initializes fields, and the page must show the failure instead of
+  // the loading message.
   if (record.isError || !record.data)
     return <p className="text-radish">{t("common.error")}</p>;
   if (fields === null) return <p className="text-muted">{t("common.loading")}</p>;
@@ -263,12 +271,13 @@ function RecordPage({
   async function onSaveRecord(): Promise<void> {
     // The sidebar campaign tree and campaign view share this cache.
     await queryClient.invalidateQueries({ queryKey: ["campaign-view"] });
+    await queryClient.invalidateQueries({ queryKey: ["chapter-trackings"] });
   }
 
   async function attachReference(field: string, targetSlug: string): Promise<void> {
     setError(null);
     try {
-      await api(`/api/records/${slug}/refs/${field}`, {
+      await api(`/api/records/${props.id}/refs/${field}`, {
         method: "POST",
         body: { targetSlug },
       });
@@ -281,7 +290,7 @@ function RecordPage({
   async function detachReference(field: string, targetSlug: string): Promise<void> {
     setError(null);
     try {
-      await api(`/api/records/${slug}/refs/${field}/${targetSlug}`, {
+      await api(`/api/records/${props.id}/refs/${field}/${targetSlug}`, {
         method: "DELETE",
       });
       await record.refetch();
@@ -310,7 +319,7 @@ function RecordPage({
     }
     setSaving(true);
     try {
-      await api(`/api/records/${slug}`, {
+      await api(`/api/records/${props.id}`, {
         method: "PATCH",
         body: {
           title: formString(form, "title"),
@@ -334,8 +343,11 @@ function RecordPage({
     if (!confirm(t("record.deleteConfirm"))) return;
     setError(null);
     try {
-      await api(`/api/records/${slug}`, { method: "DELETE" });
-      void navigate({ to: "/" });
+      await api(`/api/records/${props.id}`, { method: "DELETE" });
+      void navigate({
+        to: props.afterDeleteTo.to,
+        params: props.afterDeleteTo.params ?? ({} as never),
+      });
     } catch (deleteError) {
       setError(String(deleteError));
     }
@@ -348,11 +360,12 @@ function RecordPage({
         fields={fields}
         setFields={setFields}
         error={error}
-        saving={saving}
         onSave={onSave}
         onCancel={cancelEdit}
         onAttachReference={attachReference}
         onDetachReference={detachReference}
+        hideReferenceFields={props.hideReferenceFields}
+        saving={saving}
       />
     );
   }
@@ -362,26 +375,103 @@ function RecordPage({
       data={data}
       saved={saved}
       error={error}
-      onNewRecord={() => void navigate({ to: "/lore", search: { new: "1" } })}
       onEnterEdit={enterEdit}
       onDelete={() => void onDelete()}
     />
   );
 }
 
-/** Route entry: remounts per record so navigation resets the session
- * state through the component lifecycle. */
-export function RecordEditPage() {
-  const { slug } = useParams({ from: "/records/$slug" });
-  // The selector reads the RAW parsed search (edit=1 arrives as the
-  // number 1), not the validated route value — normalize with the same
-  // helper the route's validateSearch uses.
+/** Route entry — Lore records (world perimeter). */
+export function LoreRecordPage() {
+  const { id } = useParams({ from: "/lore/$id" });
+  // validateSearch normalizes the edit flag to the boolean true; accept
+  // both spellings so the creation forms' edit intent survives.
   const initialEdit = useRouterState({
-    select: (s) =>
-      searchFlagTrue(
-        (s.location.search ?? {}) as Record<string, unknown>,
-        "edit",
-      ) === true,
+    select: (s) => s.location.search?.edit === "1" || s.location.search?.edit === true,
   });
-  return <RecordPage key={slug} slug={slug} initialEdit={initialEdit} />;
+  // Remount per record: navigation resets the session state through the
+  // component lifecycle instead of competing effects.
+  return (
+    <RecordPage
+      key={id}
+      id={id}
+      initialEdit={initialEdit}
+      kind="lore"
+      afterDeleteTo={{ to: "/lore" }}
+    />
+  );
+}
+
+/** Route entry — a Chapter inside its campaign. */
+export function ChapterRecordPage() {
+  const { id, chapterId } = useParams({ from: "/campaigns/$id/$chapterId" });
+  const navigate = useNavigate();
+  const initialEdit = useRouterState({
+    select: (s) => s.location.search?.edit === "1" || s.location.search?.edit === true,
+  });
+  const record = useQuery({
+    queryKey: ["record", chapterId],
+    queryFn: () => api<Entity>(`/api/records/${chapterId}`),
+    retry: false,
+  });
+  // Chain validation: the chapter's owning campaign must be the URL's
+  // campaign — a wrong chain redirects to the record's own URL.
+  const campaignId = record.data?.campaign?.id;
+  const chainMismatch =
+    record.isSuccess && record.data !== undefined && campaignId !== id;
+  useEffect(() => {
+    if (record.data && chainMismatch) {
+      void navigate({ to: recordRoute(record.data).to, params: recordRoute(record.data).params });
+    }
+  }, [record.data, chainMismatch, navigate]);
+  if (chainMismatch) return null;
+  return (
+    <RecordPage
+      key={chapterId}
+      id={chapterId}
+      initialEdit={initialEdit}
+      kind="chapter"
+      afterDeleteTo={{ to: "/campaigns/$id", params: { id } }}
+      hideReferenceFields={["campaign"]}
+    />
+  );
+}
+
+/** Route entry — a Scene inside its chapter inside its campaign. */
+export function SceneRecordPage() {
+  const { id, chapterId, sceneId } = useParams({
+    from: "/campaigns/$id/$chapterId/$sceneId",
+  });
+  const navigate = useNavigate();
+  const initialEdit = useRouterState({
+    select: (s) => s.location.search?.edit === "1" || s.location.search?.edit === true,
+  });
+  const record = useQuery({
+    queryKey: ["record", sceneId],
+    queryFn: () => api<Entity>(`/api/records/${sceneId}`),
+    retry: false,
+  });
+  // Chain validation: the scene's owning campaign and chapter must match
+  // the URL — a wrong chain redirects to the record's own URL.
+  const chapterIdFromRefs = record.data?.references?.chapter?.[0]?.id;
+  const chainMismatch =
+    record.isSuccess &&
+    record.data !== undefined &&
+    (record.data.campaign?.id !== id || chapterIdFromRefs !== chapterId);
+  useEffect(() => {
+    if (record.data && chainMismatch) {
+      void navigate({ to: recordRoute(record.data).to, params: recordRoute(record.data).params });
+    }
+  }, [record.data, chainMismatch, navigate]);
+  if (chainMismatch) return null;
+  return (
+    <RecordPage
+      key={sceneId}
+      id={sceneId}
+      initialEdit={initialEdit}
+      kind="scene"
+      afterDeleteTo={{ to: "/campaigns/$id/$chapterId", params: { id, chapterId } }}
+      hideReferenceFields={["chapter"]}
+    />
+  );
 }

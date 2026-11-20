@@ -4,8 +4,10 @@ import { CampaignViewPage } from "./CampaignViewPage";
 import { renderWithProviders } from "../testing/render.js";
 
 vi.mock("@tanstack/react-router", () => ({
-  useParams: () => ({ slug: "north-realm" }),
+  useParams: () => ({ id: "uuid-north-realm" }),
   useNavigate: () => ({ to: vi.fn() }),
+  useSearch: () => ({}),
+  Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));
 
 function mockInstance() {
@@ -23,11 +25,11 @@ function mockInstance() {
           }),
         };
       }
-      if (input === "/api/records/north-realm") {
+      if (input === "/api/records/uuid-north-realm") {
         return {
           ok: true,
           json: async () => ({
-            id: "1",
+            id: "uuid-north-realm",
             slug: "north-realm",
             type: "campaign",
             perimeter: "campaign",
@@ -35,23 +37,25 @@ function mockInstance() {
             tags: [],
             fields: {},
             tracking: {
+              id: "uuid-north-realm",
               slug: "north-realm",
               status: "not_played",
               children: [
-                { slug: "chapter-one", title: "Chapter One", status: "not_played" },
+                { id: "uuid-chapter-one", slug: "uuid-chapter-one", title: "Chapter One", status: "not_played" },
               ],
             },
           }),
         };
       }
-      if (input === "/api/records/chapter-one/tracking") {
+      if (input === "/api/records/uuid-chapter-one/tracking") {
         return {
           ok: true,
           json: async () => ({
-            slug: "chapter-one",
+            id: "uuid-chapter-one",
+            slug: "uuid-chapter-one",
             status: "not_played",
             children: [
-              { slug: "scene-one", title: "Scene One", status: "not_played" },
+              { id: "uuid-scene-one", slug: "uuid-scene-one", title: "Scene One", status: "not_played" },
             ],
           }),
         };
@@ -60,8 +64,8 @@ function mockInstance() {
         return {
           ok: true,
           json: async () => ({
-            id: "3",
-            slug: "scene-one",
+            id: "uuid-scene-one",
+            slug: "uuid-scene-one",
             type: "scene",
             perimeter: "campaign",
             title: "Scene One",
@@ -101,7 +105,7 @@ describe("CampaignViewPage scene creation", () => {
   });
 
   it("creates a scene and attaches it to its chapter", async () => {
-    const fetchMock = vi.fn(async (input: string, _init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
       if (input === "/api/auth/me") {
         return {
           ok: true,
@@ -113,11 +117,11 @@ describe("CampaignViewPage scene creation", () => {
           }),
         };
       }
-      if (input === "/api/records/north-realm") {
+      if (input === "/api/records/uuid-north-realm") {
         return {
           ok: true,
           json: async () => ({
-            id: "1",
+            id: "uuid-north-realm",
             slug: "north-realm",
             type: "campaign",
             perimeter: "campaign",
@@ -129,7 +133,7 @@ describe("CampaignViewPage scene creation", () => {
               status: "not_played",
               children: [
                 {
-                  slug: "chapter-one",
+                  slug: "uuid-chapter-one",
                   title: "Chapter One",
                   status: "not_played",
                 },
@@ -138,15 +142,19 @@ describe("CampaignViewPage scene creation", () => {
           }),
         };
       }
-      if (input === "/api/records/chapter-one/tracking") {
+      if (input === "/api/records/uuid-chapter-one/tracking") {
         return {
           ok: true,
           json: async () => ({
-            slug: "chapter-one",
+            id: "uuid-chapter-one",
+            slug: "uuid-chapter-one",
             status: "not_played",
             children: [],
           }),
         };
+      }
+      if (input === "/api/records" && init?.method === "POST") {
+        return { ok: true, json: async () => ({ id: "uuid-scene-two" }) };
       }
       return { ok: true, json: async () => ({}) };
     });
@@ -178,7 +186,8 @@ describe("CampaignViewPage scene creation", () => {
       );
       const attached = calls.find(
         ([path, init]) =>
-          path === "/api/records/scene-two/parent" && init?.method === "POST",
+          path === "/api/records/uuid-scene-two/parent" &&
+          init?.method === "POST",
       );
       expect(created).toBeDefined();
       expect(attached).toBeDefined();
@@ -205,20 +214,20 @@ describe("CampaignViewPage deletions", () => {
           }),
         };
       }
-      if (input === "/api/records/north-realm" && init?.method === "DELETE") {
+      if (input === "/api/records/uuid-north-realm" && init?.method === "DELETE") {
         return { ok: true, status: 204 };
       }
-      if (input === "/api/records/chapter-one" && init?.method === "DELETE") {
+      if (input === "/api/records/uuid-chapter-one" && init?.method === "DELETE") {
         return { ok: true, status: 204 };
       }
-      if (input === "/api/records/scene-one" && init?.method === "DELETE") {
+      if (input === "/api/records/uuid-scene-one" && init?.method === "DELETE") {
         return { ok: true, status: 204 };
       }
-      if (input === "/api/records/north-realm") {
+      if (input === "/api/records/uuid-north-realm") {
         return {
           ok: true,
           json: async () => ({
-            id: "1",
+            id: "uuid-north-realm",
             slug: "north-realm",
             type: "campaign",
             perimeter: "campaign",
@@ -226,23 +235,25 @@ describe("CampaignViewPage deletions", () => {
             tags: [],
             fields: {},
             tracking: {
+              id: "uuid-north-realm",
               slug: "north-realm",
               status: "not_played",
               children: [
-                { slug: "chapter-one", title: "Chapter One", status: "not_played" },
+                { id: "uuid-chapter-one", slug: "uuid-chapter-one", title: "Chapter One", status: "not_played" },
               ],
             },
           }),
         };
       }
-      if (input === "/api/records/chapter-one/tracking") {
+      if (input === "/api/records/uuid-chapter-one/tracking") {
         return {
           ok: true,
           json: async () => ({
-            slug: "chapter-one",
+            id: "uuid-chapter-one",
+            slug: "uuid-chapter-one",
             status: "not_played",
             children: [
-              { slug: "scene-one", title: "Scene One", status: "not_played" },
+              { id: "uuid-scene-one", slug: "uuid-scene-one", title: "Scene One", status: "not_played" },
             ],
           }),
         };
@@ -265,7 +276,7 @@ describe("CampaignViewPage deletions", () => {
     (button as HTMLElement).click();
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
-      const removed = calls.find(([path, init]) => path === "/api/records/scene-one" && init?.method === "DELETE");
+      const removed = calls.find(([path, init]) => path === "/api/records/uuid-scene-one" && init?.method === "DELETE");
       expect(removed).toBeDefined();
     });
   });
@@ -282,7 +293,7 @@ describe("CampaignViewPage deletions", () => {
     button.click();
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
-      const removed = calls.find(([path, init]) => path === "/api/records/chapter-one" && init?.method === "DELETE");
+      const removed = calls.find(([path, init]) => path === "/api/records/uuid-chapter-one" && init?.method === "DELETE");
       expect(removed).toBeDefined();
     });
   });
@@ -291,11 +302,13 @@ describe("CampaignViewPage deletions", () => {
     const fetchMock = capturedFetch();
     vi.spyOn(window, "confirm").mockReturnValue(true);
     renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
-    await vi.waitFor(() => expect(screen.getByText("Delete campaign")).toBeDefined());
-    screen.getByText("Delete campaign").click();
+    await vi.waitFor(() =>
+      expect(screen.getByLabelText("Delete campaign")).toBeDefined(),
+    );
+    screen.getByLabelText("Delete campaign").click();
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
-      const removed = calls.find(([path, init]) => path === "/api/records/north-realm" && init?.method === "DELETE");
+      const removed = calls.find(([path, init]) => path === "/api/records/uuid-north-realm" && init?.method === "DELETE");
       expect(removed).toBeDefined();
     });
   });
@@ -304,11 +317,13 @@ describe("CampaignViewPage deletions", () => {
     const fetchMock = capturedFetch();
     vi.spyOn(window, "confirm").mockReturnValue(false);
     renderWithProviders(<CampaignViewPage />, "/campaigns/north-realm");
-    await vi.waitFor(() => expect(screen.getByText("Delete campaign")).toBeDefined());
-    screen.getByText("Delete campaign").click();
+    await vi.waitFor(() =>
+      expect(screen.getByLabelText("Delete campaign")).toBeDefined(),
+    );
+    screen.getByLabelText("Delete campaign").click();
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
-      const removed = calls.find(([path, init]) => path === "/api/records/north-realm" && init?.method === "DELETE");
+      const removed = calls.find(([path, init]) => path === "/api/records/uuid-north-realm" && init?.method === "DELETE");
       expect(removed).toBeUndefined();
     });
   });
@@ -334,14 +349,14 @@ describe("CampaignViewPage deletion refusal", () => {
             }),
           };
         }
-        if (input === "/api/records/chapter-one" && init?.method === "DELETE") {
+        if (input === "/api/records/uuid-chapter-one" && init?.method === "DELETE") {
           return {
             ok: false,
             status: 409,
             json: async () => ({ message: "This record is a parent: remove its scenes first" }),
           };
         }
-        if (input === "/api/records/north-realm") {
+        if (input === "/api/records/uuid-north-realm") {
           return {
             ok: true,
             json: async () => ({
@@ -356,20 +371,20 @@ describe("CampaignViewPage deletion refusal", () => {
                 slug: "north-realm",
                 status: "not_played",
                 children: [
-                  { slug: "chapter-one", title: "Chapter One", status: "not_played" },
+                  { slug: "uuid-chapter-one", title: "Chapter One", status: "not_played" },
                 ],
               },
             }),
           };
         }
-        if (input === "/api/records/chapter-one/tracking") {
+        if (input === "/api/records/uuid-chapter-one/tracking") {
           return {
             ok: true,
             json: async () => ({
-              slug: "chapter-one",
+              slug: "uuid-chapter-one",
               status: "not_played",
               children: [
-                { slug: "scene-one", title: "Scene One", status: "not_played" },
+                { slug: "uuid-scene-one", title: "Scene One", status: "not_played" },
               ],
             }),
           };
@@ -382,9 +397,7 @@ describe("CampaignViewPage deletion refusal", () => {
     await vi.waitFor(() => expect(screen.getByText("Chapter One")).toBeDefined());
     const card = screen.getByText("Chapter One").closest("li");
     if (!card) throw new Error("chapter card missing");
-    const button = [...card.querySelectorAll(":scope > div button")].find(
-      (b) => b.textContent === "Delete",
-    ) as HTMLElement | undefined;
+    const button = [...card.querySelectorAll(":scope > div button")].find((b) => b.textContent === "Delete") as HTMLElement | undefined;
     if (!button) throw new Error("chapter delete button missing");
     button.click();
     await vi.waitFor(() =>

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { RecordEditPage } from "./RecordEditPage";
+import { LoreRecordPage } from "./RecordEditPage";
 import { renderWithProviders } from "../testing/render.js";
 
 // Mutable search state the mocked router hook exposes; tests set the edit
@@ -12,7 +12,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
-    useParams: () => ({ slug: "city-of-glass" }),
+    useParams: () => ({ id: "rec-1" }),
     useNavigate: () => ({ to: vi.fn() }),
     useRouterState: (opts?: { select?: (s: unknown) => unknown }) => {
       const state = {
@@ -22,15 +22,26 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     },
     // The reading view renders references through Link; a plain anchor
     // keeps the assertion independent of the router tree.
-    Link: (props: { params?: { slug?: string }; children?: ReactNode }) => (
-      <a href={`#${props.params?.slug ?? ""}`}>{props.children}</a>
+    Link: (props: { params?: Record<string, string>; children?: ReactNode }) => (
+      <a
+        href={
+          props.params
+            ? "#" + Object.entries(props.params).map(([k, v]) => `${k}=${v}`).join("&")
+            : "#"
+        }
+      >
+        {props.children}
+      </a>
     ),
   };
 });
 
 function recordOf(
   fields: Record<string, unknown>,
-  references: Record<string, Array<{ slug: string; title: string }>> = {},
+  references: Record<
+    string,
+    Array<{ id: string; slug: string; title: string }>
+  > = {},
 ) {
   return {
     id: "1",
@@ -82,7 +93,7 @@ describe("RecordEditPage", () => {
       return { ok: true, json: async () => recordOf({ population: "1M" }) };
     });
     vi.stubGlobal("fetch", fetchMock);
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
@@ -101,7 +112,7 @@ describe("RecordEditPage", () => {
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await vi.waitFor(() => {
       const calls = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>);
-      const patch = calls.find(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "PATCH");
+      const patch = calls.find(([path, init]) => path === "/api/records/rec-1" && init?.method === "PATCH");
       expect(patch).toBeDefined();
       const payload = JSON.parse(String(patch![1].body)) as { fields: Record<string, unknown> };
       expect(payload.fields).toEqual({ population: "2M" });
@@ -109,7 +120,7 @@ describe("RecordEditPage", () => {
   });
 
   it("shows a success confirmation after saving", async () => {
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
@@ -122,7 +133,7 @@ describe("RecordEditPage", () => {
   });
 
   it("opens in reading mode by default", async () => {
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
@@ -140,7 +151,7 @@ describe("RecordEditPage", () => {
       return { ok: true, json: async () => recordOf({}) };
     });
     vi.stubGlobal("fetch", fetchMock);
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
@@ -151,7 +162,7 @@ describe("RecordEditPage", () => {
     (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).click();
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
-      expect(calls.some(([path, i]) => path === "/api/records/city-of-glass" && i?.method === "PATCH")).toBe(true);
+      expect(calls.some(([path, i]) => path === "/api/records/rec-1" && i?.method === "PATCH")).toBe(true);
     });
     // Back in reading; the header shows the reading actions again.
     await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
@@ -161,7 +172,7 @@ describe("RecordEditPage", () => {
     (screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector("#record-edit-form")).toBeNull());
     const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
-    const patches = calls.filter(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "PATCH");
+    const patches = calls.filter(([path, init]) => path === "/api/records/rec-1" && init?.method === "PATCH");
     expect(patches).toHaveLength(1);
   });
 
@@ -170,18 +181,18 @@ describe("RecordEditPage", () => {
     // the boolean and string spellings keep working through the same
     // searchFlagTrue helper the route validator uses.
     searchState.edit = true;
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
 
     searchState.edit = "1";
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
 
     searchState.edit = 1;
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
   });
 
@@ -205,14 +216,14 @@ describe("RecordEditPage", () => {
         };
       }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() => expect(screen.getByText("Chapters")).toBeDefined());
     expect(screen.getByText("Chap1")).toBeDefined();
   });
 
   it("discards the field draft on cancel instead of leaking it back", async () => {
     stubFetch(recordOf({ population: "1M" }));
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
@@ -239,7 +250,7 @@ describe("RecordEditPage", () => {
 
   it("translates enum values in the reading view", async () => {
     stubFetch(recordOf({ place_type: "intangible_place", population: "1M" }));
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("Intangible place")).toBeDefined(),
     );
@@ -272,13 +283,13 @@ describe("RecordEditPage", () => {
         if (input.endsWith("/backlinks")) {
           return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
         }
-        if (input === "/api/records/city-of-glass") {
+        if (input === "/api/records/rec-1") {
           return { ok: true, json: async () => eventRecord };
         }
         return { ok: true, status: 204, json: async () => ({}) };
       }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() => expect(screen.getByText("An 842")).toBeDefined());
     // No month-format rendering for a year-only date.
     expect(screen.queryByText(" 842")).toBeNull();
@@ -305,24 +316,30 @@ describe("RecordEditPage", () => {
             }),
           };
         }
-        if (input === "/api/records/city-of-glass/backlinks") {
+        // The backlinks query keys on the record's slug, not its uuid.
+        if (input.endsWith("/backlinks")) {
           return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
         }
-        if (input === "/api/records/city-of-glass") {
+        if (input === "/api/records/rec-1") {
           return { ok: true, json: async () => eventRecord };
         }
         return { ok: true, status: 204, json: async () => ({}) };
       }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
-    await vi.waitFor(() =>
-      expect(screen.getByText("M1 5, 842")).toBeDefined(),
-    );
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
+    await vi.waitFor(() => {
+      // The EventSheet renders the date chip as a label span + value
+      // span: assert on the whole chip.
+      const chip = screen
+        .getByText("Start")
+        .closest('span[class*="rounded-md"]');
+      expect(chip?.textContent).toBe("Start M1 5, 842");
+    });
   });
 
   it("renders prose fields through the readonly editor", async () => {
     stubFetch(recordOf({ public_description: "Sunlit **towers**." }));
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(document.querySelectorAll(".ProseMirror")).toHaveLength(1),
     );
@@ -332,26 +349,62 @@ describe("RecordEditPage", () => {
   });
 
   it("renders references as links to the referenced records", async () => {
-    stubFetch(
-      recordOf(
-        { population: "1M" },
-        {
-          leaders: [
-            { slug: "the-glass-region", title: "The Glass Region" },
-            { slug: "alpha-isle", title: "Alpha Isle" },
-          ],
-        },
-      ),
+    // The link routes resolve each target through its uuid: the stub
+    // answers the target lookups with world-record payloads.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/api/auth/me") {
+          return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
+        }
+        if (input === "/api/records/rec-1/backlinks" || input === "/api/records/city-of-glass/backlinks") {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
+        if (input === "/api/records/rec-1") {
+          return {
+            ok: true,
+            json: async () =>
+              recordOf(
+                { population: "1M" },
+                {
+                  leaders: [
+                    { id: "uuid-glass-region", slug: "the-glass-region", title: "The Glass Region" },
+                    { id: "uuid-alpha-isle", slug: "alpha-isle", title: "Alpha Isle" },
+                  ],
+                },
+              ),
+          };
+        }
+        if (input === "/api/records/uuid-glass-region") {
+          return {
+            ok: true,
+            json: async () => ({
+              id: "uuid-glass-region",
+              slug: "the-glass-region",
+              type: "places",
+              perimeter: "world",
+              title: "The Glass Region",
+              tags: [],
+              fields: {},
+            }),
+          };
+        }
+        return { ok: true, json: async () => ({}) };
+      }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("The Glass Region")).toBeDefined(),
     );
     // Title-sorted, comma-separated.
     const dd = screen.getByText("The Glass Region").closest("dd")!;
     expect(dd.textContent).toBe("Alpha Isle, The Glass Region");
-    const link = screen.getByText("The Glass Region").closest("a");
-    expect(link?.getAttribute("href")).toBe("#the-glass-region");
+    // Each link carries its target's uuid route params (the stub answers
+    // the world-record payloads, so the params point at /lore/<uuid>).
+    await vi.waitFor(() => {
+      const link = screen.getByText("The Glass Region").closest("a");
+      expect(link?.getAttribute("href")).toContain("id=uuid-glass-region");
+    });
   });
 
   it("shows the error state when the record request fails", async () => {
@@ -363,13 +416,13 @@ describe("RecordEditPage", () => {
         if (input === "/api/auth/me") {
           return { ok: true, json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }) };
         }
-        if (input === "/api/records/city-of-glass") {
+        if (input === "/api/records/rec-1") {
           return { ok: false, status: 500, json: async () => ({ message: "boom" }) };
         }
         return { ok: true, json: async () => ({}) };
       }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("Something went wrong")).toBeDefined(),
     );
@@ -388,7 +441,7 @@ describe("RecordEditPage", () => {
         if (input.endsWith("/backlinks")) {
           return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
         }
-        if (input === "/api/records/city-of-glass" && init?.method === "PATCH") {
+        if (input === "/api/records/rec-1" && init?.method === "PATCH") {
           // Hang until the test resolves it: the save is pending.
           return new Promise((resolve) => {
             resolvePatch = resolve;
@@ -397,7 +450,7 @@ describe("RecordEditPage", () => {
         return { ok: true, json: async () => recordOf({}) };
       }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );
@@ -427,13 +480,13 @@ describe("RecordEditPage", () => {
         if (input.endsWith("/backlinks")) {
           return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
         }
-        if (input === "/api/records/city-of-glass" && init?.method === "PATCH") {
+        if (input === "/api/records/rec-1" && init?.method === "PATCH") {
           return { ok: false, status: 500, json: async () => ({ message: "boom" }) };
         }
         return { ok: true, json: async () => recordOf({}) };
       }),
     );
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
     await vi.waitFor(() =>
       expect(screen.getByText("City of Glass")).toBeDefined(),
     );

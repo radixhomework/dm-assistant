@@ -7,6 +7,7 @@ import { useCalendarDefinition } from "../calendar/use-calendar.js";
 import { classifyField } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { templateSchemaOf } from "@dm/schemas";
+import { useRecordRoute } from "../urls.js";
 import type { CalendarDate } from "@dm/schemas";
 import type { Entity } from "../types.js";
 
@@ -21,14 +22,40 @@ type FieldRow = { key: string; label: string; node: React.ReactNode };
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 type Backlinks = {
-  fields: Record<string, Array<{ slug: string; title: string }>>;
-  mentions: Array<{ slug: string; title: string }>;
+  fields: Record<
+    string,
+    Array<{ id: string; slug: string; title: string; type: string; perimeter: string }>
+  >;
+  mentions: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    type: string;
+    perimeter: string;
+  }>;
 };
 
 /** Links to records, sorted alphabetically by title (not slug) and
  * separated by commas. */
+/** One record link resolved through the target's uuid — the route
+ * depends on the target's domain (Lore or campaign hierarchy). */
+function RecordLink(props: {
+  readonly target: { id: string; slug: string; title: string };
+}) {
+  const route = useRecordRoute(props.target);
+  return (
+    <Link
+      to={route?.to ?? "/lore/$id"}
+      params={route?.params ?? { id: props.target.id }}
+      className="text-accent hover:underline"
+    >
+      {props.target.title}
+    </Link>
+  );
+}
+
 export function TitleLinks(props: {
-  readonly targets: Array<{ slug: string; title: string }>;
+  readonly targets: Array<{ id: string; slug: string; title: string }>;
 }) {
   const sorted = [...props.targets].sort((a, b) =>
     a.title.localeCompare(b.title, "fr"),
@@ -38,13 +65,7 @@ export function TitleLinks(props: {
       {sorted.map((target, index) => (
         <Fragment key={target.slug}>
           {index > 0 && ", "}
-          <Link
-            to="/records/$slug"
-            params={{ slug: target.slug }}
-            className="text-accent hover:underline"
-          >
-            {target.title}
-          </Link>
+          <RecordLink target={target} />
         </Fragment>
       ))}
     </>
@@ -154,17 +175,33 @@ export function RecordSheet(props: {
             <p className="mt-2 text-muted">{t("record.noChildren")}</p>
           ) : (
             <ul className="mt-2 flex flex-col gap-1">
-              {children.map((child) => (
-                <li key={child.slug}>
-                  <Link
-                    to="/records/$slug"
-                    params={{ slug: child.slug }}
-                    className="text-accent hover:underline"
-                  >
-                    {child.title}
-                  </Link>
-                </li>
-              ))}
+              {children.map((child) => {
+                // Children are hierarchy records: a campaign's chapters
+                // live at /campaigns/<campaign>/<chapter>, a chapter's
+                // scenes one level deeper.
+                const route =
+                  record.type === "campaign"
+                    ? { to: "/campaigns/$id/$chapterId", params: { id: record.id, chapterId: child.id } }
+                    : {
+                        to: "/campaigns/$id/$chapterId/$sceneId",
+                        params: {
+                          id: record.campaign?.id ?? record.id,
+                          chapterId: record.id,
+                          sceneId: child.id,
+                        },
+                      };
+                return (
+                  <li key={child.slug}>
+                    <Link
+                      to={route.to}
+                      params={route.params}
+                      className="text-accent hover:underline"
+                    >
+                      {child.title}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -273,7 +310,7 @@ function GenericFieldRows(props: {
             <div key={fieldKey} className="record-read-field">
               <dt>{t(`fields.${fieldKey}`)}</dt>
               <dd>
-                <TitleLinks targets={targets as Array<{ slug: string; title: string }>} />
+                <TitleLinks targets={targets as Array<{ id: string; slug: string; title: string }>} />
               </dd>
             </div>
           ))}

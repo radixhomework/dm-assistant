@@ -1,18 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Pencil } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Save, Trash2 } from "lucide-react";
 import { formString } from "../forms.js";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { RecordFormFields } from "../components/record-form-fields.js";
+import { IllustrationBanner, ProseSections } from "../components/sheet-parts.js";
 import { useSlugAutoFill } from "../slug.js";
 import { useRequireAuth } from "./useRequireAuth.js";
+import { templateSchemaOf } from "@dm/schemas";
 import type { Entity } from "../types.js";
 
 type Tracking = {
+  id?: string;
   slug: string;
   status: string;
-  children: Array<{ slug: string; title: string; status: string }>;
+  children: Array<{ id?: string; slug: string; title: string; status: string }>;
 };
 
 const statusBadgeClass = (status: string) => {
@@ -50,26 +54,35 @@ function MoveButtons(props: {
   );
 }
 
+/**
+ * The campaign page — one URL for both facets of the campaign: the
+ * record content (illustration, pitch, DM summary) and the chapter/scene
+ * manager. Edit mode (?edit=1) swaps the manager for the campaign
+ * record's template form.
+ */
 export function CampaignViewPage() {
   const { t } = useTranslation();
-  const { slug } = useParams({ from: "/campaigns/$slug" });
+  const { id } = useParams({ from: "/campaigns/$id" });
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
+  const search = useSearch({ from: "/campaigns/$id" }) as { edit?: boolean | string };
+  const inEdit = search.edit === true;
   const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [creating, setCreating] = useState<"chapter" | "scene" | null>(null);
   const [parentForNew, setParentForNew] = useState<string | null>(null);
+  const [fields, setFields] = useState<Record<string, unknown> | null>(null);
 
   const campaign = useQuery({
-    queryKey: ["campaign-view", slug],
-    queryFn: () =>
-      api<Entity & { tracking: Tracking }>(`/api/records/${slug}`),
+    queryKey: ["campaign-view", id],
+    queryFn: () => api<Entity & { tracking: Tracking }>(`/api/records/${id}`),
     enabled: ready,
     retry: false,
   });
 
   const chapterTrackings = useQuery({
-    queryKey: ["chapter-trackings", slug],
+    queryKey: ["chapter-trackings", id],
     queryFn: async (): Promise<Record<string, Tracking>> => {
       const chapters = campaign.data?.tracking.children ?? [];
       const entries = await Promise.all(
@@ -84,6 +97,15 @@ export function CampaignViewPage() {
     retry: false,
   });
 
+  // The record draft seeds once per loaded campaign and is re-seeded
+  // when an edit session starts — the manager's refetches never
+  // overwrite unsaved edits.
+  useEffect(() => {
+    if (campaign.data && fields === null) {
+      setFields(campaign.data.fields);
+    }
+  }, [campaign.data, fields]);
+
   if (!ready) return null;
   if (campaign.isPending)
     return <p className="text-muted">{t("common.loading")}</p>;
@@ -92,6 +114,36 @@ export function CampaignViewPage() {
 
   const data = campaign.data;
 
+  function enterEdit() {
+    setSaved(false);
+    setError(null);
+    if (campaign.data) setFields(campaign.data.fields);
+  }
+
+  function cancelEdit() {
+    if (campaign.data) setFields(campaign.data.fields);
+  }
+
+  async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setSaved(false);
+    const form = new FormData(event.currentTarget);
+    try {
+      await api(`/api/records/${id}`, {
+        method: "PATCH",
+        body: {
+          title: formString(form, "title"),
+          fields: fields ?? {},
+        },
+      });
+      setSaved(true);
+      await campaign.refetch();
+    } catch (saveError) {
+      setError(String(saveError));
+    }
+  }
+
   async function createChild(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!creating || !parentForNew) return;
@@ -99,7 +151,7 @@ export function CampaignViewPage() {
     const form = new FormData(event.currentTarget);
     const childType = creating;
     try {
-      await api("/api/records", {
+      const created = await api<{ id: string }>("/api/records", {
         method: "POST",
         body: {
           slug: formString(form, "slug"),
@@ -108,16 +160,25 @@ export function CampaignViewPage() {
           title: formString(form, "title"),
         },
       });
-      await api(`/api/records/${formString(form, "slug")}/parent`, {
+      await api(`/api/records/${created.id}/parent`, {
         method: "POST",
         body: { parentSlug: parentForNew, kind: childType },
       });
-      // Straight into editing the freshly created chapter/scene.
-      void navigate({
-        to: "/records/$slug",
-        params: { slug: formString(form, "slug") },
-        search: { edit: "1" },
-      });
+      // Straight into editing the freshly created chapter/scene at its
+      // hierarchy URL.
+      if (childType === "chapter") {
+        void navigate({
+          to: "/campaigns/$id/$chapterId",
+          params: { id: parentForNew, chapterId: created.id },
+          search: { edit: true },
+        });
+      } else {
+        void navigate({
+          to: "/campaigns/$id/$chapterId/$sceneId",
+          params: { id, chapterId: parentForNew, sceneId: created.id },
+          search: { edit: true },
+        });
+      }
       setCreating(null);
       setParentForNew(null);
       await campaign.refetch();
@@ -157,7 +218,7 @@ export function CampaignViewPage() {
     setError(null);
     try {
       await api(`/api/records/${targetSlug}`, { method: "DELETE" });
-      if (targetSlug === slug) {
+      if (targetSlug === id) {
         void navigate({ to: "/campaigns" });
         return;
       }
@@ -168,42 +229,122 @@ export function CampaignViewPage() {
     }
   }
 
+  if (inEdit) {
+    // Edit mode: the campaign record's template form (title,
+    // illustration, pitch, DM summary). The chapters manager hides — the
+    // hierarchy is managed from the reading view.
+    const fieldsForForm = (fields ?? {}) as Record<string, unknown>;
+    return (
+      <div>
+        <div className="sticky top-0 z-10 -mx-6 border-b border-border bg-background px-6 pb-3 pt-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="font-display text-4xl font-semibold text-ink">
+                {data.title}
+              </h1>
+              <p className="mt-1 text-sm text-muted">{data.type}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 pt-1.5">
+              <button
+                type="submit"
+                form="campaign-edit-form"
+                className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+                title={t("lore.save")}
+                aria-label={t("lore.save")}
+              >
+                <Save className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface"
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+        <form
+          id="campaign-edit-form"
+          onSubmit={onSave}
+          className="mt-6 flex max-w-md flex-col gap-4"
+        >
+          <label className="flex flex-col gap-1 text-sm">
+            {t("common.fields.title")}
+            <input
+              name="title"
+              required
+              defaultValue={data.title}
+              className="rounded-md border border-border bg-background px-3 py-2"
+            />
+          </label>
+          {templateSchemaOf("campaign") ? (
+            <RecordFormFields
+              schema={templateSchemaOf("campaign")!}
+              fields={fieldsForForm}
+              onChange={setFields}
+            />
+          ) : null}
+          {error && <p className="text-sm text-radish">{error}</p>}
+        </form>
+      </div>
+    );
+  }
+
+  const campaignFields = (data.fields ?? {}) as {
+    illustration?: string;
+    pitch?: string;
+    dm_summary?: string;
+  };
+
   return (
     <div>
-      <div className="flex items-baseline justify-between">
-        <h1 className="font-display text-4xl font-semibold text-ink">{data.title}</h1>
-        <div className="flex items-center gap-2">
-          {/* Edit the campaign record itself (its template fields) through
-           * the standard record page, in edit mode. */}
-          <button
-            type="button"
-            onClick={() => void navigate({ to: "/records/$slug", params: { slug }, search: { edit: "1" } })}
-            className="rounded-md border border-border p-2 text-ink transition-colors duration-200 hover:bg-surface"
-            title={t("record.edit")}
-            aria-label={t("record.edit")}
-          >
-            <Pencil className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm(t("campaigns.deleteCampaignConfirm"))) void onDeleteRecord(slug);
-            }}
-            className="rounded-md border border-border px-3 py-1 text-sm text-radish hover:bg-background"
-          >
-            {t("campaigns.deleteCampaign")}
-          </button>
+      <div className="sticky top-0 z-10 -mx-6 border-b border-border bg-background px-6 pb-3 pt-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-display text-4xl font-semibold text-ink">{data.title}</h1>
+            <p className="mt-1 text-sm text-muted">
+              {t(`campaigns.status.${data.tracking.status}`)}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 pt-1.5">
+            <button
+              type="button"
+              onClick={enterEdit}
+              className="rounded-md border border-border p-2 text-ink transition-colors duration-200 hover:bg-surface"
+              title={t("record.edit")}
+              aria-label={t("record.edit")}
+            >
+              <Pencil className="size-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(t("campaigns.deleteCampaignConfirm"))) void onDeleteRecord(id);
+              }}
+              className="rounded-md border border-border p-2 text-radish transition-colors duration-200 hover:bg-surface"
+              title={t("campaigns.deleteCampaign")}
+              aria-label={t("campaigns.deleteCampaign")}
+            >
+              <Trash2 className="size-4" aria-hidden />
+            </button>
+          </div>
         </div>
       </div>
-      <p className="mt-1 text-sm text-muted">
-        {t(`campaigns.status.${data.tracking.status}`)}
-      </p>
 
+      <IllustrationBanner record={data} src={campaignFields.illustration} />
+      {saved && <p className="mt-3 text-sm text-primary">{t("lore.saved")}</p>}
       {error && error !== "form" && (
-        <p className="mt-2 text-sm text-radish">{error}</p>
+        <p className="mt-3 text-sm text-radish">{error}</p>
       )}
+      <ProseSections
+        blocks={[
+          ["fields.pitch", campaignFields.pitch ?? ""],
+          ["fields.dm_summary", campaignFields.dm_summary ?? ""],
+        ]}
+      />
 
-      <section className="mt-8">
+      <section className="mt-8 border-t border-border pt-6">
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-2xl font-semibold text-ink">
             {t("campaigns.chapters")}
@@ -213,7 +354,7 @@ export function CampaignViewPage() {
             onClick={() => {
               slugFields.reset();
               setCreating("chapter");
-              setParentForNew(slug);
+              setParentForNew(id);
             }}
             className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent"
           >
@@ -228,11 +369,21 @@ export function CampaignViewPage() {
         <ul className="mt-2 flex flex-col gap-3">
           {(campaign.data.tracking.children ?? []).map((chapter) => {
             const chapterTracking = chapterTrackings.data?.[chapter.slug];
+            const chapterRouteParams = {
+              id,
+              chapterId: chapter.id ?? chapter.slug,
+            };
             return (
               <li key={chapter.slug} className="rounded-lg border border-border bg-surface p-4">
                 <div className="flex items-baseline justify-between">
                   <span className="flex items-center gap-1">
-                    <span className="font-display text-xl text-ink">{chapter.title}</span>
+                    <Link
+                      to="/campaigns/$id/$chapterId"
+                      params={chapterRouteParams}
+                      className="font-display text-xl text-ink hover:underline"
+                    >
+                      {chapter.title}
+                    </Link>
                     <MoveButtons slug={chapter.slug} onMove={(slug, direction) => void moveChild(slug, direction)} />
                   </span>
                   <span className="flex items-baseline gap-2">
@@ -258,7 +409,17 @@ export function CampaignViewPage() {
                     {(chapterTracking?.children ?? []).map((scene) => (
                       <li key={scene.slug} className="flex items-baseline justify-between rounded-md border border-border bg-background px-3 py-1">
                         <span className="flex items-center gap-1">
-                          <span className="text-sm text-ink">{scene.title}</span>
+                          <Link
+                            to="/campaigns/$id/$chapterId/$sceneId"
+                            params={{
+                              id,
+                              chapterId: chapter.id ?? chapter.slug,
+                              sceneId: scene.id ?? scene.slug,
+                            }}
+                            className="text-sm text-ink hover:underline"
+                          >
+                            {scene.title}
+                          </Link>
                           <MoveButtons slug={scene.slug} onMove={(slug, direction) => void moveChild(slug, direction)} />
                         </span>
                         <span className="flex items-baseline gap-2">
@@ -296,7 +457,7 @@ export function CampaignViewPage() {
                     onClick={() => {
                       slugFields.reset();
                       setCreating("scene");
-                      setParentForNew(chapter.slug);
+                      setParentForNew(chapter.id ?? chapter.slug);
                     }}
                     className="mt-2 text-sm text-accent hover:underline"
                   >
@@ -323,12 +484,7 @@ export function CampaignViewPage() {
               onChange={(event) => slugFields.onTitleChange(event.target.value)}
               className="rounded-md border border-border bg-background px-3 py-2" />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("common.fields.slug")}
-            <input name="slug" required pattern="[a-z0-9-]+" value={slugFields.slug}
-              onChange={(event) => slugFields.onSlugChange(event.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
+          <input type="hidden" name="slug" value={slugFields.slug} />
           <div className="flex gap-2">
             <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
               {t("campaigns.create")}

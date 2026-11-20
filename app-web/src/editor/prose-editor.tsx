@@ -11,6 +11,9 @@ import {
   TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
+import { api } from "../api/client.js";
+import type { Entity } from "../types.js";
+import { recordRoute } from "../urls.js";
 import { buildExtensions } from "./extensions.js";
 import { DatePickerPanel } from "./date-picker.js";
 import { useCalendarDefinition } from "../calendar/use-calendar.js";
@@ -183,7 +186,14 @@ export function ProseEditor({
       if (editor.isEditable) return;
       const mention = (event.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
       const slug = mention?.dataset.id;
-      if (slug) void navigate({ to: "/records/$slug", params: { slug } });
+      if (!slug) return;
+      // The mention stores the slug; the target's domain decides the
+      // URL (Lore records at /lore/<uuid>, campaign records in their
+      // hierarchy).
+      void api<Entity>(`/api/records/${slug}`).then((target) => {
+        const route = recordRoute(target);
+        void navigate({ to: route.to, params: route.params });
+      });
     };
     dom.addEventListener("click", onClick);
     return () => dom.removeEventListener("click", onClick);

@@ -18,7 +18,7 @@ function event(
   slug: string,
   fields: EventInput["fields"],
 ): EventInput {
-  return { slug, title: slug, fields };
+  return { id: `id-${slug}`, slug, title: slug, fields };
 }
 
 describe("dayOccurrences", () => {
@@ -29,7 +29,7 @@ describe("dayOccurrences", () => {
       842,
     );
     expect([...result.keys()]).toEqual(["1-5"]);
-    expect(result.get("1-5")).toEqual([{ slug: "fete", title: "fete" }]);
+    expect(result.get("1-5")).toEqual([{ id: "id-fete", slug: "fete", title: "fete" }]);
   });
 
   it("marks inclusive periods across months", () => {
@@ -151,8 +151,8 @@ describe("dayOccurrences", () => {
       842,
     );
     expect(result.get("1-5")).toEqual([
-      { slug: "a", title: "a" },
-      { slug: "b", title: "b" },
+      { id: "id-a", slug: "a", title: "a" },
+      { id: "id-b", slug: "b", title: "b" },
     ]);
   });
 });

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RecordEditPage } from "./RecordEditPage";
+import { LoreRecordPage } from "./RecordEditPage";
 import { renderWithProviders } from "../testing/render.js";
 
 vi.mock("@tanstack/react-router", () => ({
-  useParams: () => ({ slug: "city-of-glass" }),
+  useParams: () => ({ id: "rec-1" }),
   useNavigate: () => ({ to: vi.fn() }),
   useRouterState: (opts?: { select?: (s: unknown) => unknown }) =>
     opts?.select
@@ -77,10 +77,10 @@ describe("RecordEditPage delete", () => {
       };
     });
     vi.stubGlobal("fetch", fetchMock);
-    renderWithProviders(<RecordEditPage />, "/records/city-of-glass");
+    renderWithProviders(<LoreRecordPage />, "/records/city-of-glass");
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
-      expect(calls.some(([path]) => path === "/api/records/city-of-glass")).toBe(true);
+      expect(calls.some(([path]) => path === "/api/records/rec-1")).toBe(true);
     });
     const deleteButton = [...document.querySelectorAll("button")].find(
       (button) => button.getAttribute("aria-label") === "Delete",
@@ -91,7 +91,7 @@ describe("RecordEditPage delete", () => {
     deleteButton.click();
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
-      expect(calls.some(([path, init]) => path === "/api/records/city-of-glass" && init?.method === "DELETE")).toBe(true);
+      expect(calls.some(([path, init]) => path === "/api/records/rec-1" && init?.method === "DELETE")).toBe(true);
     });
 
     // A dismissed confirmation sends nothing.
@@ -100,14 +100,14 @@ describe("RecordEditPage delete", () => {
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
       const deletions = calls.filter(
-        ([path, init]) => path === "/api/records/city-of-glass" && init?.method === "DELETE",
+        ([path, init]) => path === "/api/records/rec-1" && init?.method === "DELETE",
       );
       expect(deletions).toHaveLength(1);
     });
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls as Array<[string, RequestInit]>;
       const deletion = calls.find(
-        ([path, init]) => path === "/api/records/city-of-glass" && init?.method === "DELETE",
+        ([path, init]) => path === "/api/records/rec-1" && init?.method === "DELETE",
       );
       expect(deletion).toBeDefined();
     });

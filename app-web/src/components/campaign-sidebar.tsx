@@ -54,21 +54,27 @@ function StatusDot(props: { readonly status: string }) {
   );
 }
 
-/** Scene (and deeper) entries: plain links, always visible. */
+/** Scene entries: plain links under their chapter, always visible. */
 function TreeEntries(props: {
   readonly nodes: ChildView[];
-  readonly activeSlug: string | null;
+  readonly campaignId: string;
+  readonly chapterId: string;
+  readonly activeId: string | null;
 }) {
   return (
     <ul className="flex flex-col gap-0.5 pl-6">
       {props.nodes.map((node) => {
-        const active = node.slug === props.activeSlug;
+        const active = node.id === props.activeId;
         const children = node.children ?? [];
         return (
           <li key={node.slug}>
             <Link
-              to="/records/$slug"
-              params={{ slug: node.slug }}
+              to="/campaigns/$id/$chapterId/$sceneId"
+              params={{
+                id: props.campaignId,
+                chapterId: props.chapterId,
+                sceneId: node.id,
+              }}
               className={`flex items-center gap-1.5 truncate rounded-md px-2 py-1 text-sm transition-colors duration-200 ${
                 active ? activeClass : idleClass
               }`}
@@ -77,7 +83,12 @@ function TreeEntries(props: {
               <span className="truncate">{node.title}</span>
             </Link>
             {children.length > 0 && (
-              <TreeEntries nodes={children} activeSlug={props.activeSlug} />
+              <TreeEntries
+                nodes={children}
+                campaignId={props.campaignId}
+                chapterId={props.chapterId}
+                activeId={props.activeId}
+              />
             )}
           </li>
         );
@@ -94,43 +105,43 @@ function TreeEntries(props: {
  * no extra fetch when arriving from it.
  */
 export function CampaignSidebar(props: {
-  readonly campaignSlug: string;
-  readonly activeSlug: string | null;
+  readonly campaignId: string;
+  readonly activeId: string | null;
 }) {
   const { t } = useTranslation();
   const campaign = useQuery({
-    queryKey: ["campaign-view", props.campaignSlug],
+    queryKey: ["campaign-view", props.campaignId],
     queryFn: () =>
       api<Entity & { tracking?: { children?: ChildView[] } }>(
-        `/api/records/${props.campaignSlug}`,
+        `/api/records/${props.campaignId}`,
       ),
   });
   // Chapters expand by default; the set tracks the collapsed ones.
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const campaignActive = props.activeSlug === props.campaignSlug;
+  const campaignActive = props.activeId === props.campaignId;
   const chapters = campaign.data?.tracking?.children ?? [];
   return (
     <nav aria-label={t("nav.sidebar")} className="flex flex-col gap-1 py-2">
       <Link
-        to="/campaigns/$slug"
-        params={{ slug: props.campaignSlug }}
+        to="/campaigns/$id"
+        params={{ id: props.campaignId }}
         className={`block truncate rounded-md px-2 py-1.5 text-sm font-medium transition-colors duration-200 ${
           campaignActive ? activeClass : "text-muted hover:bg-surface"
         }`}
       >
-        {campaign.data?.title ?? props.campaignSlug}
+        {campaign.data?.title ?? props.campaignId}
       </Link>
       <ul className="flex flex-col gap-0.5">
         {chapters.map((chapter) => {
-          const active = chapter.slug === props.activeSlug;
+          const active = chapter.id === props.activeId;
           const scenes = chapter.children ?? [];
           const isCollapsed = collapsed.has(chapter.slug);
           return (
             <li key={chapter.slug}>
               <div className="flex items-center">
                 <Link
-                  to="/records/$slug"
-                  params={{ slug: chapter.slug }}
+                  to="/campaigns/$id/$chapterId"
+                  params={{ id: props.campaignId, chapterId: chapter.id }}
                   className={`flex min-w-0 flex-1 items-center gap-1.5 truncate rounded-md px-2 py-1 text-sm transition-colors duration-200 ${
                     active ? activeClass : idleClass
                   }`}
@@ -162,7 +173,12 @@ export function CampaignSidebar(props: {
                 )}
               </div>
               {!isCollapsed && scenes.length > 0 && (
-                <TreeEntries nodes={scenes} activeSlug={props.activeSlug} />
+                <TreeEntries
+                  nodes={scenes}
+                  campaignId={props.campaignId}
+                  chapterId={chapter.id}
+                  activeId={props.activeId}
+                />
               )}
             </li>
           );

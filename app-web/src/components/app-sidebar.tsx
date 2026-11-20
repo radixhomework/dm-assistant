@@ -25,10 +25,10 @@ export function AppSidebar() {
   // Categories start collapsed; the set tracks the expanded ones.
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
 
-  // The active record (reading or editing view: /records/<slug>), from
+  // The active record (reading or editing view: /lore/<uuid>), from
   // which the highlighted category header is derived.
-  const recordMatch = /^\/records\/([^/]+)$/.exec(pathname);
-  const activeSlug = recordMatch ? decodeURIComponent(recordMatch[1]) : null;
+  const recordMatch = /^\/lore\/([^/]+)$/.exec(pathname);
+  const activeId = recordMatch ? recordMatch[1] : null;
   // The query starts undefined and stubs may answer non-arrays; only a
   // real list feeds the grouping.
   const list = Array.isArray(records.data) ? records.data : [];
@@ -36,7 +36,7 @@ export function AppSidebar() {
   for (const record of list) {
     byType.set(record.type, [...(byType.get(record.type) ?? []), record]);
   }
-  const activeType = list.find((record) => record.slug === activeSlug)?.type ?? null;
+  const activeType = list.find((record) => record.id === activeId)?.type ?? null;
 
   return (
     <nav aria-label={t("nav.sidebar")} className="flex flex-col gap-1 py-2">
@@ -76,12 +76,12 @@ export function AppSidebar() {
             {!isCollapsed && (
               <ul className="mt-0.5 mb-1 flex flex-col gap-0.5 pl-4">
                 {typeRecords.map((record) => {
-                  const active = record.slug === activeSlug;
+                  const active = record.id === activeId;
                   return (
                     <li key={record.slug}>
                       <Link
-                        to="/records/$slug"
-                        params={{ slug: record.slug }}
+                        to="/lore/$id"
+                        params={{ id: record.id }}
                         className={`block truncate rounded-md px-2 py-1 text-sm transition-colors duration-200 ${
                           active
                             ? "bg-accent text-background"

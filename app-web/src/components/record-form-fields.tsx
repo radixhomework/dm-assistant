@@ -794,6 +794,7 @@ function StatisticsControl(props: {
  * the schema fields with their own attach/detach controls (phase 6).
  */
 export function RecordFormFields(props: {
+  readonly hideReferenceFields?: readonly string[];
   readonly schema: TemplateSchema;
   readonly fields: Fields;
   readonly onChange: (fields: Fields) => void;
@@ -911,7 +912,12 @@ export function RecordFormFields(props: {
     }
   }
 
-  const referenceEntries = Object.entries(props.schema.references);
+  // Hierarchy parents are immutable: their pickers are hidden — the
+  // parent was set at creation and never re-assigned.
+  const hiddenRefs = new Set(props.hideReferenceFields ?? []);
+  const referenceEntries = Object.entries(props.schema.references).filter(
+    ([field]) => !hiddenRefs.has(field),
+  );
   return (
     <div className="flex flex-col gap-4">
       {controls}

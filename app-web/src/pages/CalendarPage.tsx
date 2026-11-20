@@ -118,6 +118,7 @@ export function CalendarPage() {
       definition
         ? dayOccurrences(
             (events.data ?? []).map((entity) => ({
+              id: entity.id,
               slug: entity.slug,
               title: entity.title,
               fields: (entity.fields ?? {}) as EventFields,
@@ -184,7 +185,7 @@ export function CalendarPage() {
     const form = new FormData(event.currentTarget);
     const [month, day] = selectedDay.split("-").map(Number);
     try {
-      await api("/api/records", {
+      const created = await api<{ id: string }>("/api/records", {
         method: "POST",
         body: {
           slug: formString(form, "slug"),
@@ -197,9 +198,9 @@ export function CalendarPage() {
       setCreating(false);
       // Straight into editing the freshly created event.
       void navigate({
-        to: "/records/$slug",
-        params: { slug: formString(form, "slug") },
-        search: { edit: "1" },
+        to: "/lore/$id",
+        params: { id: created.id },
+        search: { edit: true },
       });
     } catch (submitError) {
       setError(String(submitError));
@@ -351,8 +352,8 @@ export function CalendarPage() {
               {(selectedRefs ?? []).map((ref) => (
                 <li key={ref.slug}>
                   <Link
-                    to="/records/$slug"
-                    params={{ slug: ref.slug }}
+                    to="/lore/$id"
+                    params={{ id: ref.id }}
                     className="text-accent hover:underline"
                   >
                     {ref.title}

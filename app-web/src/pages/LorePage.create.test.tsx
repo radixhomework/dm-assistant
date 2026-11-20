@@ -53,7 +53,7 @@ describe("LorePage create", () => {
         };
       }
       if (input === "/api/records" && init?.method === "POST") {
-        return { ok: true, json: async () => ({}) };
+        return { ok: true, json: async () => ({ id: "rec-9", slug: "city-of-glass" }) };
       }
       return { ok: true, json: async () => [] };
     });
@@ -91,9 +91,9 @@ describe("LorePage create", () => {
     // The complete success path: straight into editing the record.
     await vi.waitFor(() =>
       expect(navigate).toHaveBeenCalledWith({
-        to: "/records/$slug",
-        params: { slug: "city-of-glass" },
-        search: { edit: "1" },
+        to: "/lore/$id",
+        params: { id: "rec-9" },
+        search: { edit: true },
       }),
     );
   });

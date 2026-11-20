@@ -28,16 +28,14 @@ const campaign = {
     slug: "war-of-embers",
     status: "not_played",
     children: [
-      {
-        slug: "chapter-one",
-        title: "Chapter One",
+      { id: "chapter-one", slug: "chapter-one", title: "Chapter One",
         status: "in_progress",
         children: [
-          { slug: "scene-one", title: "Scene One", status: "not_played" },
-          { slug: "scene-two", title: "Scene Two", status: "played" },
+          { id: "scene-one", slug: "scene-one", title: "Scene One", status: "not_played" },
+          { id: "scene-two", slug: "scene-two", title: "Scene Two", status: "played" },
         ],
       },
-      { slug: "chapter-two", title: "Chapter Two", status: "not_played" },
+      { id: "chapter-two", slug: "chapter-two", title: "Chapter Two", status: "not_played" },
     ],
   },
 };
@@ -62,7 +60,7 @@ describe("CampaignSidebar", () => {
 
   it("renders the campaign title and its chapter tree", async () => {
     renderWithProviders(
-      <CampaignSidebar campaignSlug="war-of-embers" activeSlug={null} />,
+      <CampaignSidebar campaignId="war-of-embers" activeId={null} />,
     );
     await vi.waitFor(() =>
       expect(screen.getByText("War of Embers")).toBeDefined(),
@@ -74,7 +72,7 @@ describe("CampaignSidebar", () => {
 
   it("highlights the opened chapter or scene", async () => {
     renderWithProviders(
-      <CampaignSidebar campaignSlug="war-of-embers" activeSlug="scene-one" />,
+      <CampaignSidebar campaignId="war-of-embers" activeId="scene-one" />,
     );
     await vi.waitFor(() =>
       expect(screen.getByText("Scene One")).toBeDefined(),
@@ -85,7 +83,7 @@ describe("CampaignSidebar", () => {
 
   it("marks chapters and scenes with their play status", async () => {
     renderWithProviders(
-      <CampaignSidebar campaignSlug="war-of-embers" activeSlug={null} />,
+      <CampaignSidebar campaignId="war-of-embers" activeId={null} />,
     );
     await vi.waitFor(() =>
       expect(screen.getByText("Chapter One")).toBeDefined(),
@@ -98,7 +96,7 @@ describe("CampaignSidebar", () => {
 
   it("folds a chapter's scenes behind its chevron", async () => {
     renderWithProviders(
-      <CampaignSidebar campaignSlug="war-of-embers" activeSlug={null} />,
+      <CampaignSidebar campaignId="war-of-embers" activeId={null} />,
     );
     await vi.waitFor(() =>
       expect(screen.getByText("Scene One")).toBeDefined(),

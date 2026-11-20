@@ -28,13 +28,14 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 type EntityLike = {
+  id?: string;
   slug: string;
   type: string;
   title: string;
 };
 
 const records: EntityLike[] = [
-  { slug: "city-of-glass", type: "places", title: "City of Glass" },
+  { id: "id-city-of-glass", slug: "city-of-glass", type: "places", title: "City of Glass" },
   { slug: "silver-city", type: "places", title: "Silver City" },
   { slug: "the-undying", type: "monsters", title: "The Undying" },
 ];
@@ -89,7 +90,7 @@ describe("AppSidebar", () => {
   });
 
   it("highlights the active record and its category header", async () => {
-    routerState.pathname = "/records/city-of-glass";
+    routerState.pathname = "/lore/id-city-of-glass";
     renderWithProviders(<AppSidebar />);
     await vi.waitFor(() =>
       expect(screen.getByRole("button", { name: /Places\(2\)/ })).toBeDefined(),
