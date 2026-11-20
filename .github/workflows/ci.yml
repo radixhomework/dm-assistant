@@ -34,7 +34,14 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build
+      # Mirror the build output into the step summary: the job log is
+      # not readable without a token, the summary is.
+      - name: Build
+        run: |
+          npm run build 2>&1 | tee /tmp/build.out
+          EXIT=${PIPESTATUS[0]}
+          tail -50 /tmp/build.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
+          exit $EXIT
       - run: npm run db:migrate -w app
       - run: npm run lint
       # Surface tsc errors in the step summary: the job log itself is
