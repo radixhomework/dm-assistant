@@ -33,8 +33,8 @@ export class RelationshipsService {
    * Attaches a reference: `field` must be declared by the child's
    * template, the target must match the declared target template. A 0..1
    * field replaces its previous target; a 0..n field refuses duplicates.
-   * Hierarchy fields are the exception (records-editor decision 9): a
-   * second parent is refused — moving a child means detaching it first.
+   * Hierarchy fields are the exception (design decision 8): a second
+   * parent is refused — moving a child means detaching it first.
    */
   async attachReference(
     childSlug: string,
@@ -56,38 +56,7 @@ export class RelationshipsService {
     }
     if (declaration.cardinality === "one") {
       if (hierarchyFieldOf(child.type) === field) {
-        // The hierarchy keeps the child→parent link deliberate: an
-        // existing parent is never silently replaced (design decision 8's
-        // hierarchy exception, the records-hierarchy capability's
-        // "Single parent enforced" scenario). The pre-check gives the
-        // friendly message; the one-per-child partial unique index is the
-        // authority — this path inserts without deleting, so two
-        // concurrent parents mean the losing insert violates it instead
-        // of replacing the winner through a delete+insert.
-        const [current] = await this.db
-          .select({ toId: relationships.toId })
-          .from(relationships)
-          .where(
-            and(eq(relationships.fromId, child.id), eq(relationships.kind, field)),
-          )
-          .limit(1);
-        if (current) {
-          throw new ConflictException(
-            "This record already has a parent there — detach it first",
-          );
-        }
-        try {
-          await this.db
-            .insert(relationships)
-            .values({ fromId: child.id, toId: target.id, kind: field });
-        } catch (error) {
-          if (isUniqueViolation(error)) {
-            throw new ConflictException(
-              "This record already has a parent there — detach it first",
-            );
-          }
-          throw error;
-        }
+        await this.attachHierarchyParent(child.id, field, target.id);
         return;
       }
       // 0..1: the previous link, if any, is replaced — delete and insert
@@ -132,6 +101,44 @@ export class RelationshipsService {
       if (isUniqueViolation(error)) {
         throw new ConflictException(
           `${targetSlug} is already attached to '${field}'`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Attaches a hierarchy parent: the link is deliberate, never replaced
+   * (design decision 8's hierarchy exception, the records-hierarchy
+   * capability's "Single parent enforced" scenario). The pre-check gives
+   * the friendly message; the one-per-child partial unique index is the
+   * authority — this path inserts without deleting, so two concurrent
+   * parents mean the losing insert violates it instead of replacing the
+   * winner through a delete+insert.
+   */
+  private async attachHierarchyParent(
+    childId: string,
+    field: HierarchyField,
+    targetId: string,
+  ): Promise<void> {
+    const [current] = await this.db
+      .select({ toId: relationships.toId })
+      .from(relationships)
+      .where(and(eq(relationships.fromId, childId), eq(relationships.kind, field)))
+      .limit(1);
+    if (current) {
+      throw new ConflictException(
+        "This record already has a parent there — detach it first",
+      );
+    }
+    try {
+      await this.db
+        .insert(relationships)
+        .values({ fromId: childId, toId: targetId, kind: field });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(
+          "This record already has a parent there — detach it first",
         );
       }
       throw error;
