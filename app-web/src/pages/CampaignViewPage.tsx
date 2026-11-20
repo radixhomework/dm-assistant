@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil } from "lucide-react";
 import { formString } from "../forms.js";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
@@ -172,15 +172,28 @@ export function CampaignViewPage() {
     <div>
       <div className="flex items-baseline justify-between">
         <h1 className="font-display text-4xl font-semibold text-ink">{data.title}</h1>
-        <button
-          type="button"
-          onClick={() => {
-            if (confirm(t("campaigns.deleteCampaignConfirm"))) void onDeleteRecord(slug);
-          }}
-          className="rounded-md border border-border px-3 py-1 text-sm text-radish hover:bg-background"
-        >
-          {t("campaigns.deleteCampaign")}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Edit the campaign record itself (its template fields) through
+           * the standard record page, in edit mode. */}
+          <button
+            type="button"
+            onClick={() => void navigate({ to: "/records/$slug", params: { slug }, search: { edit: "1" } })}
+            className="rounded-md border border-border p-2 text-ink transition-colors duration-200 hover:bg-surface"
+            title={t("record.edit")}
+            aria-label={t("record.edit")}
+          >
+            <Pencil className="size-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm(t("campaigns.deleteCampaignConfirm"))) void onDeleteRecord(slug);
+            }}
+            className="rounded-md border border-border px-3 py-1 text-sm text-radish hover:bg-background"
+          >
+            {t("campaigns.deleteCampaign")}
+          </button>
+        </div>
       </div>
       <p className="mt-1 text-sm text-muted">
         {t(`campaigns.status.${data.tracking.status}`)}
