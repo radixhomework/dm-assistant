@@ -113,8 +113,8 @@ describe("EntitiesService", () => {
   it("enforces a single parent and lists children at the parent", async () => {
     await service.create(campaign);
     await service.create(chapter);
-    // A 0..1 field set a second time replaces its target: the child keeps
-    // exactly one campaign link.
+    // The hierarchy field holds at most one parent: the child keeps
+    // exactly one campaign link (a second parent is refused).
     await service.relationships.attachReference(
       "chapter-one",
       "campaign",

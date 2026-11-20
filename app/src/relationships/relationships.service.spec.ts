@@ -34,14 +34,40 @@ describe("RelationshipsService", () => {
     ).rejects.toThrow(/expects a campaign/);
   });
 
-  it("replaces the target of a 0..1 reference", async () => {
-    await service.attachReference("chapter-a", "campaign", "campaign-a");
-    // Re-attaching through the same 0..1 field replaces the target.
-    await service.attachReference("chapter-a", "campaign", "campaign-b");
+  it("replaces the target of a non-hierarchy 0..1 reference", async () => {
+    await testDb.execute(
+      sql`insert into entities (id, slug, type, perimeter, title) values (gen_random_uuid(), 'place-b', 'places', 'world', 'P2')`,
+    );
+    await service.attachReference("nation-a", "capital", "place-a");
+    // Re-attaching through the same 0..1 field replaces the target —
+    // hierarchy fields are the exception, tested below.
+    await service.attachReference("nation-a", "capital", "place-b");
     const rows = await testDb.execute(
-      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'chapter-a') and kind = 'campaign' and to_id = (select id from entities where slug = 'campaign-b')`,
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'nation-a') and kind = 'capital' and to_id = (select id from entities where slug = 'place-b')`,
     );
     expect(rows[0]).toMatchObject({ count: 1 });
+    const all = await testDb.execute(
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'nation-a') and kind = 'capital'`,
+    );
+    expect(all[0]).toMatchObject({ count: 1 });
+    await service.detachReference("nation-a", "capital");
+  });
+
+  it("refuses a second parent through a hierarchy field", async () => {
+    await testDb.execute(
+      sql`insert into entities (id, slug, type, perimeter, title) values (gen_random_uuid(), 'chapter-b', 'chapter', 'campaign', 'B'), (gen_random_uuid(), 'scene-b', 'scene', 'campaign', 'S2')`,
+    );
+    await service.attachReference("scene-b", "chapter", "chapter-a");
+    // The hierarchy keeps re-parenting deliberate: a second parent is
+    // refused, never silently replaced.
+    await expect(
+      service.attachReference("scene-b", "chapter", "chapter-b"),
+    ).rejects.toThrow(/detach it first/);
+    const rows = await testDb.execute(
+      sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'scene-b') and kind = 'chapter' and to_id = (select id from entities where slug = 'chapter-a')`,
+    );
+    expect(rows[0]).toMatchObject({ count: 1 });
+    await service.detachReference("scene-b", "chapter");
   });
 
   it("refuses to delete a chapter that scenes still reference", async () => {

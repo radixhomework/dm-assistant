@@ -33,6 +33,8 @@ export class RelationshipsService {
    * Attaches a reference: `field` must be declared by the child's
    * template, the target must match the declared target template. A 0..1
    * field replaces its previous target; a 0..n field refuses duplicates.
+   * Hierarchy fields are the exception (records-editor decision 9): a
+   * second parent is refused — moving a child means detaching it first.
    */
   async attachReference(
     childSlug: string,
@@ -53,6 +55,24 @@ export class RelationshipsService {
       );
     }
     if (declaration.cardinality === "one") {
+      if (hierarchyFieldOf(child.type) === field) {
+        // The hierarchy keeps the child→parent link deliberate: an
+        // existing parent is never silently replaced (design decision 8's
+        // hierarchy exception, the records-hierarchy capability's
+        // "Single parent enforced" scenario).
+        const [current] = await this.db
+          .select({ toId: relationships.toId })
+          .from(relationships)
+          .where(
+            and(eq(relationships.fromId, child.id), eq(relationships.kind, field)),
+          )
+          .limit(1);
+        if (current) {
+          throw new ConflictException(
+            "This record already has a parent there — detach it first",
+          );
+        }
+      }
       // 0..1: the previous link, if any, is replaced — delete and insert
       // run in one transaction so a failed insert cannot leave the record
       // detached.
