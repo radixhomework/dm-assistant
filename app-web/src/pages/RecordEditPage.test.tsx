@@ -403,6 +403,9 @@ describe("RecordEditPage", () => {
       expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
       expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
     });
+    // The draft is pinned too: the form is inert while the save is in
+    // flight, so a late edit can never diverge from the PATCH in flight.
+    expect(document.querySelector("#record-edit-form")!.hasAttribute("inert")).toBe(true);
     // The completing save closes THIS session and no other: no newer
     // session can open while the controls are pinned.
     resolvePatch({ ok: true, json: async () => recordOf({}) });
@@ -436,5 +439,6 @@ describe("RecordEditPage", () => {
     // The failure leaves the session open with working controls.
     expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(false);
+    expect(document.querySelector("#record-edit-form")!.hasAttribute("inert")).toBe(false);
   });
 });

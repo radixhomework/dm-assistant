@@ -151,7 +151,14 @@ function RecordEditView(props: {
           </>
         }
       />
-      <form id="record-edit-form" onSubmit={props.onSave} className="mt-6 flex flex-col gap-4">
+      {/* inert pins the draft while the save is in flight: a late edit
+       * could never reach the PATCH already carrying the earlier value. */}
+      <form
+        id="record-edit-form"
+        onSubmit={props.onSave}
+        inert={props.saving}
+        className="mt-6 flex flex-col gap-4"
+      >
         <label className="flex flex-col gap-1 text-sm">
           {t("common.fields.title")}
           <input name="title" defaultValue={props.data.title} className="rounded-md border border-border bg-background px-3 py-2" />
