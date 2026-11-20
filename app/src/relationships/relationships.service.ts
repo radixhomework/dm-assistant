@@ -25,6 +25,10 @@ function hierarchyFieldOf(type: string): HierarchyField | null {
   return null;
 }
 
+function isHierarchyField(field: string): field is HierarchyField {
+  return field === "campaign" || field === "chapter";
+}
+
 @Injectable()
 export class RelationshipsService {
   constructor(@Inject(DB) private readonly db: Db) {}

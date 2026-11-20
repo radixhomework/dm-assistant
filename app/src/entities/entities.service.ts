@@ -34,6 +34,7 @@ function parseTypeFilter(type: string | undefined): string[] {
 }
 
 export type TrackingView = {
+  id: string;
   slug: string;
   title: string;
   status: PlayStatus;
@@ -68,13 +69,20 @@ export class EntitiesService {
     }
   }
 
-  async getBySlug(slug: string): Promise<EntityRow> {
+  /**
+   * Resolves a record by its slug **or** its uuid: the routes are
+   * uuid-addressed while prose mentions and the mentions table stay
+   * slug-keyed, so both identifiers must reach every endpoint.
+   */
+  async getBySlug(slugOrId: string): Promise<EntityRow> {
     const [row] = await this.db
       .select()
       .from(entities)
-      .where(eq(entities.slug, slug));
+      .where(
+        or(eq(entities.slug, slugOrId), sql`${entities.id}::text = ${slugOrId}`),
+      );
     if (!row) {
-      throw new NotFoundException(`Record '${slug}' not found`);
+      throw new NotFoundException(`Record '${slugOrId}' not found`);
     }
     return row;
   }
@@ -152,9 +160,9 @@ export class EntitiesService {
    */
   async campaignOf(
     record: EntityRow,
-  ): Promise<{ slug: string; title: string } | null> {
+  ): Promise<{ id: string; slug: string; title: string } | null> {
     if (record.type === "campaign") {
-      return { slug: record.slug, title: record.title };
+      return { id: record.id, slug: record.slug, title: record.title };
     }
     let current: { id: string } = record;
     for (let depth = 0; depth < 4; depth += 1) {
@@ -171,7 +179,7 @@ export class EntitiesService {
         .limit(1);
       if (!parent) return null;
       if (parent.type === "campaign") {
-        return { slug: parent.slug, title: parent.title };
+        return { id: parent.id, slug: parent.slug, title: parent.title };
       }
       current = parent;
     }
@@ -184,21 +192,36 @@ export class EntitiesService {
    */
   async referencesOf(
     slug: string,
-  ): Promise<Record<string, Array<{ slug: string; title: string }>>> {
+  ): Promise<
+    Record<
+      string,
+      Array<{ id: string; slug: string; title: string; type: string }>
+    >
+  > {
     const record = await this.getBySlug(slug);
     const rows = await this.db
       .select({
         kind: relationships.kind,
+        id: entities.id,
         slug: entities.slug,
         title: entities.title,
+        type: entities.type,
       })
       .from(relationships)
       .innerJoin(entities, eq(relationships.toId, entities.id))
       .where(eq(relationships.fromId, record.id));
-    const grouped: Record<string, Array<{ slug: string; title: string }>> = {};
+    const grouped: Record<
+      string,
+      Array<{ id: string; slug: string; title: string; type: string }>
+    > = {};
     for (const row of rows) {
       const targets = grouped[row.kind] ?? [];
-      targets.push({ slug: row.slug, title: row.title });
+      targets.push({
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        type: row.type,
+      });
       grouped[row.kind] = targets;
     }
     return grouped;
@@ -212,27 +235,54 @@ export class EntitiesService {
   async backlinksOf(
     slug: string,
   ): Promise<{
-    fields: Record<string, Array<{ slug: string; title: string }>>;
-    mentions: Array<{ slug: string; title: string }>;
+    fields: Record<
+      string,
+      Array<{ id: string; slug: string; title: string; type: string; perimeter: string }>
+    >;
+    mentions: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      type: string;
+      perimeter: string;
+    }>;
   }> {
     const record = await this.getBySlug(slug);
     const rows = await this.db
       .select({
         kind: relationships.kind,
+        id: entities.id,
         slug: entities.slug,
         title: entities.title,
+        type: entities.type,
+        perimeter: entities.perimeter,
       })
       .from(relationships)
       .innerJoin(entities, eq(relationships.fromId, entities.id))
       .where(eq(relationships.toId, record.id));
-    const fields: Record<string, Array<{ slug: string; title: string }>> = {};
+    const fields: Record<
+      string,
+      Array<{ id: string; slug: string; title: string; type: string; perimeter: string }>
+    > = {};
     for (const row of rows) {
       const targets = fields[row.kind] ?? [];
-      targets.push({ slug: row.slug, title: row.title });
+      targets.push({
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        type: row.type,
+        perimeter: row.perimeter,
+      });
       fields[row.kind] = targets;
     }
     const mentionRows = await this.db
-      .select({ slug: entities.slug, title: entities.title })
+      .select({
+        id: entities.id,
+        slug: entities.slug,
+        title: entities.title,
+        type: entities.type,
+        perimeter: entities.perimeter,
+      })
       .from(mentions)
       .innerJoin(entities, eq(mentions.entityId, entities.id))
       .where(eq(mentions.targetSlug, slug));
@@ -277,13 +327,14 @@ export class EntitiesService {
    * statuses, which fold their Scenes — a leaf keeps its explicit status. */
   async tracking(slug: string, seen: Set<string> = new Set()): Promise<TrackingView> {
     if (seen.has(slug)) {
-      return { slug, title: "", status: "not_played", children: [] };
+      return { id: slug, slug, title: "", status: "not_played", children: [] };
     }
     seen.add(slug);
     const record = await this.getBySlug(slug);
     const childKind = childKindOf(record.type);
     if (!childKind) {
       return {
+        id: record.id,
         slug,
         title: record.title,
         status: this.statusOf(record.fields),
@@ -298,6 +349,7 @@ export class EntitiesService {
       children.map((child) => this.tracking(child.slug, seen)),
     );
     return {
+      id: record.id,
       slug,
       title: record.title,
       status: foldStatuses(childViews.map((c) => c.status)),

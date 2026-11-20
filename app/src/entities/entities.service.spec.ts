@@ -199,10 +199,13 @@ describe("EntitiesService", () => {
       "north-realm",
     );
     await service.relationships.attachReference("scene-one", "chapter", "chapter-one");
-    const owned = { slug: "north-realm", title: "The North Realm" };
+    const campaignRow = await service.getBySlug("north-realm");
+    const owned = { id: campaignRow.id, slug: "north-realm", title: "The North Realm" };
     expect(await service.campaignOf(await service.getBySlug("north-realm"))).toEqual(owned);
     expect(await service.campaignOf(await service.getBySlug("chapter-one"))).toEqual(owned);
     expect(await service.campaignOf(await service.getBySlug("scene-one"))).toEqual(owned);
+    // The uuid resolves like the slug — routes are uuid-addressed.
+    expect(await service.getBySlug(campaignRow.id)).toEqual(campaignRow);
   });
 
   it("collects backlinks: reverse references and incoming mentions", async () => {
@@ -233,11 +236,27 @@ describe("EntitiesService", () => {
       title: "Storyteller",
       fields: { public_description: "Tales of @lone-place." },
     });
+    const kingdom = await service.getBySlug("north-kingdom");
+    const storyteller = await service.getBySlug("storyteller");
     const backlinks = await service.backlinksOf("lone-place");
     expect(backlinks.fields.geography).toEqual([
-      { slug: "north-kingdom", title: "North Kingdom" },
+      {
+        id: kingdom.id,
+        slug: "north-kingdom",
+        title: "North Kingdom",
+        type: "nations",
+        perimeter: "world",
+      },
     ]);
-    expect(backlinks.mentions).toEqual([{ slug: "storyteller", title: "Storyteller" }]);
+    expect(backlinks.mentions).toEqual([
+      {
+        id: storyteller.id,
+        slug: "storyteller",
+        title: "Storyteller",
+        type: "characters-and-entities",
+        perimeter: "world",
+      },
+    ]);
   });
 
   it("returns no owning campaign for a world record", async () => {

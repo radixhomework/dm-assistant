@@ -93,7 +93,7 @@ describe("EntitiesController", () => {
     expect(result.campaign).toEqual({ slug: "north-realm", title: "North" });
   });
 
-  it("attaches and detaches parents", async () => {
+  it("attaches a parent (the hierarchy is immutable afterwards)", async () => {
     await controller.attachParent("chapter-one", {
       parentSlug: "north-realm",
       kind: "campaign",
@@ -102,11 +102,6 @@ describe("EntitiesController", () => {
       "chapter-one",
       "campaign",
       "north-realm",
-    );
-    await controller.detachParent("chapter-one", "campaign");
-    expect(relationships.detachReference).toHaveBeenCalledWith(
-      "chapter-one",
-      "campaign",
     );
   });
 });

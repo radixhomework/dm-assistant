@@ -117,12 +117,4 @@ export class EntitiesController {
     return this.relationshipsService.attachReference(slug, kind, parentSlug);
   }
 
-  @HttpCode(204)
-  @Delete(":slug/parent/:kind")
-  detachParent(
-    @Param("slug") slug: string,
-    @Param("kind") kind: "campaign" | "chapter",
-  ) {
-    return this.relationshipsService.detachReference(slug, kind);
-  }
 }
