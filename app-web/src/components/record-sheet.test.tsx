@@ -26,8 +26,8 @@ describe("RecordSheet scaffold", () => {
           return {
             ok: true,
             json: async () => ({
-              fields: { nations: [{ slug: "plenear", title: "Plenear" }] },
-              mentions: [{ slug: "monstera", title: "Monstera" }],
+              fields: { nations: [{ id: "id-plenear", slug: "plenear", title: "Plenear" }] },
+              mentions: [{ id: "id-monstera", slug: "monstera", title: "Monstera" }],
             }),
           };
         }

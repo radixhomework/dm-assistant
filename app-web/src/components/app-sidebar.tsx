@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { categoryIcons, categoryLabelKey } from "../categories.js";
-import { worldTemplates, type Entity } from "../types.js";
+import { catalogTemplates, worldTemplates, type Entity } from "../types.js";
+import { catalogIcons } from "../categories.js";
 
 /**
  * Persistent left sidebar: record categories (same labels, icons and
@@ -65,6 +66,59 @@ export function AppSidebar() {
                   ? "bg-accent/20 text-ink"
                   : "text-muted hover:bg-surface"
               }`}
+            >
+              {Icon && <Icon className="size-4 shrink-0 text-accent" aria-hidden />}
+              <span className="flex-1 truncate text-sm font-medium">
+                {t(categoryLabelKey(type))}
+              </span>
+              <span className="text-xs text-muted">({typeRecords.length})</span>
+              <span className="text-xs text-muted">{isCollapsed ? "▸" : "▾"}</span>
+            </button>
+            {!isCollapsed && (
+              <ul className="mt-0.5 mb-1 flex flex-col gap-0.5 pl-4">
+                {typeRecords.map((record) => {
+                  const active = record.id === activeId;
+                  return (
+                    <li key={record.slug}>
+                      <Link
+                        to="/lore/$id"
+                        params={{ id: record.id }}
+                        className={`block truncate rounded-md px-2 py-1 text-sm transition-colors duration-200 ${
+                          active
+                            ? "bg-accent text-background"
+                            : "text-ink hover:bg-surface"
+                        }`}
+                      >
+                        {record.title}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        );
+      })}
+
+      {catalogTemplates.map((type) => {
+        const typeRecords = byType.get(type) ?? [];
+        if (typeRecords.length === 0) return null;
+        const Icon = catalogIcons[type];
+        const isCollapsed = !expanded.has(type);
+        return (
+          <section key={type} className="mt-1">
+            <button
+              type="button"
+              aria-expanded={!isCollapsed}
+              onClick={() =>
+                setExpanded((current) => {
+                  const next = new Set(current);
+                  if (next.has(type)) next.delete(type);
+                  else next.add(type);
+                  return next;
+                })
+              }
+              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors duration-200 hover:bg-surface"
             >
               {Icon && <Icon className="size-4 shrink-0 text-accent" aria-hidden />}
               <span className="flex-1 truncate text-sm font-medium">

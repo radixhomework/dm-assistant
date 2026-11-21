@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { templateSchemaOf } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
@@ -290,13 +290,23 @@ export class RelationshipsService {
     }));
   }
 
-  private async entityBySlug(slug: string) {
+  /**
+   * Resolves a record by its slug **or** its uuid — the hierarchy
+   * endpoints are uuid-addressed while the mentions table stays
+   * slug-keyed, so both identifiers reach every path.
+   */
+  private async entityBySlug(slugOrId: string) {
     const [row] = await this.db
       .select({ id: entities.id, type: entities.type })
       .from(entities)
-      .where(eq(entities.slug, slug));
+      .where(
+        or(
+          eq(entities.slug, slugOrId),
+          sql`${entities.id}::text = ${slugOrId}`,
+        ),
+      );
     if (!row) {
-      throw new NotFoundException(`Record '${slug}' not found`);
+      throw new NotFoundException(`Record '${slugOrId}' not found`);
     }
     return row;
   }

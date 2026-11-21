@@ -25,7 +25,7 @@ const chapter: Entity = {
     order: 0,
   },
   references: {
-    campaign: [{ slug: "campagne-1", title: "Campagne 1" }],
+    campaign: [{ id: "id-campagne-1", slug: "campagne-1", title: "Campagne 1" }],
   },
 };
 
@@ -43,7 +43,7 @@ const scene: Entity = {
     order: 0,
   },
   references: {
-    chapter: [{ slug: "chap1", title: "Chapitre 1 — Le port disparu" }],
+    chapter: [{ id: "id-chap1", slug: "chap1", title: "Chapitre 1 — Le port disparu" }],
   },
 };
 

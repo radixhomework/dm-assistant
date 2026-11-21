@@ -26,8 +26,8 @@ const event: Entity = {
     public_description: "Le vol du marteau de la famille Gulgram.",
   },
   references: {
-    origin: [{ slug: "miral", title: "Miral" }],
-    characters: [{ slug: "gyorick-ducan", title: "Gyorick Ducan" }],
+    origin: [{ id: "id-miral", slug: "miral", title: "Miral" }],
+    characters: [{ id: "id-gyorick-ducan", slug: "gyorick-ducan", title: "Gyorick Ducan" }],
   },
 };
 

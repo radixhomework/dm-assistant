@@ -38,6 +38,21 @@ export type WorldTemplate =
   | "knowledge-and-technologies"
   | "game-rules";
 
+/** The eight catalogs (P3 fills them from the SRD; DM-created ones are
+ * editable). They are world-perimeter records too, listed in a separate
+ * Lore section. */
+export const catalogTemplates = [
+  "classes",
+  "species",
+  "conditions",
+  "damage-types",
+  "treasure-types",
+  "languages",
+  "fauna",
+  "flora",
+] as const;
+export type CatalogTemplate = (typeof catalogTemplates)[number];
+
 export const worldTemplates: WorldTemplate[] = [
   "characters-and-entities",
   "places",

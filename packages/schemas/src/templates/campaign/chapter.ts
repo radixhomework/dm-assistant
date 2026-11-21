@@ -12,8 +12,8 @@ import { orderSchema } from "../vocabulary.js";
 export const chapter = template(
   {
     illustration: assetField,
-    dm_summary: proseField,
     order: orderSchema.optional(),
+    dm_summary: proseField,
   },
   {
     campaign: refOne("campaign"),

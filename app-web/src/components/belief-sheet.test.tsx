@@ -24,11 +24,11 @@ const belief: Entity = {
     public_description: "Les 7 enfers sont administrés par la déesse.",
   },
   references: {
-    origin: [{ slug: "osgwirond", title: "Osgwirond" }],
-    events: [{ slug: "event1", title: "Début de la campagne" }],
-    characters: [{ slug: "gyorick-ducan", title: "Gyorick Ducan" }],
-    organizations: [{ slug: "cercle-du-peridot", title: "Cercle du Péridot" }],
-    beliefs: [{ slug: "7-enfers", title: "7 Enfers" }],
+    origin: [{ id: "id-osgwirond", slug: "osgwirond", title: "Osgwirond" }],
+    events: [{ id: "id-event1", slug: "event1", title: "Début de la campagne" }],
+    characters: [{ id: "id-gyorick-ducan", slug: "gyorick-ducan", title: "Gyorick Ducan" }],
+    organizations: [{ id: "id-cercle-du-peridot", slug: "cercle-du-peridot", title: "Cercle du Péridot" }],
+    beliefs: [{ id: "id-7-enfers", slug: "7-enfers", title: "7 Enfers" }],
   },
 };
 

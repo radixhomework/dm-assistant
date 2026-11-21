@@ -25,7 +25,7 @@ const place: Entity = {
     public_description: "A coastal city.",
   },
   references: {
-    leaders: [{ slug: "the-mayor", title: "The Mayor" }],
+    leaders: [{ id: "id-the-mayor", slug: "the-mayor", title: "The Mayor" }],
   },
 };
 

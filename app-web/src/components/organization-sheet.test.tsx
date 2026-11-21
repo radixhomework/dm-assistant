@@ -24,8 +24,8 @@ const organization: Entity = {
     public_description: "Groupement secret œuvrant dans l'ombre.",
   },
   references: {
-    headquarters: [{ slug: "osgwirond", title: "Osgwirond" }],
-    leaders: [{ slug: "soniata", title: "Soniata Elwim Hulma" }],
+    headquarters: [{ id: "id-osgwirond", slug: "osgwirond", title: "Osgwirond" }],
+    leaders: [{ id: "id-soniata", slug: "soniata", title: "Soniata Elwim Hulma" }],
   },
 };
 

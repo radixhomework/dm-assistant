@@ -25,9 +25,9 @@ const nation: Entity = {
     public_description: "Région méridionale de Fraëweld.",
   },
   references: {
-    capital: [{ slug: "tremling", title: "Tremling" }],
-    geography: [{ slug: "veldra", title: "Veldra" }],
-    organizations: [{ slug: "cercle-du-peridot", title: "Cercle du Péridot" }],
+    capital: [{ id: "id-tremling", slug: "tremling", title: "Tremling" }],
+    geography: [{ id: "id-veldra", slug: "veldra", title: "Veldra" }],
+    organizations: [{ id: "id-cercle-du-peridot", slug: "cercle-du-peridot", title: "Cercle du Péridot" }],
   },
 };
 

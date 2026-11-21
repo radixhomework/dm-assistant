@@ -23,9 +23,9 @@ const work: Entity = {
     public_description: "Livre de recette bien connu dans l'empire de Bunala.",
   },
   references: {
-    origin: [{ slug: "tremling", title: "Tremling" }],
-    events: [{ slug: "event1", title: "Début de la campagne" }],
-    characters: [{ slug: "gyorick-ducan", title: "Gyorick Ducan" }],
+    origin: [{ id: "id-tremling", slug: "tremling", title: "Tremling" }],
+    events: [{ id: "id-event1", slug: "event1", title: "Début de la campagne" }],
+    characters: [{ id: "id-gyorick-ducan", slug: "gyorick-ducan", title: "Gyorick Ducan" }],
   },
 };
 

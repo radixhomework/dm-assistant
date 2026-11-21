@@ -23,7 +23,7 @@ const landmark: Entity = {
     public_description: "Plateaux balayés par les vents.",
   },
   references: {
-    nations: [{ slug: "plenear", title: "Plenear" }],
+    nations: [{ id: "id-plenear", slug: "plenear", title: "Plenear" }],
   },
 };
 

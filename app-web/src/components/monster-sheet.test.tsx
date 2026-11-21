@@ -38,8 +38,8 @@ const monster: Entity = {
     actions: "Attaques multiples. Le péryton effectue deux attaques.",
   },
   references: {
-    languages: [{ slug: "fraelish", title: "Fraëlish" }],
-    treasure_types: [{ slug: "trinkets", title: "Bibelots" }],
+    languages: [{ id: "id-fraelish", slug: "fraelish", title: "Fraëlish" }],
+    treasure_types: [{ id: "id-trinkets", slug: "trinkets", title: "Bibelots" }],
   },
 };
 

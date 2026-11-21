@@ -16,10 +16,10 @@ import { playStatuses } from "../../entities.js";
 export const scene = template(
   {
     illustration: assetField,
-    dm_summary: proseField,
-    running_notes: proseField,
     play_status: z.enum(playStatuses).optional(),
     order: orderSchema.optional(),
+    dm_summary: proseField,
+    running_notes: proseField,
   },
   {
     chapter: refOne("chapter"),

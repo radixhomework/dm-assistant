@@ -23,13 +23,13 @@ const knowledge: Entity = {
     public_description: "Procédé d'impression à caractères mobiles.",
   },
   references: {
-    origin: [{ slug: "tremling", title: "Tremling" }],
-    events: [{ slug: "event1", title: "Début de la campagne" }],
-    places: [{ slug: "veldra", title: "Veldra" }],
-    characters: [{ slug: "gyorick-ducan", title: "Gyorick Ducan" }],
-    knowledge: [{ slug: "imprimerie", title: "Imprimerie" }],
-    nations: [{ slug: "plenear", title: "Plenear" }],
-    beliefs: [{ slug: "7-enfers", title: "7 Enfers" }],
+    origin: [{ id: "id-tremling", slug: "tremling", title: "Tremling" }],
+    events: [{ id: "id-event1", slug: "event1", title: "Début de la campagne" }],
+    places: [{ id: "id-veldra", slug: "veldra", title: "Veldra" }],
+    characters: [{ id: "id-gyorick-ducan", slug: "gyorick-ducan", title: "Gyorick Ducan" }],
+    knowledge: [{ id: "id-imprimerie", slug: "imprimerie", title: "Imprimerie" }],
+    nations: [{ id: "id-plenear", slug: "plenear", title: "Plenear" }],
+    beliefs: [{ id: "id-7-enfers", slug: "7-enfers", title: "7 Enfers" }],
   },
 };
 

@@ -111,8 +111,17 @@
       "equipment-and-items": "Équipement et objets",
       "beliefs-myths-and-customs": "Croyances, mythes et coutumes",
       "knowledge-and-technologies": "Savoirs et technologies",
-      "game-rules": "Règles du jeu"
-    }
+      "game-rules": "Règles du jeu",
+      "classes": "Classes",
+      "species": "Espèces",
+      "languages": "Langues",
+      "damage-types": "Types de dégâts",
+      "treasure-types": "Types de trésors",
+      "conditions": "États",
+      "fauna": "Faune",
+      "flora": "Flore"
+    },
+    "catalogsTitle": "Catalogues"
   },
   "campaigns": {
     "title": "Campagnes",
