@@ -41,11 +41,9 @@
 - [x] 6.2 Backlinks endpoint (reverse references grouped by field + incoming mentions, access-filtered); service tests
 - [x] 6.3 Wire reference fields into forms; backlinks section on the sheet scaffold
 
-## 7. Versions
+## 7. Versions — out of scope (DM decision, 2026-11-21)
 
-- [ ] 7.1 Migration: `entity_versions`; snapshot append on create/update in the same transaction; service tests
-- [ ] 7.2 Endpoints: list (newest first), read-only snapshot, restore-as-update; service tests
-- [ ] 7.3 Versions panel on the sheet (list + read-only view + restore action)
+The DM does not version their records: the `entity_versions` migration, the endpoints and the versions panel are dropped from this change, together with the `record-versions` delta. The sheet scaffold carries children and backlinks only (task 9.1 amended).
 
 ## 8. Play order
 
@@ -55,11 +53,11 @@
 
 ## 9. Sheets
 
-- [x] 9.1 Reading-view scaffold: template-shaped fields (empty-means-hidden), children + backlinks + versions at the end; open = read mode, save returns to read mode with confirmation
+- [x] 9.1 Reading-view scaffold: template-shaped fields (empty-means-hidden), children + backlinks at the end; open = read mode, save returns to read mode with confirmation
 - [x] 9.2 First bespoke sheet: Characters and entities (statistics, references, public/private prose, self-references) — DM review gate before batching
 - [x] 9.3 Remaining sheets in batches (12 world templates, 2 campaign, 8 catalogs — 22 after the first), each through the impeccable skills and DM review
   - [x] 9.3a World templates (12/12), the campaign pair (Chapter, Scene), the Campaign page (merged record content + chapter/scene manager) and the 8 catalogs through the shared CatalogSheet — the batch is complete
   - [x] 9.3b Catalog access surface: Catalogs section on the Lore page and in the Lore sidebar (non-empty catalogs only, grouped under a label), grouped type select in the creation form; app-shell-navigation delta spec added
-- [ ] 9.4 i18n: every new interface label in fr+en, parity test green
+- [x] 9.4 i18n: every new interface label in fr+en, parity test green — audit of all 243 static `t()` keys plus the dynamic prefixes (enums, lore.categories, campaigns.status, stats, money, fields) resolving in both catalogs; recursive fr/en parity clean (no orphan keys either side); template-derived labels stay verbatim data per the i18n rule
 - [x] 9.6 Review-feedback sweep (CodeRabbit majors + Sonar gate): recurrence walk rewritten from the anchor, atomic relationship/mention writes, scoped sibling reorders, chapter deletion guard, edit-session draft lifecycle, mounted-editor refetch sync, calendar load errors, form control hardening, Drizzle declarations aligned with the applied migrations — plus the statistics/actions block rework (equipment, editable skill modifiers, reactions and legendary actions) reviewed with the DM
-- [ ] 9.5 Final verification: full suites (app, app-web), typecheck, lint, Sonar gate on new code, round-trip suite green with all new fixtures; `openspec validate records-editor --strict`
+- [x] 9.5 Final verification: full suites (app 17 files/110 tests, app-web 60 files/278 tests), root typecheck and lint clean, round-trip suite green (32 tests over the corpus and ad-hoc fixtures), Sonar gate OK on new code (reliability/security/maintainability A, new-code coverage 84.4%, duplication 1.6%, hotspots 100% reviewed); `openspec validate records-editor --strict` — scope note: per-record version history left this change on 2026-11-21 (task 7), so the final state ships without it
