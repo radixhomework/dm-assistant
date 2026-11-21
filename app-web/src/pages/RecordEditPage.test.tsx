@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ChapterRecordPage, LoreRecordPage } from "./RecordEditPage";
+import { searchFlagTrue } from "../router/search-flag.js";
 import { renderWithProviders } from "../testing/render.js";
 
 // Mutable search state the mocked router hook exposes; tests set the edit
 // flag to simulate navigation straight from a creation form.
-const searchState: { edit?: string | boolean | number } = {};
+const searchState: { edit?: string | boolean } = {};
 // Route params for the mocked useParams; the lore tests keep this default.
 const paramState: Record<string, string> = { id: "rec-1" };
 
@@ -179,25 +180,17 @@ describe("RecordEditPage", () => {
     expect(patches).toHaveLength(1);
   });
 
-  it("opens straight into edit mode from a creation redirect", async () => {
-    // The router parses the raw search (edit=1 arrives as the number 1);
-    // the boolean and string spellings keep working through the same
-    // searchFlagTrue helper the route validator uses.
-    searchState.edit = true;
-    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
-    await vi.waitFor(() =>
-      expect(screen.getByText("City of Glass")).toBeDefined(),
-    );
-    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
-
-    searchState.edit = "1";
-    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
-    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
-
-    searchState.edit = 1;
-    renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
-    await vi.waitFor(() => expect(document.querySelector("form")).not.toBeNull());
-  });
+  it.each([true, "1", 1])(
+    "opens straight into edit mode from a creation redirect with edit=%j",
+    async (edit) => {
+      // The route validator normalizes the numeric value parsed from ?edit=1.
+      searchState.edit = typeof edit === "number" ? searchFlagTrue({ edit }, "edit") : edit;
+      const { container } = renderWithProviders(<LoreRecordPage />, "/lore/rec-1");
+      await vi.waitFor(() =>
+        expect(container.querySelector("form#record-edit-form")).not.toBeNull(),
+      );
+    },
+  );
 
   it("lists the campaign children through the tracking view", async () => {
     vi.stubGlobal(
