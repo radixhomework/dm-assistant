@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { CampaignViewPage } from "./CampaignViewPage";
 import { renderWithProviders } from "../testing/render.js";
 
-const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
+const { navigate, useSearch } = vi.hoisted(() => ({ navigate: vi.fn(), useSearch: vi.fn((): { edit?: boolean } => ({})) }));
 
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ id: "uuid-north-realm" }),
   useNavigate: () => navigate,
-  useSearch: () => ({}),
+  useSearch,
   Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));
 
@@ -218,6 +218,37 @@ describe("CampaignViewPage edit navigation", () => {
       }),
     );
   });
+
+  it("blocks duplicate saves and keeps the draft editable after a failed PATCH", async () => {
+    useSearch.mockReturnValue({ edit: true });
+    const fetchRecord = vi.mocked(fetch).getMockImplementation()!;
+    let resolve!: (response: Response) => void;
+    const promise = new Promise<Response>((done) => { resolve = done; });
+    const patch = vi.fn(() => promise);
+    vi.mocked(fetch).mockImplementation((url, init) =>
+      init?.method === "PATCH" ? patch() : fetchRecord(url, init),
+    );
+    try {
+      renderWithProviders(<CampaignViewPage />);
+      const title = await screen.findByRole("textbox", { name: "Title" });
+      fireEvent.change(title, { target: { value: "Draft title" } });
+      const form = title.closest("form")!;
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+      expect(patch).toHaveBeenCalledTimes(1);
+      expect(form.hasAttribute("inert")).toBe(true);
+      expect(screen.getByRole("status").textContent).toBe("Saving…");
+
+      resolve(Response.json({ message: "Save failed" }, { status: 500 }));
+      await screen.findByText(/Save failed/);
+      expect(form.hasAttribute("inert")).toBe(false);
+      expect((title as HTMLInputElement).value).toBe("Draft title");
+      expect(navigate).not.toHaveBeenCalled();
+    } finally {
+      useSearch.mockReturnValue({});
+    }
+  });
+
 });
 
 describe("CampaignViewPage deletions", () => {

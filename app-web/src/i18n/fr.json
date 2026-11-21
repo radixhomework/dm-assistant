@@ -214,6 +214,8 @@
     "error": "Hors ligne — vérifiez que le serveur applicatif tourne"
   },
   "record": {
+    "retryLink": "Réessayer de charger le lien vers {{title}}",
+    "saving": "Enregistrement…",
     "edit": "Éditer",
     "era": "Ère",
     "year": "Année",

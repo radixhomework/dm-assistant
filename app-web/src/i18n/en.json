@@ -214,6 +214,8 @@
     "error": "Offline — check that the app server is running"
   },
   "record": {
+    "retryLink": "Retry loading link to {{title}}",
+    "saving": "Saving…",
     "edit": "Edit",
     "era": "Era",
     "year": "Year",

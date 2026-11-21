@@ -209,7 +209,7 @@ describe("EntitiesService", () => {
   });
 
   it("collects backlinks: reverse references and incoming mentions", async () => {
-    await service.create({
+    const place = await service.create({
       slug: "lone-place",
       type: "places",
       perimeter: "world",
@@ -257,6 +257,7 @@ describe("EntitiesService", () => {
         perimeter: "world",
       },
     ]);
+    expect(await service.backlinksOf(place.id)).toEqual(backlinks);
   });
 
   it("returns no owning campaign for a world record", async () => {

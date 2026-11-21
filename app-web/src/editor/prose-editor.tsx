@@ -180,8 +180,9 @@ export function ProseEditor({
   // the same pane. In edit mode the click belongs to the node
   // (selection/deletion), so the handler stays readonly-only.
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !readonly) return;
     const dom = editor.view.dom;
+    let lookup = 0;
     const onClick = (event: MouseEvent) => {
       if (editor.isEditable) return;
       const mention = (event.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
@@ -190,14 +191,21 @@ export function ProseEditor({
       // The mention stores the slug; the target's domain decides the
       // URL (Lore records at /lore/<uuid>, campaign records in their
       // hierarchy).
+      const current = ++lookup;
       void api<Entity>(`/api/records/${slug}`).then((target) => {
+        if (current !== lookup) return;
         const route = recordRoute(target);
         void navigate({ to: route.to, params: route.params });
+      }, () => {
+        // The target may have been deleted since the mention rendered.
       });
     };
     dom.addEventListener("click", onClick);
-    return () => dom.removeEventListener("click", onClick);
-  }, [editor, navigate]);
+    return () => {
+      lookup++;
+      dom.removeEventListener("click", onClick);
+    };
+  }, [editor, navigate, readonly]);
 
   if (!editor) return null;
 

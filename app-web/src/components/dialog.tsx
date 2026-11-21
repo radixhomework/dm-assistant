@@ -2,6 +2,26 @@ import { X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+function tabbableElements(root: HTMLElement | null): HTMLElement[] {
+  if (!root) return [];
+  return Array.from(root.querySelectorAll<HTMLElement>(
+    "input, select, textarea, button, a[href], [tabindex]",
+  )).filter((element) => {
+    if (
+      element.tabIndex < 0 ||
+      element.matches(':disabled, [aria-disabled="true"], input[type="hidden"]') ||
+      element.closest("[inert]") ||
+      /^(hidden|collapse)$/.test(getComputedStyle(element).visibility)
+    ) return false;
+    for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+      if (getComputedStyle(node).display === "none") return false;
+    }
+    return true;
+  }).sort((a, b) =>
+    (a.tabIndex || Infinity) - (b.tabIndex || Infinity),
+  );
+}
+
 /**
  * Modal dialog for short, protected-focus tasks (the record creation
  * forms): a dimmed backdrop, one centered surface panel. Escape, a
@@ -23,9 +43,7 @@ export function Dialog(props: {
   // precedes the body in the DOM); restore focus on close.
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const first = bodyRef.current?.querySelector<HTMLElement>(
-      "input, select, textarea, button",
-    );
+    const [first] = tabbableElements(bodyRef.current);
     (first ?? panelRef.current)?.focus();
     return () => previous?.focus();
   }, []);
@@ -42,16 +60,19 @@ export function Dialog(props: {
   // Minimal focus trap: Tab wraps between the panel's focusables.
   function onKeyDown(event: React.KeyboardEvent) {
     if (event.key !== "Tab") return;
-    const focusables = panelRef.current?.querySelectorAll<HTMLElement>(
-      "input, select, textarea, button, a[href]",
-    );
-    if (!focusables || focusables.length === 0) return;
+    const focusables = tabbableElements(panelRef.current);
+    if (focusables.length === 0) {
+      event.preventDefault();
+      return;
+    }
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
+    const active = document.activeElement;
+    const atPanel = active === panelRef.current;
+    if (event.shiftKey && (active === first || atPanel)) {
       event.preventDefault();
       last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
+    } else if (!event.shiftKey && (active === last || atPanel)) {
       event.preventDefault();
       first.focus();
     }

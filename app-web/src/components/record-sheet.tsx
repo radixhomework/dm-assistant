@@ -42,11 +42,32 @@ type Backlinks = {
 function RecordLink(props: {
   readonly target: { id: string; slug: string; title: string };
 }) {
-  const route = useRecordRoute(props.target);
+  const { t } = useTranslation();
+  const { route, isError, isFetching, refetch } = useRecordRoute(props.target);
+  if (!route) {
+    return (
+      <span className="text-muted">
+        {props.target.title}{" "}
+        {isError && !isFetching ? (
+          <>
+            <span role="status">({t("common.error")})</span>{" "}
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              aria-label={t("record.retryLink", { title: props.target.title })}
+              className="text-accent underline"
+            >
+              {t("common.retry")}
+            </button>
+          </>
+        ) : <span role="status">({t("common.loading")})</span>}
+      </span>
+    );
+  }
   return (
     <Link
-      to={route?.to ?? "/lore/$id"}
-      params={route?.params ?? { id: props.target.id }}
+      to={route.to}
+      params={route.params}
       className="text-accent hover:underline"
     >
       {props.target.title}

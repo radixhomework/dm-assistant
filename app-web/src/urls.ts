@@ -71,7 +71,7 @@ export function recordRoute(record: {
  */
 export function useRecordRoute(
   target: { readonly id: string } | undefined | null,
-): RecordRoute | null {
+) {
   const id = target?.id;
   const query = useQuery({
     queryKey: ["record", id],
@@ -79,6 +79,10 @@ export function useRecordRoute(
     enabled: id !== undefined,
     staleTime: Infinity,
   });
-  if (!id || query.data === undefined) return null;
-  return recordRoute(query.data);
+  return {
+    route: query.data ? recordRoute(query.data) : null,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+  };
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { ProseEditor } from "./prose-editor.js";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -99,4 +99,40 @@ describe("ProseEditor", () => {
       }),
     );
   });
+
+  it("ignores mention lookups superseded by another click or unmount", async () => {
+    const pending = new Map<string, (response: Response) => void>();
+    vi.stubGlobal("fetch", vi.fn((url: string) =>
+      new Promise<Response>((resolve) => pending.set(url, resolve)),
+    ));
+    const { unmount } = renderWithProviders(<ProseEditor markdown="" readonly />);
+    function clickMention(slug: string) {
+      const span = document.createElement("span");
+      span.dataset.type = "mention";
+      span.dataset.id = slug;
+      document.querySelector(".ProseMirror")!.appendChild(span);
+      fireEvent.click(span);
+    }
+    async function resolveRecord(slug: string) {
+      await act(async () => {
+        pending.get(`/api/records/${slug}`)!(
+          Response.json({ id: slug, type: "places", perimeter: "world" }),
+        );
+      });
+    }
+
+    clickMention("first");
+    clickMention("second");
+    await resolveRecord("second");
+    await resolveRecord("first");
+    expect(navigateSpy.mock.calls).toEqual([
+      [{ to: "/lore/$id", params: { id: "second" } }],
+    ]);
+
+    clickMention("third");
+    unmount();
+    await resolveRecord("third");
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+  });
+
 });

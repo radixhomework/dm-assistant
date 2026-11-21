@@ -285,7 +285,7 @@ export class EntitiesService {
       })
       .from(mentions)
       .innerJoin(entities, eq(mentions.entityId, entities.id))
-      .where(eq(mentions.targetSlug, slug));
+      .where(eq(mentions.targetSlug, record.slug));
     return { fields, mentions: mentionRows };
   }
 

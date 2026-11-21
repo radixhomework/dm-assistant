@@ -1,6 +1,7 @@
+import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
-import { RecordSheet } from "./record-sheet.js";
+import { fireEvent, screen } from "@testing-library/react";
+import { RecordSheet, TitleLinks } from "./record-sheet.js";
 import { renderWithProviders } from "../testing/render.js";
 import type { Entity } from "../types.js";
 
@@ -8,13 +9,44 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
-    Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
+    Link: (props: {
+      children?: React.ReactNode;
+      to: string;
+      params: Record<string, string>;
+    }) => <a href={props.to.replace(/\$(\w+)/g, (_, key: string) => props.params[key])}>{props.children}</a>,
   };
 });
 
 beforeEach(() => {
   document.documentElement.lang = "en";
   document.body.innerHTML = "";
+});
+
+it("waits for a record URL and retries a failed lookup before linking", async () => {
+  const fetchRecord = vi.fn()
+    .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({ message: "Unavailable" }) })
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: "scene-id",
+        type: "scene",
+        perimeter: "campaign",
+        campaign: { id: "campaign-id" },
+        references: { chapter: [{ id: "chapter-id" }] },
+      }),
+    });
+  vi.stubGlobal("fetch", fetchRecord);
+  renderWithProviders(
+    <TitleLinks targets={[{ id: "scene-id", slug: "scene", title: "Scene" }]} />,
+    { client: new QueryClient({ defaultOptions: { queries: { retry: false } } }) },
+  );
+  expect(screen.getByText(/Loading/)).toBeDefined();
+  expect(screen.queryByRole("link")).toBeNull();
+  const retry = await screen.findByRole("button", { name: "Retry loading link to Scene" });
+  expect(screen.queryByRole("link")).toBeNull();
+  fireEvent.click(retry);
+  const link = await screen.findByRole("link", { name: "Scene" });
+  expect(link.getAttribute("href")).toBe("/campaigns/campaign-id/chapter-id/scene-id");
 });
 
 describe("RecordSheet scaffold", () => {

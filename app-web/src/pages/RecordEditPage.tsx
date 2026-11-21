@@ -273,7 +273,7 @@ function RecordPage(props: {
     setMode("read");
   }
 
-  async function onSaveRecord(): Promise<void> {
+  async function invalidateCampaignTree(): Promise<void> {
     // The sidebar campaign tree and campaign view share this cache.
     await queryClient.invalidateQueries({ queryKey: ["campaign-view"] });
     await queryClient.invalidateQueries({ queryKey: ["chapter-trackings"] });
@@ -334,7 +334,7 @@ function RecordPage(props: {
       });
       setSaved(true);
       await record.refetch();
-      await onSaveRecord();
+      await invalidateCampaignTree();
       setMode("read");
     } catch (saveError) {
       setError(String(saveError));
@@ -349,6 +349,7 @@ function RecordPage(props: {
     setError(null);
     try {
       await api(`/api/records/${props.id}`, { method: "DELETE" });
+      await invalidateCampaignTree();
       void navigate({
         to: props.afterDeleteTo.to,
         params: props.afterDeleteTo.params ?? ({} as never),

@@ -74,6 +74,7 @@ const campaignViewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/campaigns/$id",
   component: CampaignViewPage,
+  remountDeps: ({ params }) => params.id,
   validateSearch: (search: Record<string, unknown>) => ({
     edit: searchFlagTrue(search, "edit"),
   }),

@@ -110,6 +110,7 @@ export function AppSidebar() {
         if (typeRecords.length === 0) return null;
         const Icon = catalogIcons[type];
         const isCollapsed = !expanded.has(type);
+        const containsActive = activeType === type;
         return (
           <section key={type} className="mt-1">
             <button
@@ -123,7 +124,11 @@ export function AppSidebar() {
                   return next;
                 })
               }
-              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors duration-200 hover:bg-surface"
+              className={`flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors duration-200 ${
+                containsActive
+                  ? "bg-accent/20 text-ink"
+                  : "text-muted hover:bg-surface"
+              }`}
             >
               {Icon && <Icon className="size-4 shrink-0 text-accent" aria-hidden />}
               <span className="flex-1 truncate text-sm font-medium">

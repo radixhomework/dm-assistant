@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Pencil, Save, Trash2 } from "lucide-react";
 import { formString } from "../forms.js";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { Dialog } from "../components/dialog.js";
@@ -71,6 +71,8 @@ export function CampaignViewPage() {
   const slugFields = useSlugAutoFill();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const saveInFlight = useRef(false);
   const [creating, setCreating] = useState<"chapter" | "scene" | null>(null);
   const [parentForNew, setParentForNew] = useState<string | null>(null);
   const [parentTitle, setParentTitle] = useState<string | null>(null);
@@ -132,9 +134,12 @@ export function CampaignViewPage() {
 
   async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saveInFlight.current) return;
+    const form = new FormData(event.currentTarget);
+    saveInFlight.current = true;
+    setSaving(true);
     setError(null);
     setSaved(false);
-    const form = new FormData(event.currentTarget);
     try {
       await api(`/api/records/${id}`, {
         method: "PATCH",
@@ -146,9 +151,12 @@ export function CampaignViewPage() {
       setSaved(true);
       await campaign.refetch();
       // Back to the reading view, where the saved banner shows.
-      void navigate({ to: "/campaigns/$id", params: { id }, search: {} });
+      await navigate({ to: "/campaigns/$id", params: { id }, search: {} });
     } catch (saveError) {
       setError(String(saveError));
+    } finally {
+      saveInFlight.current = false;
+      setSaving(false);
     }
   }
 
@@ -256,7 +264,8 @@ export function CampaignViewPage() {
               <button
                 type="submit"
                 form="campaign-edit-form"
-                className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+                disabled={saving}
+                className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent disabled:opacity-50"
                 title={t("lore.save")}
                 aria-label={t("lore.save")}
               >
@@ -265,16 +274,19 @@ export function CampaignViewPage() {
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface"
+                disabled={saving}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:bg-surface disabled:opacity-50"
               >
                 {t("common.cancel")}
               </button>
             </div>
           </div>
         </div>
+        {saving && <p role="status" className="mt-3 text-sm text-muted">{t("record.saving")}</p>}
         <form
           id="campaign-edit-form"
           onSubmit={onSave}
+          inert={saving}
           className="mt-6 flex max-w-md flex-col gap-4"
         >
           <label className="flex flex-col gap-1 text-sm">

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { Dialog } from "./dialog.js";
+import "../i18n/index.js";
 
 describe("Dialog", () => {
   beforeEach(() => {
@@ -40,6 +41,35 @@ describe("Dialog", () => {
     unmount();
     expect(document.activeElement).toBe(outside);
     outside.remove();
+  });
+
+  it("skips disabled, hidden and non-tabbable controls when opening", () => {
+    render(
+      <Dialog title="D" onClose={() => {}}>
+        <input aria-label="Disabled" disabled />
+        <div style={{ display: "none" }}>
+          <input aria-label="Hidden" />
+        </div>
+        <input aria-label="Outside the tab order" tabIndex={-1} />
+        <input aria-label="Title" />
+      </Dialog>,
+    );
+    expect(document.activeElement).toBe(screen.getByLabelText("Title"));
+  });
+
+  it("wraps focus in both directions when the last control is disabled", () => {
+    render(
+      <Dialog title="D" onClose={() => {}}>
+        <input aria-label="Title" />
+        <button disabled>Save</button>
+      </Dialog>,
+    );
+    const title = screen.getByLabelText("Title");
+    const close = screen.getByRole("button", { name: "Close" });
+    expect(fireEvent.keyDown(title, { key: "Tab" })).toBe(false);
+    expect(document.activeElement).toBe(close);
+    expect(fireEvent.keyDown(close, { key: "Tab", shiftKey: true })).toBe(false);
+    expect(document.activeElement).toBe(title);
   });
 
   it("dismisses on Escape and on a backdrop click", () => {
