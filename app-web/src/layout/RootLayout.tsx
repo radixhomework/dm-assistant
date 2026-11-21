@@ -37,12 +37,16 @@ export function RootLayout() {
   const worldName = bootstrap.data?.worldName ?? null;
 
   // Tab title: white-labeled with the world name; record pages override
-  // with their own title (RecordEditPage).
+  // with their own title (RecordEditPage). The record shapes mirror the
+  // sidebar-mode resolution below.
+  const recordTitleMatch =
+    /^\/lore\/[^/]+$/.test(pathname) ||
+    /^\/campaigns\/[^/]+(?:\/[^/]+){1,2}$/.test(pathname);
   useEffect(() => {
-    if (!pathname.startsWith("/records/")) {
+    if (!recordTitleMatch) {
       document.title = worldName ?? "DM Assistant";
     }
-  }, [pathname, me.data, worldName]);
+  }, [recordTitleMatch, me.data, worldName]);
 
   // Apply the account's UI language at load (null = instance default).
   useEffect(() => {
