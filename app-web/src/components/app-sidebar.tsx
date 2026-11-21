@@ -100,6 +100,11 @@ export function AppSidebar() {
         );
       })}
 
+      {catalogTemplates.some((type) => (byType.get(type) ?? []).length > 0) && (
+        <h2 className="mt-3 px-2 text-xs font-semibold uppercase tracking-wide text-muted">
+          {t("lore.catalogsTitle")}
+        </h2>
+      )}
       {catalogTemplates.map((type) => {
         const typeRecords = byType.get(type) ?? [];
         if (typeRecords.length === 0) return null;
