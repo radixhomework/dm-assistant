@@ -13,6 +13,7 @@ import { KnowledgeSheet } from "./knowledge-sheet.js";
 import { GameRuleSheet } from "./game-rule-sheet.js";
 import { ChapterSheet } from "./chapter-sheet.js";
 import { SceneSheet } from "./scene-sheet.js";
+import { CatalogSheet } from "./catalog-sheet.js";
 import type { Entity } from "../types.js";
 
 /**
@@ -35,6 +36,14 @@ const registry: Record<string, ComponentType<{ readonly record: Entity }>> = {
   "game-rules": GameRuleSheet,
   chapter: ChapterSheet,
   scene: SceneSheet,
+  classes: (props) => <CatalogSheet record={props.record} />,
+  species: (props) => <CatalogSheet record={props.record} />,
+  conditions: (props) => <CatalogSheet record={props.record} />,
+  "damage-types": (props) => <CatalogSheet record={props.record} />,
+  languages: (props) => <CatalogSheet record={props.record} />,
+  "treasure-types": (props) => <CatalogSheet record={props.record} />,
+  fauna: (props) => <CatalogSheet record={props.record} withStatistics />,
+  flora: (props) => <CatalogSheet record={props.record} withStatistics />,
 };
 
 /** The bespoke sheet component for a record type, null when the generic

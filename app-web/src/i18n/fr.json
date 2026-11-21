@@ -380,6 +380,11 @@
       "unconscious": "Inconscient",
       "poisoned": "Empoisonné",
       "exhaustion": "Épuisement"
+    },
+    "play_status": {
+      "not_played": "Non jouée",
+      "in_progress": "En cours",
+      "played": "Jouée"
     }
   },
   "money": {
