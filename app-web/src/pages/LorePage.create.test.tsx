@@ -3,8 +3,14 @@ import { screen } from "@testing-library/react";
 import { LorePage } from "./LorePage";
 import { renderWithProviders } from "../testing/render.js";
 
+// A callable navigation mock: LorePage.onCreate navigates after the POST
+// and refetch — a non-callable mock made that call throw, and the test
+// passed on the POST assertion alone.
+const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
+
 vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => ({ to: vi.fn() }),
+  useSearch: () => ({ new: undefined }),
+  useNavigate: () => navigate,
   Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));
 
@@ -47,16 +53,16 @@ describe("LorePage create", () => {
         };
       }
       if (input === "/api/records" && init?.method === "POST") {
-        return { ok: true, json: async () => ({}) };
+        return { ok: true, json: async () => ({ id: "rec-9", slug: "city-of-glass" }) };
       }
       return { ok: true, json: async () => [] };
     });
     vi.stubGlobal("fetch", fetchMock);
     renderWithProviders(<LorePage />, "/");
     await vi.waitFor(() =>
-      expect(screen.getByText("New record")).toBeDefined(),
+      expect(screen.getByRole("button", { name: "New record" })).toBeDefined(),
     );
-    screen.getByText("New record").click();
+    screen.getByRole("button", { name: "New record" }).click();
     await vi.waitFor(() => {
       const form = document.querySelector("form");
       expect(form).not.toBeNull();
@@ -82,5 +88,13 @@ describe("LorePage create", () => {
       );
       expect(post).toBeDefined();
     });
+    // The complete success path: straight into editing the record.
+    await vi.waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({
+        to: "/lore/$id",
+        params: { id: "rec-9" },
+        search: { edit: true },
+      }),
+    );
   });
 });

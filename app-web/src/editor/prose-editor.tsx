@@ -1,0 +1,352 @@
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  CalendarDays,
+  Dices,
+  Feather,
+  MessageSquareQuote,
+  Table as TableIcon,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
+import { api } from "../api/client.js";
+import type { Entity } from "../types.js";
+import { recordRoute } from "../urls.js";
+import { buildExtensions } from "./extensions.js";
+import { DatePickerPanel } from "./date-picker.js";
+import { useCalendarDefinition } from "../calendar/use-calendar.js";
+
+const toolButton =
+  "rounded-md border border-border px-2 py-0.5 text-sm text-ink transition-colors duration-200 hover:bg-surface";
+
+/** Icon-only highlight/insert button: the icon carries the assigned
+ * section color, the tooltip the action. */
+const TYPED_BLOCK_TYPES = ["attention", "paraphrase", "develop"];
+
+/** Inserts a highlight block, escaping any typed-block container the
+ * caret sits in: the new block lands after the outermost container
+ * instead of nesting inside it. */
+function insertHighlightBlock(
+  editor: Editor,
+  type: (typeof TYPED_BLOCK_TYPES)[number],
+): void {
+  const { selection } = editor.state;
+  let afterOuter: number | null = null;
+  for (let depth = selection.$from.depth; depth > 0; depth -= 1) {
+    const node = selection.$from.node(depth);
+    if (TYPED_BLOCK_TYPES.includes(node.type.name)) {
+      afterOuter = selection.$from.after(depth);
+    }
+  }
+  if (afterOuter !== null) {
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(afterOuter, {
+        type,
+        content: [{ type: "paragraph" }],
+      })
+      .run();
+    return;
+  }
+  editor
+    .chain()
+    .focus()
+    .insertContent({ type, content: [{ type: "paragraph" }] })
+    .run();
+}
+
+function IconToolButton({
+  icon: Icon,
+  label,
+  title,
+  action,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly title: string;
+  readonly action: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={label}
+      tabIndex={-1}
+      onClick={action}
+      className="rounded-md border border-border bg-surface px-2 py-1 text-muted transition-colors duration-200 hover:bg-background hover:text-ink"
+    >
+      <Icon className="size-4" aria-hidden />
+    </button>
+  );
+}
+
+function ToolButton({
+  editor,
+  active,
+  label,
+  title,
+  action,
+}: {
+  readonly editor: Editor;
+  readonly active: boolean;
+  readonly label: string;
+  readonly title: string;
+  readonly action: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      tabIndex={-1}
+      disabled={active ? false : !editor.can().chain().focus().run()}
+      onClick={action}
+      className={
+        active
+          ? "rounded-md bg-primary px-2 py-0.5 text-sm text-background transition-colors duration-200"
+          : toolButton
+      }
+    >
+      {label}
+    </button>
+  );
+}
+
+/**
+ * The mounted prose editor: the shared buildExtensions() configuration
+ * under a toolbar. Bodies load as markdown and emit markdown on every
+ * change through the same parse → serialize contract the round-trip
+ * suite gates.
+ *
+ * Toolbar rows: classic formatting first, the highlight blocks (attention,
+ * mechanics) on their own row. readonly=true drops the toolbar entirely —
+ * used by the record reading view.
+ */
+export function ProseEditor({
+  markdown,
+  onChange,
+  readonly = false,
+  frame = true,
+}: {
+  readonly markdown: string;
+  readonly onChange?: (markdown: string) => void;
+  readonly readonly?: boolean;
+  /** false renders the prose without the boxed frame — the reading
+   * sheet separates prose sections with headings instead. */
+  readonly frame?: boolean;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { definition } = useCalendarDefinition();
+  // Re-render the toolbar on every transaction so active states follow.
+  const [renderTick, setRenderTick] = useState(0);
+  // The prose date picker anchors on the toolbar button that opened it.
+  const [datePicker, setDatePicker] = useState<{ x: number; y: number } | null>(null);
+  const editor = useEditor({
+    extensions: buildExtensions(),
+    content: markdown,
+    contentType: "markdown",
+    editable: !readonly,
+    onUpdate: ({ editor: current }) => onChange?.(current.getMarkdown()),
+  });
+
+  useEffect(() => {
+    editor?.setEditable(!readonly);
+  }, [editor, readonly]);
+
+  // Keep the editor in sync with externally supplied markdown: a record
+  // refetch can change the prose while this editor stays mounted, and
+  // TipTap otherwise keeps its stale document (the next edit would emit
+  // it back). Skipped while the field is focused — in-progress typing
+  // must never be clobbered.
+  useEffect(() => {
+    if (!editor || editor.isFocused) return;
+    if (editor.getMarkdown() === markdown) return;
+    editor.commands.setContent(markdown, { contentType: "markdown" });
+  }, [editor, markdown]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const rerender = () => setRenderTick((value) => value + 1);
+    editor.on("transaction", rerender);
+    return () => {
+      editor.off("transaction", rerender);
+    };
+  }, [editor]);
+
+  // Reading mode: a mention click navigates to the referenced record in
+  // the same pane. In edit mode the click belongs to the node
+  // (selection/deletion), so the handler stays readonly-only.
+  useEffect(() => {
+    if (!editor || !readonly) return;
+    const dom = editor.view.dom;
+    let lookup = 0;
+    const onClick = (event: MouseEvent) => {
+      if (editor.isEditable) return;
+      const mention = (event.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
+      const slug = mention?.dataset.id;
+      if (!slug) return;
+      // The mention stores the slug; the target's domain decides the
+      // URL (Lore records at /lore/<uuid>, campaign records in their
+      // hierarchy).
+      const current = ++lookup;
+      void api<Entity>(`/api/records/${slug}`).then((target) => {
+        if (current !== lookup) return;
+        const route = recordRoute(target);
+        void navigate({ to: route.to, params: route.params });
+      }, () => {
+        // The target may have been deleted since the mention rendered.
+      });
+    };
+    dom.addEventListener("click", onClick);
+    return () => {
+      lookup++;
+      dom.removeEventListener("click", onClick);
+    };
+  }, [editor, navigate, readonly]);
+
+  if (!editor) return null;
+
+  const cmd = () => editor.chain().focus();
+
+  return (
+    <div className="flex flex-col gap-2">
+      {!readonly && (
+        <>
+          <div
+            data-revision={renderTick}
+            className="flex flex-wrap items-center gap-1"
+            role="toolbar"
+            aria-label={t("editor.toolbar")}
+            // Toolbars stay out of the Tab order: Tab walks field to
+            // field through the form; formatting goes through shortcuts
+            // (Ctrl+B…) or the mouse.
+            tabIndex={-1}
+          >
+            <ToolButton editor={editor} active={editor.isActive("bold")} label="B" title={t("editor.bold")} action={() => cmd().toggleBold().run()} />
+            <ToolButton editor={editor} active={editor.isActive("italic")} label="I" title={t("editor.italic")} action={() => cmd().toggleItalic().run()} />
+            <ToolButton editor={editor} active={editor.isActive("strike")} label="S" title={t("editor.strike")} action={() => cmd().toggleStrike().run()} />
+            <ToolButton editor={editor} active={editor.isActive("heading", { level: 2 })} label="H2" title={t("editor.heading2")} action={() => cmd().toggleHeading({ level: 2 }).run()} />
+            <ToolButton editor={editor} active={editor.isActive("heading", { level: 3 })} label="H3" title={t("editor.heading3")} action={() => cmd().toggleHeading({ level: 3 }).run()} />
+            <ToolButton editor={editor} active={editor.isActive("heading", { level: 4 })} label="H4" title={t("editor.heading4")} action={() => cmd().toggleHeading({ level: 4 }).run()} />
+            <ToolButton editor={editor} active={editor.isActive("code")} label={"< >"} title={t("editor.inlineCode")} action={() => cmd().toggleCode().run()} />
+            <ToolButton editor={editor} active={editor.isActive("codeBlock")} label={"{" + "}"} title={t("editor.codeBlock")} action={() => cmd().toggleCodeBlock().run()} />
+            <ToolButton editor={editor} active={editor.isActive("blockquote")} label="❝" title={t("editor.quote")} action={() => cmd().toggleBlockquote().run()} />
+            <ToolButton editor={editor} active={editor.isActive("bulletList")} label="•—" title={t("editor.bulletList")} action={() => cmd().toggleBulletList().run()} />
+            <ToolButton editor={editor} active={editor.isActive("orderedList")} label="1." title={t("editor.orderedList")} action={() => cmd().toggleOrderedList().run()} />
+            <ToolButton editor={editor} active={editor.isActive("link")} label="🔗" title={t("editor.link")} action={() => {
+              const previous = editor.getAttributes("link").href as string | undefined;
+              const href = window.prompt(t("editor.linkPrompt"), previous ?? "https://");
+              if (href === null) return;
+              if (href === "") { cmd().unsetLink().run(); return; }
+              cmd().setLink({ href }).run();
+            }} />
+            <ToolButton editor={editor} active={false} label="🖼" title={t("editor.image")} action={() => {
+              const src = window.prompt(t("editor.imagePrompt"));
+              if (src) cmd().setImage({ src }).run();
+            }} />
+            <IconToolButton
+              icon={TableIcon}
+              label={t("editor.table")}
+              title={t("editor.table")}
+              action={() => cmd().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            />
+            {/* Contextual table controls: only while the caret sits in a
+             * table — compact labels, full tooltips. */}
+            {editor.isActive("table") && (
+              <>
+                <ToolButton editor={editor} active={false} label="L+" title={t("editor.tableAddRow")} action={() => cmd().addRowAfter().run()} />
+                <ToolButton editor={editor} active={false} label="C+" title={t("editor.tableAddColumn")} action={() => cmd().addColumnAfter().run()} />
+                <ToolButton editor={editor} active={false} label="L−" title={t("editor.tableDeleteRow")} action={() => cmd().deleteRow().run()} />
+                <ToolButton editor={editor} active={false} label="C−" title={t("editor.tableDeleteColumn")} action={() => cmd().deleteColumn().run()} />
+                <ToolButton editor={editor} active={editor.isActive("tableHeader")} label="H" title={t("editor.tableHeader")} action={() => cmd().toggleHeaderRow().run()} />
+                <ToolButton editor={editor} active={false} label="✕" title={t("editor.tableDelete")} action={() => cmd().deleteTable().run()} />
+              </>
+            )}
+            {datePicker !== null && (
+              <DatePickerPanel
+                definition={definition}
+                anchor={datePicker}
+                onInsert={(date) => {
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent({
+                      type: "calendarDate",
+                      attrs: {
+                        year: date.year,
+                        month: date.month ?? null,
+                        day: date.day ?? null,
+                      },
+                    })
+                    .run();
+                  setDatePicker(null);
+                }}
+                onClose={() => setDatePicker(null)}
+              />
+            )}
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-1"
+            role="toolbar"
+            aria-label={t("editor.highlightToolbar")}
+            tabIndex={-1}
+          >
+            <IconToolButton
+              icon={Dices}
+              label={t("editor.dice")}
+              title={t("editor.dice")}
+              action={() => {
+                const raw = window.prompt(t("editor.dicePrompt"));
+                if (!raw) return;
+                editor.chain().focus().insertContent({
+                  type: "dice",
+                  attrs: { formula: raw.trim() },
+                }).run();
+              }}
+            />
+            <IconToolButton
+              icon={CalendarDays}
+              label={t("editor.date")}
+              title={t("editor.date")}
+              action={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                setDatePicker((open) =>
+                  open === null ? { x: rect.left, y: rect.bottom } : null,
+                );
+              }}
+            />
+            <IconToolButton
+              icon={TriangleAlert}
+              label={t("editor.attention")}
+              title={t("editor.attention")}
+              action={() => insertHighlightBlock(editor, "attention")}
+            />
+            <IconToolButton
+              icon={MessageSquareQuote}
+              label={t("editor.paraphrase")}
+              title={t("editor.paraphrase")}
+              action={() => insertHighlightBlock(editor, "paraphrase")}
+            />
+            <IconToolButton
+              icon={Feather}
+              label={t("editor.develop")}
+              title={t("editor.develop")}
+              action={() => insertHighlightBlock(editor, "develop")}
+            />
+          </div>
+        </>
+      )}
+      <EditorContent
+        editor={editor}
+        className={
+          frame
+            ? "prose-editor rounded-md border border-border bg-background px-3 py-2"
+            : "prose-editor"
+        }
+      />
+    </div>
+  );
+}

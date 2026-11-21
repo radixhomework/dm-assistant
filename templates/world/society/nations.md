@@ -10,7 +10,7 @@
 4. **Public description** — summary describing the nation to players
 5. **Private description** — secrets and details of the nation
 6. **Capital** — single reference to a Place
-7. **Geography** — places associated with the nation
+7. **Geography** — places associated with the nation (multiple references to Places, Nations or Natural landmarks)
 8. **Beliefs** — beliefs, myths and customs associated with the nation
 9. **Works** — works associated with the nation
 10. **Knowledge** — knowledge and technologies associated with the nation

@@ -1,17 +1,13 @@
 import { Editor, type AnyExtension } from "@tiptap/core";
-import Image from "@tiptap/extension-image";
-import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
-import { Markdown } from "@tiptap/markdown";
-import StarterKit from "@tiptap/starter-kit";
-import { AttentionPoint } from "./attention-point.js";
+import { buildExtensions } from "../extensions.js";
 
 /**
- * Plan A editor extension set used for every round-trip run: the official
- * markdown extension (ARCHITECTURE.md §2), starter-kit core marks and nodes,
- * table and image support required by the corpus, and the custom-node probe.
+ * Plan A editor extension set used for every round-trip run: the shared
+ * buildExtensions() configuration is the one the mounted editor uses, so
+ * the suite validates the real editor.
  */
 export function roundTripExtensions(): AnyExtension[] {
-  return [Markdown, StarterKit, Table, TableRow, TableCell, TableHeader, Image, AttentionPoint];
+  return buildExtensions();
 }
 
 /**

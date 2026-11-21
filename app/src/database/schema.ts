@@ -34,10 +34,12 @@ export const users = pgTable("users", {
     .default("active"),
   /** Per-account UI language (null = instance default from UI_LOCALE). */
   uiLocale: text("ui_locale", { enum: ["en", "fr"] }),
+  /** Login name — unique, lowercase; the email stays a profile field. */
+  username: text("username").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [uniqueIndex("users_username_uq").on(t.username)]);
 
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
@@ -59,7 +61,6 @@ export const entities = pgTable("entities", {
     .notNull()
     .default([]),
   fields: jsonb("fields").notNull().default({}),
-  body: text("body").notNull().default(""),
   /** Authoring reference — carries the user-deletion campaign constraint. */
   createdBy: uuid("created_by").references(() => users.id, {
     onDelete: "set null",
@@ -73,8 +74,10 @@ export const entities = pgTable("entities", {
 });
 
 /**
- * Typed relationships. Hierarchy kinds (`chapter`, `scene`) carry the
- * child→parent link and are unique per child (partial unique index).
+ * Typed relationships. Hierarchy kinds (`campaign`, `chapter`) carry the
+ * child→parent link and are unique per child (partial unique index); a
+ * target can be attached only once per field — enforced in the database
+ * so concurrent attachments cannot double-link a record.
  */
 export const relationships = pgTable(
   "relationships",
@@ -89,9 +92,30 @@ export const relationships = pgTable(
     kind: text("kind").notNull(),
   },
   (t) => [
-    uniqueIndex("relationships_child_role_uq")
+    uniqueIndex("relationships_target_uq").on(t.fromId, t.kind, t.toId),
+    uniqueIndex("relationships_one_ref_uq")
       .on(t.fromId, t.kind)
-      .where(sql`kind in ('chapter', 'scene')`),
+      .where(sql`kind in ('campaign', 'chapter', 'capital', 'headquarters', 'origin')`),
     index("relationships_to_idx").on(t.toId, t.kind),
+  ],
+);
+
+/**
+ * `@slug` mentions parsed from record bodies on save (PRE-SPEC.md §6).
+ * Rows reference the target by slug text — a deleted target keeps its
+ * rows so the rendering marks the mention as a dead link.
+ */
+export const mentions = pgTable(
+  "mentions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    entityId: uuid("entity_id")
+      .notNull()
+      .references(() => entities.id, { onDelete: "cascade" }),
+    targetSlug: text("target_slug").notNull(),
+  },
+  (t) => [
+    index("mentions_entity_idx").on(t.entityId),
+    index("mentions_target_idx").on(t.targetSlug),
   ],
 );

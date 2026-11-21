@@ -4,8 +4,10 @@ import { AuthController, BootstrapController } from "./auth.controller.js";
 import { AuthGuard } from "./auth.guard.js";
 import { AuthService } from "./auth.service.js";
 import { SessionStore } from "./session.store.js";
+import { SettingsModule } from "../settings/settings.module.js";
 
 @Module({
+  imports: [SettingsModule],
   controllers: [AuthController, BootstrapController],
   providers: [AuthService, SessionStore, AuthGuard],
   exports: [SessionStore],

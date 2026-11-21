@@ -1,26 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
+import { Dialog } from "../components/dialog.js";
 import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { FilePlus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { useSlugAutoFill } from "../slug.js";
+import { catalogIcons, categoryIcons } from "../categories.js";
 import { useRequireAuth } from "./useRequireAuth.js";
-import { worldTemplates, type Entity } from "../types.js";
+import { catalogTemplates, worldTemplates, type Entity } from "../types.js";
 
 export function LorePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
+  // A "Nouvelle fiche" button from any record page lands here with
+  // ?new=1 — the creation form opens straight away.
+  const search = useSearch({ from: "/lore" });
   const records = useQuery({
     queryKey: ["lore-records"],
     queryFn: () => api<Entity[]>("/api/records?perimeter=world"),
     enabled: ready,
     retry: false,
   });
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(search.new === true);
+  // Categories start collapsed; the set tracks the expanded ones.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   if (!ready) return null;
@@ -37,7 +46,7 @@ export function LorePage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
-      await api("/api/records", {
+      const created = await api<{ id: string }>("/api/records", {
         method: "POST",
         body: {
           slug: formString(form, "slug"),
@@ -47,7 +56,14 @@ export function LorePage() {
         },
       });
       setCreating(false);
+      slugFields.reset();
       await records.refetch();
+      // Straight into editing the freshly created record.
+      void navigate({
+        to: "/lore/$id",
+        params: { id: created.id },
+        search: { edit: true },
+      });
     } catch (submitError) {
       setError(String(submitError));
     }
@@ -55,7 +71,7 @@ export function LorePage() {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between">
+      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-4 border-b border-border bg-background px-6 pb-3 pt-5">
         <h1 className="font-display text-4xl font-semibold text-ink">
           {t("lore.title")}
         </h1>
@@ -65,53 +81,149 @@ export function LorePage() {
             if (!creating) slugFields.reset();
             setCreating((value) => !value);
           }}
-          className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
+          className="shrink-0 rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+          title={t("lore.newRecord")}
+          aria-label={t("lore.newRecord")}
         >
-          {t("lore.newRecord")}
+          <FilePlus className="size-4" aria-hidden />
         </button>
       </div>
-      <p className="mt-2 text-muted">{t("lore.intro")}</p>
+
 
       {creating && (
-        <form onSubmit={onCreate} className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4">
-          <Field label={t("lore.type")}>
-            <select name="type" className={inputClass}>
-              {worldTemplates.map((template) => (
-                <option key={template} value={template}>
-                  {template}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <SlugTitleFields fields={slugFields} />
-          {error && <p className="text-sm text-radish">{error}</p>}
-          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
-            {t("lore.create")}
-          </button>
-        </form>
+        <Dialog title={t("lore.newRecord")} onClose={() => {
+          setCreating(false);
+          setError(null);
+          slugFields.reset();
+        }}>
+          <form onSubmit={onCreate} className="flex flex-col gap-3">
+            <Field label={t("lore.type")}>
+              <select name="type" className={inputClass}>
+                <optgroup label={t("lore.title")}>
+                  {worldTemplates.map((template) => (
+                    <option key={template} value={template}>
+                      {t(`lore.categories.${template}`)}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={t("lore.catalogsTitle")}>
+                  {catalogTemplates.map((template) => (
+                    <option key={template} value={template}>
+                      {t(`lore.categories.${template}`)}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </Field>
+            <SlugTitleFields fields={slugFields} />
+            {error && <p className="text-sm text-radish">{error}</p>}
+            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
+              {t("lore.create")}
+            </button>
+          </form>
+        </Dialog>
       )}
 
       {list.length === 0 && <p className="mt-8 text-muted">{t("lore.empty")}</p>}
 
-      {[...byType.entries()].map(([type, typeRecords]) => (
-        <section key={type} className="mt-8">
-          <h2 className="font-display text-2xl font-semibold text-ink">{type}</h2>
-          <ul className="mt-2 flex flex-col gap-1">
-            {typeRecords.map((record) => (
-              <li key={record.slug} className="flex items-baseline justify-between rounded-md border border-border bg-surface px-4 py-2">
-                <span className="text-ink">{record.title}</span>
-                <Link
-                  to="/records/$slug"
-                  params={{ slug: record.slug }}
-                  className="text-sm text-accent hover:underline"
-                >
-                  {t("lore.open")}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      {worldTemplates.map((type) => {
+        const typeRecords = byType.get(type) ?? [];
+        if (typeRecords.length === 0) return null;
+        const Icon = categoryIcons[type];
+        const isCollapsed = !expanded.has(type);
+        return (
+          <section key={type} className="mt-6">
+            <button
+              type="button"
+              aria-expanded={!isCollapsed}
+              onClick={() =>
+                setExpanded((current) => {
+                  const next = new Set(current);
+                  if (next.has(type)) next.delete(type);
+                  else next.add(type);
+                  return next;
+                })
+              }
+              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors duration-200 hover:bg-surface"
+            >
+              {Icon && <Icon className="size-5 text-accent" aria-hidden />}
+              <h2 className="font-display text-2xl font-semibold text-ink">
+                {t(`lore.categories.${type}`)}
+              </h2>
+              <span className="text-sm text-muted">({typeRecords.length})</span>
+              <span className="ml-auto text-sm text-muted">{isCollapsed ? "▸" : "▾"}</span>
+            </button>
+            {!isCollapsed && (
+              <ul className="mt-2 flex flex-col gap-1">
+                {typeRecords.map((record) => (
+                  <li key={record.slug} className="flex items-baseline justify-between rounded-md border border-border bg-surface px-4 py-2">
+                    <span className="text-ink">{record.title}</span>
+                    <Link
+                      to="/lore/$id"
+                      params={{ id: record.id }}
+                      className="text-sm text-accent hover:underline"
+                    >
+                      {t("lore.open")}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
+
+      <section className="mt-10 border-t border-border pt-6">
+        <h2 className="font-display text-2xl font-semibold text-ink">
+          {t("lore.catalogsTitle")}
+        </h2>
+        {catalogTemplates.map((type) => {
+          const typeRecords = byType.get(type) ?? [];
+          if (typeRecords.length === 0) return null;
+          const Icon = catalogIcons[type];
+          const isCollapsed = !expanded.has(type);
+          return (
+            <section key={type} className="mt-6">
+              <button
+                type="button"
+                aria-expanded={!isCollapsed}
+                onClick={() =>
+                  setExpanded((current) => {
+                    const next = new Set(current);
+                    if (next.has(type)) next.delete(type);
+                    else next.add(type);
+                    return next;
+                  })
+                }
+                className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors duration-200 hover:bg-surface"
+              >
+                {Icon && <Icon className="size-5 text-accent" aria-hidden />}
+                <h3 className="font-display text-xl font-semibold text-ink">
+                  {t(`lore.categories.${type}`)}
+                </h3>
+                <span className="text-sm text-muted">({typeRecords.length})</span>
+                <span className="ml-auto text-sm text-muted">{isCollapsed ? "▸" : "▾"}</span>
+              </button>
+              {!isCollapsed && (
+                <ul className="mt-2 flex flex-col gap-1">
+                  {typeRecords.map((record) => (
+                    <li key={record.slug} className="flex items-baseline justify-between rounded-md border border-border bg-surface px-4 py-2">
+                      <span className="text-ink">{record.title}</span>
+                      <Link
+                        to="/lore/$id"
+                        params={{ id: record.id }}
+                        className="text-sm text-accent hover:underline"
+                      >
+                        {t("lore.open")}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          );
+        })}
+      </section>
     </div>
   );
 }

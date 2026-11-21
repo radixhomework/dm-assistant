@@ -15,6 +15,7 @@ function safeUiLocale(value: string | null | undefined): SafeUser["uiLocale"] {
 /** Public projection — never expose the password hash (S3358-safe, shared). */
 export function safeUserOf(row: {
   id: string;
+  username?: string | null;
   email: string;
   displayName: string;
   role: string;
@@ -23,6 +24,7 @@ export function safeUserOf(row: {
 }): SafeUser {
   return {
     id: row.id,
+    username: row.username ?? null,
     email: row.email,
     displayName: row.displayName,
     role: row.role as SafeUser["role"],
@@ -33,6 +35,7 @@ export function safeUserOf(row: {
 
 export type SafeUser = {
   id: string;
+  username: string | null;
   email: string;
   displayName: string;
   role: "admin" | "dm";
@@ -46,16 +49,30 @@ export class UsersService {
 
   async create(input: CreateUserInput): Promise<SafeUser> {
     const passwordHash = await hash(input.password);
-    const [row] = await this.db
-      .insert(users)
-      .values({
-        email: input.email.toLowerCase(),
-        displayName: input.displayName,
-        passwordHash,
-        role: input.role,
-      })
-      .returning();
-    return safeUserOf(row);
+    try {
+      const [row] = await this.db
+        .insert(users)
+        .values({
+          username: input.username,
+          email: (input.email ?? `${input.username}@instance.local`).toLowerCase(),
+          displayName: input.displayName,
+          passwordHash,
+          role: input.role,
+        })
+        .returning();
+      return safeUserOf(row);
+    } catch (error) {
+      // Drizzle wraps driver errors: the constraint code may sit on the
+      // error itself or on its cause.
+      const codes = [
+        (error as { code?: string }).code,
+        (error as { cause?: { code?: string } }).cause?.code,
+      ];
+      if (codes.includes("23505")) {
+        throw new ConflictException("Username or email already used");
+      }
+      throw error;
+    }
   }
 
   async findByEmail(email: string) {

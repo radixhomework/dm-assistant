@@ -1,8 +1,11 @@
 name: CI
 
 on:
+  # Feature branches run the same pipeline: the PR gate polls these
+  # runs, and a push-only-main trigger would leave the branch checks
+  # empty until the PR opens on main.
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
 
 jobs:
@@ -24,6 +27,9 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://dm:dm@localhost:5432/dm_assistant
+      # The builds and tsc on this monorepo outgrew the default heap on
+      # the hosted runner.
+      NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -31,10 +37,28 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build
+      # Mirror the build output into the step summary: the job log is
+      # not readable without a token, the summary is.
+      - name: Build
+        run: |
+          npm run build 2>&1 | tee /tmp/build.out
+          EXIT=${PIPESTATUS[0]}
+          if [ "$EXIT" -ne 0 ]; then
+            printf '::error::Build failed (exit %s). See the step summary for full output.\n' "$EXIT"
+          fi
+          cat /tmp/build.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
+          exit "$EXIT"
       - run: npm run db:migrate -w app
       - run: npm run lint
-      - run: npm run typecheck
+      # Surface tsc errors in the step summary: the job log itself is
+      # not readable without a token, the summary is.
+      - name: Typecheck
+        run: |
+          npm run typecheck 2>&1 | tee /tmp/tc.out
+          EXIT=${PIPESTATUS[0]}
+          grep -E "error TS" /tmp/tc.out | sed 's/^/::error ::/' || true
+          tail -40 /tmp/tc.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
+          exit $EXIT
       - run: npm run test
       - name: SonarQube scan
         uses: sonarsource/sonarqube-scan-action@v8

@@ -16,7 +16,7 @@ describe("LoginPage", () => {
   it("renders the form labels in the active locale", () => {
     renderWithProviders(<LoginPage />, "/login");
     expect(screen.getAllByText("Log in").length).toBeGreaterThan(0);
-    expect(screen.getByText("Email")).toBeDefined();
+    expect(screen.getByText("Username")).toBeDefined();
   });
 
   it("posts credentials to the login endpoint on submit", async () => {
@@ -28,10 +28,10 @@ describe("LoginPage", () => {
     renderWithProviders(<LoginPage />, "/login");
     const form = document.querySelector("form");
     if (!form) throw new Error("form missing");
-    const email = form.querySelector('input[name="email"]');
+    const identifier = form.querySelector('input[name="username"]');
     const password = form.querySelector('input[name="password"]');
-    if (!email || !password) throw new Error("inputs missing");
-    (email as HTMLInputElement).value = "dm@example.com";
+    if (!identifier || !password) throw new Error("inputs missing");
+    (identifier as HTMLInputElement).value = "dm";
     (password as HTMLInputElement).value = "a-long-enough-passphrase";
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await vi.waitFor(() =>

@@ -61,6 +61,15 @@ export function AccountPage() {
         </h2>
         <form onSubmit={onSaveProfile} className="mt-4 flex max-w-md flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
+            {t("account.username")}
+            <input
+              name="username"
+              value={user?.username ?? ""}
+              readOnly
+              className="rounded-md border border-border bg-surface px-3 py-2 text-muted"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
             {t("account.email")}
             <input
               name="email"

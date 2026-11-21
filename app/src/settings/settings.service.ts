@@ -1,9 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
+  calendarSettingsSchema,
   distanceUnits,
   volumeUnits,
   weightUnits,
+  type CalendarSettings,
   type UpdateSettingsInput,
 } from "@dm/schemas";
 import type { Db } from "../database/database.module.js";
@@ -59,5 +61,31 @@ export class SettingsService {
         });
     }
     return this.getAll();
+  }
+
+  /**
+   * The world calendar definition, null when never defined. A stored but
+   * invalid shape reads as undefined (the admin editor redefines it).
+   */
+  async getCalendar(): Promise<CalendarSettings | null> {
+    const [row] = await this.db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, "calendar"))
+      .limit(1);
+    if (row === undefined) return null;
+    const parsed = calendarSettingsSchema.safeParse(row.value);
+    return parsed.success ? parsed.data : null;
+  }
+
+  async updateCalendar(input: CalendarSettings): Promise<CalendarSettings> {
+    await this.db
+      .insert(settings)
+      .values({ key: "calendar", value: input })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value: input, updatedAt: new Date() },
+      });
+    return input;
   }
 }

@@ -1,22 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchMe, logout, updateProfile } from "../api/auth.js";
-import { queryClient } from "../query-client.js";
+import { BookOpen, CalendarDays, Menu, Shield, Swords, X } from "lucide-react";
+import { AppSidebar } from "../components/app-sidebar.js";
+import { CampaignSidebar } from "../components/campaign-sidebar.js";
+import { fetchBootstrapState, fetchMe, logout } from "../api/auth.js";
 
 const navItemClass = (active: boolean) =>
-  `font-display text-xl px-3 py-1 rounded-md transition-colors duration-200 ${
+  `flex items-center gap-1.5 font-display text-xl px-3 py-1 rounded-md transition-colors duration-200 ${
     active
-      ? "bg-primary text-background"
-      : "text-ink hover:text-accent"
-  }`;
-
-const languageClass = (active: boolean) =>
-  `rounded-md px-2 py-0.5 text-sm transition-colors duration-200 ${
-    active
-      ? "bg-primary text-background"
-      : "text-muted hover:text-accent"
+      ? "bg-accent text-background"
+      : "text-background/75 hover:text-background"
   }`;
 
 export function RootLayout() {
@@ -24,9 +19,34 @@ export function RootLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSetupOrLogin = pathname === "/setup" || pathname === "/login";
+  // Narrow screens: the sidebar overlays as a drawer, dismissed on
+  // toggle, backdrop tap or navigation.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe, retry: false });
   const user = me.data;
+  // The world name through a live subscription: the header re-renders as
+  // soon as the ["bootstrap"] cache updates (a rename on /admin
+  // invalidates it), where the previous getWorldName() cache read was a
+  // one-shot snapshot.
+  const bootstrap = useQuery({
+    queryKey: ["bootstrap"],
+    queryFn: fetchBootstrapState,
+    retry: false,
+  });
+  const worldName = bootstrap.data?.worldName ?? null;
+
+  // Tab title: white-labeled with the world name; record pages override
+  // with their own title (RecordEditPage). The record shapes mirror the
+  // sidebar-mode resolution below.
+  const recordTitleMatch =
+    /^\/lore\/[^/]+$/.test(pathname) ||
+    /^\/campaigns\/[^/]+(?:\/[^/]+){1,2}$/.test(pathname);
+  useEffect(() => {
+    if (!recordTitleMatch) {
+      document.title = worldName ?? "DM Assistant";
+    }
+  }, [recordTitleMatch, me.data, worldName]);
 
   // Apply the account's UI language at load (null = instance default).
   useEffect(() => {
@@ -41,75 +61,95 @@ export function RootLayout() {
     void navigate({ to: "/login" });
   }
 
-  function onSwitchLanguage(next: "en" | "fr") {
-    if (i18n.language === next) return;
-    void i18n.changeLanguage(next);
-    if (user) {
-      // Persist on the account; keep the session local if it fails.
-      void updateProfile({ uiLocale: next })
-        .then((updated) => queryClient.setQueryData(["me"], updated))
-        .catch(() => undefined);
-    }
+  // Navigation dismisses the narrow-screen drawer.
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  // Contextual sidebar, resolved straight from the URL shape: lore
+  // records live at /lore/<uuid> and campaign records inside their
+  // /campaigns/<uuid>[/<chapter>[/<scene>]] hierarchy — no record fetch
+  // needed to pick the mode.
+  const loreRecordMatch = /^\/lore\/([^/]+)$/.exec(pathname);
+  const campaignPathMatch = /^\/campaigns\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/.exec(
+    pathname,
+  );
+  type SidebarMode =
+    | { kind: "lore" }
+    | { kind: "campaign"; id: string }
+    | { kind: "none" };
+  let mode: SidebarMode = { kind: "lore" };
+  if (
+    pathname === "/" ||
+    pathname === "/home" ||
+    pathname === "/admin" ||
+    pathname === "/account" ||
+    pathname === "/campaigns" ||
+    pathname === "/calendar"
+  ) {
+    mode = { kind: "none" };
+  } else if (campaignPathMatch) {
+    mode = { kind: "campaign", id: campaignPathMatch[1] };
+  } else if (loreRecordMatch) {
+    mode = { kind: "lore" };
   }
+  const activeRecordId =
+    loreRecordMatch?.[1] ?? campaignPathMatch?.[3] ?? campaignPathMatch?.[2] ?? null;
+
+  const loreActive = pathname === "/lore" || mode.kind === "lore";
+  const campaignsActive = mode.kind === "campaign" || pathname === "/campaigns";
 
   return (
-    <div className="min-h-screen">
+    <div className="flex h-dvh flex-col overflow-hidden">
       {isSetupOrLogin ? (
         <Outlet />
       ) : (
         <>
-          <header className="border-b border-border bg-surface">
-            <div className="mx-auto flex w-full max-w-[1100px] items-center gap-4 px-6 py-3">
-              <Link to="/" className="font-display text-2xl font-semibold text-ink">
-                {t("app.title")}
+          <header className="shrink-0 border-b border-[#1e211c] bg-[#2e332b]">
+            <div className="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-6 py-3">
+              {user && mode.kind !== "none" && (
+                <button
+                  type="button"
+                  aria-label={t("nav.sidebar")}
+                  aria-expanded={sidebarOpen}
+                  onClick={() => setSidebarOpen((open) => !open)}
+                  className="rounded-md p-1.5 text-background/75 transition-colors duration-200 hover:bg-[#1e211c] hover:text-background md:hidden"
+                >
+                  <Menu className="size-5" aria-hidden />
+                </button>
+              )}
+              <Link to="/" className="font-display text-2xl font-semibold text-background">
+                {worldName ?? t("app.title")}
               </Link>
               <nav className="ml-4 flex items-center gap-2">
-                <Link to="/" className={navItemClass(pathname === "/")}>
+                <Link to="/lore" className={navItemClass(loreActive)}>
+                  <BookOpen className="size-4" aria-hidden />
                   {t("nav.lore")}
                 </Link>
-                <Link
-                  to="/campaigns"
-                  className={navItemClass(pathname.startsWith("/campaigns"))}
-                >
+                <Link to="/calendar" className={navItemClass(pathname === "/calendar")}>
+                  <CalendarDays className="size-4" aria-hidden />
+                  {t("nav.calendar")}
+                </Link>
+                <Link to="/campaigns" className={navItemClass(campaignsActive)}>
+                  <Swords className="size-4" aria-hidden />
                   {t("nav.campaigns")}
                 </Link>
                 {user?.role === "admin" && (
-                  <Link
-                    to="/admin"
-                    className={navItemClass(pathname === "/admin")}
-                  >
+                  <Link to="/admin" className={navItemClass(pathname === "/admin")}>
+                    <Shield className="size-4" aria-hidden />
                     {t("nav.admin")}
                   </Link>
                 )}
               </nav>
               {user && (
                 <div className="ml-auto flex items-center gap-3">
-                  <fieldset className="flex items-center gap-1 border-0 p-0" aria-label="UI language">
-                    <button
-                      type="button"
-                      onClick={() => onSwitchLanguage("en")}
-                      className={languageClass(i18n.language === "en")}
-                    >
-                      EN
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSwitchLanguage("fr")}
-                      className={languageClass(i18n.language === "fr")}
-                    >
-                      FR
-                    </button>
-                  </fieldset>
-                  <Link
-                    to="/account"
-                    className="text-sm text-muted hover:text-accent"
-                  >
+                  <Link to="/account" className="text-sm text-background/75 hover:text-background">
                     {user.displayName}
                   </Link>
                   <button
                     type="button"
                     onClick={() => void onLogout()}
-                    className="text-sm text-muted hover:text-accent"
+                    className="text-sm text-background/75 hover:text-background"
                   >
                     {t("nav.logout")}
                   </button>
@@ -117,9 +157,56 @@ export function RootLayout() {
               )}
             </div>
           </header>
-          <main className="mx-auto w-full max-w-[1100px] px-6 py-8">
-            <Outlet />
-          </main>
+          <div className="mx-auto flex w-full max-w-[1200px] min-h-0 flex-1 items-stretch">
+            {mode.kind !== "none" && (
+              <aside
+                className={`${
+                  sidebarOpen
+                    ? "fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto bg-surface shadow-xl"
+                    : "hidden"
+                } md:static md:z-auto md:flex md:min-h-0 md:w-[260px] md:shrink-0 md:flex-col md:overflow-hidden md:border-r md:border-border`}
+              >
+                <div className="flex items-center justify-end px-2 pt-3 md:hidden">
+                  <button
+                    type="button"
+                    aria-label={t("common.close")}
+                    onClick={() => setSidebarOpen(false)}
+                    className="rounded-md p-1.5 text-muted transition-colors duration-200 hover:bg-surface hover:text-ink"
+                  >
+                    <X className="size-5" aria-hidden />
+                  </button>
+                </div>
+                <div className="pane-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-4">
+                  {mode.kind === "lore" ? (
+                    <AppSidebar />
+                  ) : (
+                    <CampaignSidebar
+                      campaignId={mode.id}
+                      // The campaign view highlights the campaign header;
+                      // chapter/scene pages highlight their own entry.
+                      activeId={activeRecordId ?? mode.id}
+                    />
+                  )}
+                </div>
+              </aside>
+            )}
+            {sidebarOpen && (
+              <div
+                aria-hidden
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 z-40 bg-black/40 md:hidden"
+              />
+            )}
+            {/* The scroll pane carries no padding: a padded scroll
+             * container would let content show through the strip above a
+             * sticky header (sticky pins below the top padding). Pages
+             * pad themselves through this wrapper instead. */}
+            <main className="pane-scroll min-h-0 min-w-0 flex-1 overflow-y-auto">
+              <div className="px-6 py-8">
+                <Outlet />
+              </div>
+            </main>
+          </div>
         </>
       )}
     </div>

@@ -17,6 +17,7 @@ import {
   wizardSchema,
 } from "@dm/schemas";
 import { AuthService } from "./auth.service.js";
+import { SettingsService } from "../settings/settings.service.js";
 import { Public } from "./public.decorator.js";
 import type { AuthedRequest } from "./auth.guard.js";
 
@@ -32,8 +33,8 @@ export class AuthController {
     @Req() req: AuthedRequest,
     @Body() body: unknown,
   ) {
-    const { email, password } = loginSchema.parse(body);
-    const user = await this.authService.login(email, password, req.session);
+    const { username, password } = loginSchema.parse(body);
+    const user = await this.authService.login(username, password, req.session);
     return { id: user.id, email: user.email, role: user.role };
   }
 
@@ -71,13 +72,17 @@ export class AuthController {
 
 @Controller("api/bootstrap")
 export class BootstrapController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly settingsService: SettingsService,
+  ) {}
 
   @Public()
   @Get()
   async state() {
     return {
       adminExists: await this.authService.adminExists(),
+      worldName: (await this.settingsService.getAll()).worldName,
     };
   }
 

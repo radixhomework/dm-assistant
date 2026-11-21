@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
+import { Dialog } from "../components/dialog.js";
 import { formString } from "../forms.js";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
@@ -15,8 +16,10 @@ type CampaignWithTracking = Omit<Entity, "tracking"> & {
 
 export function CampaignsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const campaigns = useQuery({
     queryKey: ["campaigns"],
@@ -47,7 +50,7 @@ export function CampaignsPage() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
-      await api("/api/records", {
+      const created = await api<{ id: string }>("/api/records", {
         method: "POST",
         body: {
           slug: formString(form, "slug"),
@@ -55,6 +58,11 @@ export function CampaignsPage() {
           perimeter: "campaign",
           title: formString(form, "title"),
         },
+      });
+      void navigate({
+        to: "/campaigns/$id",
+        params: { id: created.id },
+        search: { edit: true },
       });
       await campaigns.refetch();
     } catch (submitError) {
@@ -70,26 +78,31 @@ export function CampaignsPage() {
         </h1>
         <button
           type="button"
-          onClick={() => { setError((value) => (value === "form" ? null : "form")); if (error !== "form") slugFields.reset(); }}
+          onClick={() => {
+            slugFields.reset();
+            setError(null);
+            setCreating((value) => !value);
+          }}
           className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
           {t("campaigns.newCampaign")}
         </button>
       </div>
 
-      {error === "form" && (
-        <form
-          onSubmit={onCreate}
-          className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
-        >
-          <SlugTitleFields fields={slugFields} />
-          {error !== null && error !== "form" && (
-            <p className="text-sm text-radish">{error}</p>
-          )}
-          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
-            {t("campaigns.create")}
-          </button>
-        </form>
+      {creating && (
+        <Dialog title={t("campaigns.newCampaign")} onClose={() => {
+          setCreating(false);
+          setError(null);
+          slugFields.reset();
+        }}>
+          <form onSubmit={onCreate} className="flex flex-col gap-3">
+            <SlugTitleFields fields={slugFields} />
+            {error && <p className="text-sm text-radish">{error}</p>}
+            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
+              {t("campaigns.create")}
+            </button>
+          </form>
+        </Dialog>
       )}
 
       {(campaigns.data ?? []).length === 0 && (
@@ -108,8 +121,8 @@ export function CampaignsPage() {
                 {t(`campaigns.status.${campaign.tracking.status}`)}
               </span>
               <Link
-                to="/campaigns/$slug"
-                params={{ slug: campaign.slug }}
+                to="/campaigns/$id"
+                params={{ id: campaign.id }}
                 className="text-sm text-accent hover:underline"
               >
                 {t("campaigns.open")}

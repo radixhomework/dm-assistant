@@ -38,7 +38,7 @@ describe("SetupPage submit", () => {
     const form = document.querySelector("form");
     if (!form) throw new Error("form missing");
     for (const [name, value] of [
-      ["email", "admin@example.com"],
+      ["username", "admin"],
       ["password", "a-long-enough-passphrase"],
       ["displayName", "The DM"],
       ["worldName", "My World"],

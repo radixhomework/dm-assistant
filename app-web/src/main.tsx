@@ -9,14 +9,21 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { RootLayout } from "./layout/RootLayout";
+import { searchFlagTrue } from "./router/search-flag.js";
 import { SetupPage } from "./pages/SetupPage";
 import { LoginPage } from "./pages/LoginPage";
 import { LorePage } from "./pages/LorePage";
 import { CampaignsPage } from "./pages/CampaignsPage";
 import { CampaignViewPage } from "./pages/CampaignViewPage";
+import { CalendarPage } from "./pages/CalendarPage";
+import { HomePage } from "./pages/HomePage";
 import { AdminPage } from "./pages/AdminPage";
 import { AccountPage } from "./pages/AccountPage";
-import { RecordEditPage } from "./pages/RecordEditPage";
+import {
+  ChapterRecordPage,
+  LoreRecordPage,
+  SceneRecordPage,
+} from "./pages/RecordEditPage";
 import { fetchBootstrapState, type BootstrapState } from "./api/auth.js";
 import { queryClient } from "./query-client.js";
 import "./i18n";
@@ -44,23 +51,59 @@ const rootRoute = createRootRoute({
 });
 const loreRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  path: "/lore",
   component: LorePage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    new: searchFlagTrue(search, "new"),
+  }),
 });
 const campaignsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/campaigns",
   component: CampaignsPage,
 });
-const recordEditRoute = createRoute({
+const loreRecordRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/records/$slug",
-  component: RecordEditPage,
+  path: "/lore/$id",
+  component: LoreRecordPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
 });
 const campaignViewRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/campaigns/$slug",
+  path: "/campaigns/$id",
   component: CampaignViewPage,
+  remountDeps: ({ params }) => params.id,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
+});
+const chapterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/campaigns/$id/$chapterId",
+  component: ChapterRecordPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
+});
+const sceneRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/campaigns/$id/$chapterId/$sceneId",
+  component: SceneRecordPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: searchFlagTrue(search, "edit"),
+  }),
+});
+const calendarRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/calendar",
+  component: CalendarPage,
+});
+const homeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: HomePage,
 });
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -85,9 +128,13 @@ const setupRoute = createRoute({
 const router = createRouter({
   routeTree: rootRoute.addChildren([
     loreRoute,
-    recordEditRoute,
+    loreRecordRoute,
     campaignsRoute,
     campaignViewRoute,
+    chapterRoute,
+    sceneRoute,
+    calendarRoute,
+    homeRoute,
     adminRoute,
     accountRoute,
     loginRoute,

@@ -6,7 +6,6 @@ CREATE TABLE "entities" (
 	"title" text NOT NULL,
 	"tags" text[] DEFAULT '{}' NOT NULL,
 	"fields" jsonb DEFAULT '{}'::jsonb NOT NULL,
-	"body" text DEFAULT '' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "entities_slug_unique" UNIQUE("slug")

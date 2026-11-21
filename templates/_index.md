@@ -2,7 +2,7 @@
 
 This folder defines the target data model of DM Assistant: the record **templates** (world and campaign) and the **catalogs** (SRD-fed reference lists). Each file lists the exact fields, in order.
 
-It derives from the rework of the original Lore templates (the DM's campaign tool, Amsel suite): merges, removals and additions are traced at the end of this file.
+It derives from the rework of the original Lore templates: merges, removals and additions are traced at the end of this file.
 
 ## Structure
 

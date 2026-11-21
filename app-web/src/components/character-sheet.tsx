@@ -1,0 +1,319 @@
+import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
+import { abilityModifier } from "@dm/schemas";
+import { ActionsBlock } from "./actions-block.js";
+import { ProseSections, ReferenceGroups } from "./sheet-parts.js";
+import { useDistanceUnit } from "../stats/use-distance-unit.js";
+import type { Entity } from "../types.js";
+import type { Statistics } from "@dm/schemas";
+
+/**
+ * The bespoke sheet for "Characters and entities" (records-editor 9.2 —
+ * the DM review gate before batching the remaining templates): the
+ * statistics block rendered as a proper stat strip, the typed
+ * references as labeled link groups, and the prose blocks through the
+ * readonly editor (mention links resolved, dead links marked).
+ */
+
+/** The SRD-shaped statistics block — shared by the character and
+ * monster sheets. */
+export function StatisticsBlock(props: { readonly statistics: Statistics }) {
+  const { t } = useTranslation();
+  const stats = props.statistics;
+  // An absent proficiency bonus is a gap the sheet never fills: mastery
+  // then renders as unknown instead of silently adding zero.
+  const prof = typeof stats.proficiencyBonus === "number" ? stats.proficiencyBonus : null;
+  const signed = (value: number | "?" | null): string => {
+    if (value === null) return "—";
+    if (value === "?") return "?";
+    return value >= 0 ? `+${value}` : String(value);
+  };
+  const abilities: Array<readonly [string, number | undefined]> = [
+    ["strength", stats.strength],
+    ["dexterity", stats.dexterity],
+    ["constitution", stats.constitution],
+    ["intelligence", stats.intelligence],
+    ["wisdom", stats.wisdom],
+    ["charisma", stats.charisma],
+  ];
+  // MOD = pure ability modifier; JS = MOD + proficiency when the save is
+  // mastered (records-editor — SRD stat-block convention).
+  function modifierOf(score: number | undefined): number | null {
+    if (score === undefined) return null;
+    return abilityModifier(score);
+  }
+
+  function saveOf(
+    key: keyof NonNullable<Statistics["savesMastery"]>,
+    mod: number | null,
+  ): number | "?" | null {
+    if (mod === null) return null;
+    const mastered =
+      stats.savesMastery?.[key as keyof NonNullable<Statistics["savesMastery"]>] ===
+      true;
+    if (!mastered) return mod;
+    // Mastery adds the proficiency bonus — unknown bonus, unknown save.
+    return prof === null ? "?" : mod + prof;
+  }
+
+  const unit = useDistanceUnit();
+  const speed = stats.speed;
+  // Reading mode: the unit sits beside the values only — the section
+  // titles stay plain.
+  const speedParts: string[] = speed
+    ? (
+        [
+          ["speedWalk", speed.walk],
+          ["speedFly", speed.fly],
+          ["speedSwim", speed.swim],
+          ["speedClimb", speed.climb],
+          ["speedBurrow", speed.burrow],
+        ] as const
+      )
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => {
+          const label = t(`stats.${key}`);
+          return `${label} ${value} ${unit}`;
+        })
+    : [];
+  const sizeLabels: Record<string, string> = Object.fromEntries(
+    ["tiny", "small", "medium", "large", "huge", "gargantuan"].map((size) => [
+      size,
+      t(`enums.size.${size}`),
+    ]),
+  );
+  const senses: string[] = (
+    [
+      ["darkvision", stats.senses?.darkvision, ` ${unit}`],
+      ["blindsight", stats.senses?.blindsight, ` ${unit}`],
+      ["truesight", stats.senses?.truesight, ` ${unit}`],
+      ["tremorsense", stats.senses?.tremorsense, ` ${unit}`],
+      ["passivePerception", stats.passivePerception, ""],
+    ] as const
+  )
+    .filter((pair) => pair[1] !== undefined)
+    .map(([key, value, suffix]) => {
+      const label = t(`stats.${key}`);
+      return `${label} ${value}${suffix}`;
+    });
+
+  return (
+    <section className="mt-8">
+      <p className="text-sm italic text-muted">
+        {[
+          stats.creatureType !== undefined
+            ? t(`enums.creatureType.${stats.creatureType}`)
+            : "",
+          stats.alignment !== undefined
+            ? t(`enums.alignment.${stats.alignment}`)
+            : "",
+        ]
+          .filter(Boolean)
+          .join(", ")}
+        {stats.size !== undefined
+          ? ` · ${t("stats.size")} ${sizeLabels[stats.size]}`
+          : ""}
+      </p>
+      <div className="mt-2 flex flex-col gap-1 rounded-md border border-border bg-surface p-3 text-sm">
+        <p>
+          <span className="font-semibold text-ink">{t("stats.ac")}</span>{" "}
+          {stats.ac ?? "—"}
+          {stats.initiative !== undefined && (
+            <>
+              {" — "}
+              <span className="font-semibold text-ink">{t("stats.initiative")}</span>{" "}
+              {stats.initiative >= 0 ? "+" : ""}
+              {stats.initiative}
+            </>
+          )}
+        </p>
+        {stats.hp !== undefined && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.hpShort")}</span>{" "}
+            {stats.hp.average !== undefined
+              ? `${stats.hp.average} (${stats.hp.formula})`
+              : `(${stats.hp.formula})`}
+          </p>
+        )}
+        {speedParts.length > 0 && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.speed")}</span>{" "}
+            {speedParts.join(", ")}
+          </p>
+        )}
+        {/* Compact SRD table: CAR / Valeur / Mod / JS — three abilities
+         * per line. JS = MOD + proficiency when the save is mastered. */}
+        <div className="mt-1 grid grid-cols-12 gap-x-2 text-sm">
+          {[0, 1, 2].map((group) => (
+            <Fragment key={`head-${group}`}>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.carHeader")}
+              </span>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.valueHeader")}
+              </span>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.modHeader")}
+              </span>
+              <span className="text-xs uppercase text-muted">
+                {t("stats.saveHeader")}
+              </span>
+            </Fragment>
+          ))}
+          {abilities.map(([key, score]) => {
+            const mod = modifierOf(score);
+            const save = saveOf(
+              key as keyof NonNullable<Statistics["savesMastery"]>,
+              mod,
+            );
+            return (
+              <Fragment key={key}>
+                <span className="font-semibold text-ink">
+                  {t(`stats.abbr.${key}`)}
+                </span>
+                <span className="text-ink">{score ?? "—"}</span>
+                <span className="text-ink">{signed(mod)}</span>
+                <span className="text-ink">{signed(save)}</span>
+              </Fragment>
+            );
+          })}
+        </div>
+        {(stats.skills ?? []).length > 0 && (
+          <p className="mt-2">
+            <span className="font-semibold text-ink">{t("stats.skills")}</span>{" "}
+            {(stats.skills ?? [])
+              .map((skill) => {
+                // The stored modifier wins; the SRD computation
+                // (ability + proficiency) is only the fallback for
+                // records entered before it became editable.
+                const base = modifierOf(
+                  stats[skill.ability as keyof Statistics] as
+                    | number
+                    | undefined,
+                );
+                const total =
+                  skill.modifier ??
+                  (base !== null && prof !== null ? base + prof : "?");
+                return `${skill.name} ${signed(total)}`;
+              })
+              .join(", ")}
+          </p>
+        )}
+        {(stats.resistances ?? []).length > 0 && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.resistances")}</span>{" "}
+            {(stats.resistances ?? [])
+              .map((entry) =>
+                t(`enums.damageTypes.${entry}`, { defaultValue: entry }),
+              )
+              .join(", ")}
+          </p>
+        )}
+        {(stats.vulnerabilities ?? []).length > 0 && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.vulnerabilities")}</span>{" "}
+            {(stats.vulnerabilities ?? [])
+              .map((entry) =>
+                t(`enums.damageTypes.${entry}`, { defaultValue: entry }),
+              )
+              .join(", ")}
+          </p>
+        )}
+        {(stats.immunities ?? []).length > 0 && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.immunities")}</span>{" "}
+            {(stats.immunities ?? [])
+              .map((entry) =>
+                // Immunities mix damage types and conditions.
+                t(`enums.damageTypes.${entry}`, {
+                  defaultValue: t(`enums.conditions.${entry}`, {
+                    defaultValue: entry,
+                  }),
+                }),
+              )
+              .join(", ")}
+          </p>
+        )}
+        {senses.length > 0 && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.senses")}</span>{" "}
+            {senses.join(" ; ")}
+          </p>
+        )}
+        {stats.equipment !== undefined && stats.equipment !== "" && (
+          <p>
+            <span className="font-semibold text-ink">{t("stats.equipment")}</span>{" "}
+            {stats.equipment}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function CharacterSheet(props: { readonly record: Entity }) {
+  const { t } = useTranslation();
+  const fields = (props.record.fields ?? {}) as {
+    gender?: string;
+    physical_traits?: string;
+    statistics?: Statistics;
+    traits?: string;
+    actions?: string;
+    bonus_actions?: string;
+    reactions?: string;
+    legendary_actions?: string;
+    public_description?: string;
+    private_description?: string;
+  };
+  const references = props.record.references ?? {};
+  const gender =
+    fields.gender !== undefined
+      ? t(`enums.gender.${fields.gender}`, { defaultValue: fields.gender })
+      : undefined;
+
+  const referenceGroups: Array<readonly [string, string]> = [
+    ["origins", "fields.origins"],
+    ["species", "fields.species"],
+    ["classes", "fields.classes"],
+    ["languages", "fields.languages"],
+    ["characters", "fields.characters"],
+    ["beliefs", "fields.beliefs"],
+    ["organizations", "fields.organizations"],
+    ["knowledge", "fields.knowledge"],
+    ["works", "fields.works"],
+  ];
+
+  const proseBlocks: Array<readonly [string, string]> = [
+    ["fields.physical_traits", fields.physical_traits ?? ""],
+    ["fields.public_description", fields.public_description ?? ""],
+    ["fields.private_description", fields.private_description ?? ""],
+  ];
+
+  return (
+    <div>
+      {gender !== undefined && (
+        <p className="text-sm italic text-muted">
+          {t("fields.gender")} : {gender}
+        </p>
+      )}
+      {fields.statistics !== undefined && (
+        <StatisticsBlock statistics={fields.statistics} />
+      )}
+      <ActionsBlock
+        fields={{
+          traits: fields.traits,
+          actions: fields.actions,
+          bonus_actions: fields.bonus_actions,
+          reactions: fields.reactions,
+          legendary_actions: fields.legendary_actions,
+        }}
+      />
+      <ReferenceGroups
+        groups={referenceGroups}
+        references={references}
+        className="mt-4"
+      />
+      <ProseSections blocks={proseBlocks} />
+    </div>
+  );
+}

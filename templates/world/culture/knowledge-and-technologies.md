@@ -5,7 +5,7 @@
 ## Fields
 
 1. **Illustration** — image of the knowledge or technology
-2. **Origin** — place of origin (single reference to a Place)
+2. **Origin** — place of origin (single reference to a Place, Nation or Natural landmark)
 3. **Public description** — description of the knowledge or technology for the players
 4. **Private description** — secrets and details
 5. **Events** — associated events
