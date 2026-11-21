@@ -1,8 +1,11 @@
 name: CI
 
 on:
+  # Feature branches run the same pipeline: the PR gate polls these
+  # runs, and a push-only-main trigger would leave the branch checks
+  # empty until the PR opens on main.
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
 
 jobs:
@@ -42,8 +45,7 @@ jobs:
           EXIT=${PIPESTATUS[0]}
           # Emit every numbered line as annotations and summary: the job
           # log is not readable without a token, both these surfaces are.
-          awk '{ printf "::error::%04d %s
-", NR, $0 }' /tmp/build.out
+          awk '{ printf "::error::%04d %s\n", NR, $0 }' /tmp/build.out
           cat /tmp/build.out > "${GITHUB_STEP_SUMMARY:-/dev/null}" || true
           exit $EXIT
       - run: npm run db:migrate -w app
