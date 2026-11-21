@@ -34,7 +34,9 @@ export class RelationshipsService {
    * template, the target must match the declared target template. A 0..1
    * field replaces its previous target; a 0..n field refuses duplicates.
    * Hierarchy fields are the exception (design decision 8): a second
-   * parent is refused — moving a child means detaching it first.
+   * parent is refused and the link cannot be detached afterwards — the
+   * hierarchy is frozen at creation, so moving a record between parents
+   * means deleting and recreating it.
    */
   async attachReference(
     childSlug: string,
@@ -145,12 +147,21 @@ export class RelationshipsService {
     }
   }
 
-  /** Detaches one target of a field, or all of them when no target. */
+  /** Detaches one target of a field, or all of them when no target.
+   * Hierarchy links are frozen at creation (records-editor decision 8):
+   * detaching a parent would let the next attachment smuggle a new
+   * parent in, so a parent change means deleting and recreating the
+   * record — detachment is refused. */
   async detachReference(
     childSlug: string,
     field: string,
     targetSlug?: string,
   ): Promise<void> {
+    if (field === "campaign" || field === "chapter") {
+      throw new ConflictException(
+        "A parent link cannot be detached — delete and recreate the record instead",
+      );
+    }
     const child = await this.entityBySlug(childSlug);
     const conditions = [
       eq(relationships.fromId, child.id),
@@ -212,7 +223,9 @@ export class RelationshipsService {
       );
     }
     const siblings = await this.childSlugsAndStatuses(link.toId, field);
-    const index = siblings.findIndex((sibling) => sibling.slug === childSlug);
+    // Siblings are identified by slug: the input may be the uuid, so the
+    // comparison uses the resolved child's canonical slug.
+    const index = siblings.findIndex((sibling) => sibling.slug === child.slug);
     const swapWith = direction === "up" ? index - 1 : index + 1;
     if (index === -1 || swapWith < 0 || swapWith >= siblings.length) return;
     const reordered = [...siblings];
@@ -293,7 +306,7 @@ export class RelationshipsService {
    */
   private async entityBySlug(slugOrId: string) {
     const [row] = await this.db
-      .select({ id: entities.id, type: entities.type })
+      .select({ id: entities.id, slug: entities.slug, type: entities.type })
       .from(entities)
       .where(
         or(

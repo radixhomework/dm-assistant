@@ -14,6 +14,14 @@ describe("RelationshipsService", () => {
     );
   });
 
+  /** Hierarchy links cannot be detached through the service anymore
+   * (frozen at creation); tests drop the row directly. */
+  async function dropHierarchyLink(childSlug: string): Promise<void> {
+    await testDb.execute(
+      sql`delete from relationships where from_id = (select id from entities where slug = ${childSlug}) and kind in ('campaign', 'chapter')`,
+    );
+  }
+
   it("rejects an unknown child or target slug", async () => {
     await expect(
       service.attachReference("ghost", "campaign", "also-ghost"),
@@ -67,7 +75,7 @@ describe("RelationshipsService", () => {
       sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'scene-b') and kind = 'chapter' and to_id = (select id from entities where slug = 'chapter-a')`,
     );
     expect(rows[0]).toMatchObject({ count: 1 });
-    await service.detachReference("scene-b", "chapter");
+    await dropHierarchyLink("scene-b");
   });
 
   it("refuses a concurrent second hierarchy parent exactly once", async () => {
@@ -94,7 +102,7 @@ describe("RelationshipsService", () => {
       sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'scene-c') and kind = 'chapter'`,
     );
     expect(rows[0]).toMatchObject({ count: 1 });
-    await service.detachReference("scene-c", "chapter");
+    await dropHierarchyLink("scene-c");
   });
 
   it("refuses to delete a chapter that scenes still reference", async () => {
@@ -113,7 +121,7 @@ describe("RelationshipsService", () => {
         )[0].id,
       ),
     ).rejects.toThrow(/has children attached/);
-    await service.detachReference("scene-a", "chapter");
+    await dropHierarchyLink("scene-a");
     await expect(
       service.assertNoChildren(
         (
@@ -125,13 +133,18 @@ describe("RelationshipsService", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("detaches the field's reference", async () => {
+  it("refuses to detach a hierarchy link", async () => {
+    // The hierarchy is frozen at creation (records-editor decision 8):
+    // detachment would let the next attachment smuggle a new parent in.
     await service.attachReference("chapter-a", "campaign", "campaign-a");
-    await service.detachReference("chapter-a", "campaign");
+    await expect(
+      service.detachReference("chapter-a", "campaign"),
+    ).rejects.toThrow(/cannot be detached/);
     const rows = await testDb.execute(
       sql`select count(*)::int as count from relationships where from_id = (select id from entities where slug = 'chapter-a') and kind = 'campaign'`,
     );
-    expect(rows[0]).toMatchObject({ count: 0 });
+    expect(rows[0]).toMatchObject({ count: 1 });
+    await dropHierarchyLink("chapter-a");
   });
 
   it("refuses a concurrent duplicate 0..n attachment exactly once", async () => {

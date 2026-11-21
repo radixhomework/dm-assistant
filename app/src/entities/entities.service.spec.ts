@@ -187,6 +187,12 @@ describe("EntitiesService", () => {
     await service.relationships.moveChild("chapter-c", "down");
     const afterDown = await service.relationships.listChildren("north-realm", "campaign");
     expect(afterDown.map((c) => c.slug)).toEqual(["chapter-b", "chapter-c", "chapter-one"]);
+    // A uuid-addressed move resolves the same sibling list: the order
+    // writes stay scoped to the child's canonical slug.
+    const { id } = await service.getBySlug("chapter-c");
+    await service.relationships.moveChild(id, "up");
+    const afterUuidMove = await service.relationships.listChildren("north-realm", "campaign");
+    expect(afterUuidMove.map((c) => c.slug)).toEqual(["chapter-c", "chapter-b", "chapter-one"]);
   });
 
   it("resolves the owning campaign through the parent chain", async () => {

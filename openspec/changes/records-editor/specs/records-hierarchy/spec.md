@@ -38,6 +38,10 @@ The hierarchy SHALL be carried by child→parent references: a Chapter reference
 - **WHEN** a Chapter already has a Campaign and a re-attachment is attempted (or a Scene already has a Chapter)
 - **THEN** the re-assignment is refused with an explicit error — the hierarchy is frozen at creation; moving a record between parents means deleting and recreating it
 
+#### Scenario: Parent link cannot be detached
+- **WHEN** a detach is attempted on a hierarchy field (a Campaign's chapters or a Chapter's scenes), addressed by slug or uuid
+- **THEN** the detachment is refused with an explicit error — the frozen hierarchy cannot be opened through the reference API
+
 #### Scenario: Children in play order
 - **WHEN** a parent sheet lists its children
 - **THEN** they appear ordered by their `Order` field, missing orders last, then by title
