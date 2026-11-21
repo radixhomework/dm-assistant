@@ -1,11 +1,13 @@
+# record-relationships Specification
+
 ## Purpose
 
 Defines typed relationships between records — reference fields bound to one or more declared target templates — and the per-record backlinks section that surfaces everything pointing at a record.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Typed reference fields
-Reference fields (0..1 and 0..n) declared by a template's schema SHALL store their links as relationship rows keyed by the field's name, each pointing at records of one of the field's declared target templates — a field MAY declare several target templates (for example `origins` and `geography` accept Places, Nations and Natural landmarks). A 0..1 field SHALL hold at most one target per record and field, and a target SHALL be attachable at most once per record and field — enforced by the database so concurrent attachments cannot double-link a target. Hierarchy fields (a Chapter's `campaign`, a Scene's `chapter`) are the exception to replacement: setting a parent while one is attached SHALL be refused — moving a child is a deliberate detach-then-attach. References SHALL be edited through autocompletion inputs searching every declared target template's titles. Removing a target SHALL detach the relationship, not delete the target record.
+Reference fields (0..1 and 0..n) declared by a template's schema SHALL store their links as relationship rows keyed by the field's name, each pointing at records of one of the field's declared target templates — a field MAY declare several target templates (for example `origins` and `geography` accept Places, Nations and Natural landmarks). A 0..1 field SHALL hold at most one target per record and field, and a target SHALL be attachable at most once per record and field — enforced by the database so concurrent attachments cannot double-link a target. Hierarchy fields (a Chapter's `campaign`, a Scene's `chapter`) are the exception to replacement: setting a parent while one is attached SHALL be refused — the hierarchy is frozen at creation, and a parent link cannot be detached either, so a parent change means deleting and recreating the record. References SHALL be edited through autocompletion inputs searching every declared target template's titles. Removing a target SHALL detach the relationship, not delete the target record.
 
 #### Scenario: Targets validated against the declared templates
 - **WHEN** a record sets a reference field declared with one or several target templates
