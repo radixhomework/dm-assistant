@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
+import { QueryClient } from "@tanstack/react-query";
 import { AdminPage } from "./AdminPage";
 import { renderWithProviders } from "../testing/render.js";
 
@@ -8,6 +9,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 function mockInstance(captured: Array<[string, RequestInit]>) {
+  let worldName = "W";
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: string, init?: RequestInit) => {
@@ -37,10 +39,19 @@ function mockInstance(captured: Array<[string, RequestInit]>) {
           ],
         };
       }
+      if (input === "/api/admin/settings" && init?.method === "PATCH") {
+        worldName = JSON.parse(String(init.body)).worldName;
+      }
+      if (input === "/api/bootstrap") {
+        return {
+          ok: true,
+          json: async () => ({ adminExists: true, worldName }),
+        };
+      }
       return {
         ok: true,
         json: async () => ({
-          worldName: "W",
+          worldName,
           contentLanguage: "en",
           distanceUnit: "m",
           weightUnit: "kg",
@@ -167,19 +178,26 @@ describe("AdminPage actions", () => {
     );
   });
 
-  it("saves instance settings via the settings form", async () => {
+  it("saves instance settings and refreshes bootstrap without a subscriber", async () => {
     const captured: Array<[string, RequestInit]> = [];
     mockInstance(captured);
-    renderWithProviders(<AdminPage />, "/admin");
+    const client = new QueryClient();
+    client.setQueryData(["bootstrap"], { adminExists: true, worldName: "W" });
+    renderWithProviders(<AdminPage />, { client });
     // Two Save buttons render (unit settings + calendar editor); the
     // first belongs to the instance settings form.
     await vi.waitFor(() => expect(screen.getAllByText("Save").length).toBeGreaterThanOrEqual(2));
+    fireEvent.change(screen.getByDisplayValue("W"), { target: { value: "New name" } });
     screen.getAllByText("Save")[0].click();
     await vi.waitFor(() => {
       const patch = captured.find(
         ([path, init]) => path === "/api/admin/settings" && init?.method === "PATCH",
       );
       expect(patch).toBeDefined();
+      expect(client.getQueryData(["bootstrap"])).toEqual({
+        adminExists: true,
+        worldName: "New name",
+      });
     });
   });
 });

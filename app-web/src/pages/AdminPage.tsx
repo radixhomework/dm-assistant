@@ -4,7 +4,7 @@ import { formString } from "../forms.js";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
-import { adminDeleteUser, adminResetPassword } from "../api/auth.js";
+import { adminDeleteUser, adminResetPassword, fetchBootstrapState } from "../api/auth.js";
 import { CalendarAdminEditor } from "../components/calendar-admin-editor.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import type { SafeUserLike } from "../types.js";
@@ -126,9 +126,12 @@ export function AdminPage() {
       });
       setSaved(true);
       await settings.refetch();
-      // The header brands itself with the world name from the bootstrap
-      // cache — refresh it so the rename is immediate.
-      await queryClient.invalidateQueries({ queryKey: ["bootstrap"] });
+      // Discard any pre-rename fetch and refresh even if the router only
+      // seeded the bootstrap cache and no observer supplied a query function.
+      await queryClient.cancelQueries({ queryKey: ["bootstrap"], exact: true });
+      await queryClient
+        .query({ queryKey: ["bootstrap"], queryFn: fetchBootstrapState, staleTime: 0 })
+        .catch(() => undefined); // The settings save already succeeded.
     } catch (saveError) {
       setError(String(saveError));
     }
