@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
+import { Dialog } from "../components/dialog.js";
 import { Field, inputClass } from "../components/form.js";
 import { formString } from "../forms.js";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -90,31 +91,37 @@ export function LorePage() {
 
 
       {creating && (
-        <form onSubmit={onCreate} className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4">
-          <Field label={t("lore.type")}>
-            <select name="type" className={inputClass}>
-              <optgroup label={t("lore.title")}>
-                {worldTemplates.map((template) => (
-                  <option key={template} value={template}>
-                    {t(`lore.categories.${template}`)}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label={t("lore.catalogsTitle")}>
-                {catalogTemplates.map((template) => (
-                  <option key={template} value={template}>
-                    {t(`lore.categories.${template}`)}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </Field>
-          <SlugTitleFields fields={slugFields} />
-          {error && <p className="text-sm text-radish">{error}</p>}
-          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
-            {t("lore.create")}
-          </button>
-        </form>
+        <Dialog title={t("lore.newRecord")} onClose={() => {
+          setCreating(false);
+          setError(null);
+          slugFields.reset();
+        }}>
+          <form onSubmit={onCreate} className="flex flex-col gap-3">
+            <Field label={t("lore.type")}>
+              <select name="type" className={inputClass}>
+                <optgroup label={t("lore.title")}>
+                  {worldTemplates.map((template) => (
+                    <option key={template} value={template}>
+                      {t(`lore.categories.${template}`)}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={t("lore.catalogsTitle")}>
+                  {catalogTemplates.map((template) => (
+                    <option key={template} value={template}>
+                      {t(`lore.categories.${template}`)}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </Field>
+            <SlugTitleFields fields={slugFields} />
+            {error && <p className="text-sm text-radish">{error}</p>}
+            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
+              {t("lore.create")}
+            </button>
+          </form>
+        </Dialog>
       )}
 
       {list.length === 0 && <p className="mt-8 text-muted">{t("lore.empty")}</p>}

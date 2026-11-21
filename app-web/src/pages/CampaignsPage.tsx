@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SlugTitleFields } from "../components/slug-fields.js";
+import { Dialog } from "../components/dialog.js";
 import { formString } from "../forms.js";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -18,6 +19,7 @@ export function CampaignsPage() {
   const navigate = useNavigate();
   const { ready } = useRequireAuth();
   const slugFields = useSlugAutoFill();
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const campaigns = useQuery({
     queryKey: ["campaigns"],
@@ -76,26 +78,31 @@ export function CampaignsPage() {
         </h1>
         <button
           type="button"
-          onClick={() => { setError((value) => (value === "form" ? null : "form")); if (error !== "form") slugFields.reset(); }}
+          onClick={() => {
+            slugFields.reset();
+            setError(null);
+            setCreating((value) => !value);
+          }}
           className="rounded-md bg-primary px-4 py-2 text-sm text-background transition-colors duration-200 hover:bg-accent"
         >
           {t("campaigns.newCampaign")}
         </button>
       </div>
 
-      {error === "form" && (
-        <form
-          onSubmit={onCreate}
-          className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
-        >
-          <SlugTitleFields fields={slugFields} />
-          {error !== null && error !== "form" && (
-            <p className="text-sm text-radish">{error}</p>
-          )}
-          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
-            {t("campaigns.create")}
-          </button>
-        </form>
+      {creating && (
+        <Dialog title={t("campaigns.newCampaign")} onClose={() => {
+          setCreating(false);
+          setError(null);
+          slugFields.reset();
+        }}>
+          <form onSubmit={onCreate} className="flex flex-col gap-3">
+            <SlugTitleFields fields={slugFields} />
+            {error && <p className="text-sm text-radish">{error}</p>}
+            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
+              {t("campaigns.create")}
+            </button>
+          </form>
+        </Dialog>
       )}
 
       {(campaigns.data ?? []).length === 0 && (

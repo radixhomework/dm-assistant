@@ -132,6 +132,7 @@
     "newChapter": "New chapter",
     "scenes": "Scenes",
     "newScene": "New scene",
+    "inParent": "in “{{title}}”",
     "status": {
       "not_played": "Not played",
       "in_progress": "In progress",

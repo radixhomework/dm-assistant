@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router"
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { Dialog } from "../components/dialog.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
 import { IllustrationBanner, ProseSections } from "../components/sheet-parts.js";
 import { useSlugAutoFill } from "../slug.js";
@@ -72,6 +73,7 @@ export function CampaignViewPage() {
   const [saved, setSaved] = useState(false);
   const [creating, setCreating] = useState<"chapter" | "scene" | null>(null);
   const [parentForNew, setParentForNew] = useState<string | null>(null);
+  const [parentTitle, setParentTitle] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
 
   const campaign = useQuery({
@@ -353,8 +355,10 @@ export function CampaignViewPage() {
             type="button"
             onClick={() => {
               slugFields.reset();
+              setError(null);
               setCreating("chapter");
               setParentForNew(id);
+              setParentTitle(data.title);
             }}
             className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent"
           >
@@ -456,8 +460,10 @@ export function CampaignViewPage() {
                     type="button"
                     onClick={() => {
                       slugFields.reset();
+                      setError(null);
                       setCreating("scene");
                       setParentForNew(chapter.id ?? chapter.slug);
+                      setParentTitle(chapter.title);
                     }}
                     className="mt-2 text-sm text-accent hover:underline"
                   >
@@ -471,36 +477,48 @@ export function CampaignViewPage() {
       </section>
 
       {creating && parentForNew && (
-        <form
-          onSubmit={createChild}
-          className="mt-6 flex max-w-md flex-col gap-3 rounded-lg border border-border bg-surface p-4"
+        <Dialog
+          title={
+            creating === "chapter"
+              ? t("campaigns.newChapter")
+              : t("campaigns.newScene")
+          }
+          onClose={() => {
+            setCreating(null);
+            setParentForNew(null);
+            setError(null);
+            slugFields.reset();
+          }}
         >
-          <p className="text-sm text-muted">
-            {creating} → {parentForNew}
-          </p>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("common.fields.title")}
-            <input name="title" required value={slugFields.title}
-              onChange={(event) => slugFields.onTitleChange(event.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2" />
-          </label>
-          <input type="hidden" name="slug" value={slugFields.slug} />
-          <div className="flex gap-2">
-            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
-              {t("campaigns.create")}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCreating(null);
-                setParentForNew(null);
-              }}
-              className="rounded-md border border-border px-4 py-2 text-sm text-muted"
-            >
-              {t("common.cancel")}
-            </button>
-          </div>
-        </form>
+          <form onSubmit={createChild} className="flex flex-col gap-3">
+            {creating === "scene" && parentTitle && (
+              <p className="text-sm text-muted">{t("campaigns.inParent", { title: parentTitle })}</p>
+            )}
+            <label className="flex flex-col gap-1 text-sm">
+              {t("common.fields.title")}
+              <input name="title" required value={slugFields.title}
+                onChange={(event) => slugFields.onTitleChange(event.target.value)}
+                className="rounded-md border border-border bg-background px-3 py-2" />
+            </label>
+            <input type="hidden" name="slug" value={slugFields.slug} />
+            {error && <p className="text-sm text-radish">{error}</p>}
+            <div className="flex gap-2">
+              <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
+                {t("campaigns.create")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreating(null);
+                  setParentForNew(null);
+                }}
+                className="rounded-md border border-border px-4 py-2 text-sm text-muted transition-colors duration-200 hover:bg-background"
+              >
+                {t("common.cancel")}
+                </button>
+            </div>
+          </form>
+        </Dialog>
       )}
     </div>
   );
