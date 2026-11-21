@@ -1,18 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { LoreRecordPage } from "./RecordEditPage";
+import { ChapterRecordPage, LoreRecordPage } from "./RecordEditPage";
 import { renderWithProviders } from "../testing/render.js";
 
 // Mutable search state the mocked router hook exposes; tests set the edit
 // flag to simulate navigation straight from a creation form.
 const searchState: { edit?: string | boolean | number } = {};
+// Route params for the mocked useParams; the lore tests keep this default.
+const paramState: Record<string, string> = { id: "rec-1" };
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
-    useParams: () => ({ id: "rec-1" }),
+    // Mutable so route-specific tests can set their own params.
+    useParams: () => paramState,
     useNavigate: () => ({ to: vi.fn() }),
     useRouterState: (opts?: { select?: (s: unknown) => unknown }) => {
       const state = {
@@ -498,5 +501,54 @@ describe("RecordEditPage", () => {
     expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(false);
     expect(document.querySelector("#record-edit-form")!.hasAttribute("inert")).toBe(false);
+  });
+});
+
+
+describe("ChapterRecordPage header", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "en";
+    paramState["id"] = "camp-1";
+    paramState["chapterId"] = "chap-1";
+    searchState.edit = undefined;
+  });
+
+  it("offers Edit and Delete but no creation shortcut", async () => {
+    const fetchMock = vi.fn(async (input: string) => {
+      if (input === "/api/auth/me") {
+        return {
+          ok: true,
+          json: async () => ({
+            id: "1",
+            email: "a@b.c",
+            displayName: "DM",
+            role: "admin",
+          }),
+        };
+      }
+      if (input.endsWith("/backlinks")) {
+        return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+      }
+      if (input.endsWith("/api/records/chap-1")) {
+        return {
+          ok: true,
+          json: async () => ({
+            ...recordOf({}),
+            id: "chap-1",
+            slug: "chap-one",
+            type: "chapter",
+            campaign: { id: "camp-1", slug: "north-realm", title: "The North Realm" },
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithProviders(<ChapterRecordPage />, "/campaigns/camp-1/chap-1");
+    await vi.waitFor(() =>
+      expect(screen.getByRole("button", { name: "Edit" })).toBeDefined(),
+    );
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "New record" })).toBeNull();
   });
 });

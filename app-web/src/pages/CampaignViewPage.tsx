@@ -116,14 +116,18 @@ export function CampaignViewPage() {
 
   const data = campaign.data;
 
+  // Edit mode is URL-driven (?edit=true): entering and leaving it is a
+  // navigation, not just state.
   function enterEdit() {
     setSaved(false);
     setError(null);
     if (campaign.data) setFields(campaign.data.fields);
+    void navigate({ to: "/campaigns/$id", params: { id }, search: { edit: true } });
   }
 
   function cancelEdit() {
     if (campaign.data) setFields(campaign.data.fields);
+    void navigate({ to: "/campaigns/$id", params: { id }, search: {} });
   }
 
   async function onSave(event: React.SubmitEvent<HTMLFormElement>) {
@@ -141,6 +145,8 @@ export function CampaignViewPage() {
       });
       setSaved(true);
       await campaign.refetch();
+      // Back to the reading view, where the saved banner shows.
+      void navigate({ to: "/campaigns/$id", params: { id }, search: {} });
     } catch (saveError) {
       setError(String(saveError));
     }

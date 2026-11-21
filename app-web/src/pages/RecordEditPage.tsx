@@ -48,13 +48,16 @@ function SheetHeader(props: {
 }
 
 /** Reading view: the saved record through its bespoke sheet (or the
- * generic scaffold) with the shared header actions. */
+ * generic scaffold) with the shared header actions. The creation
+ * shortcut is a Lore affordance — campaign records (chapters, scenes)
+ * create from their campaign page. */
 function RecordReadView(props: {
   readonly data: Entity;
   readonly saved: boolean;
   readonly error: string | null;
   readonly onEnterEdit: () => void;
   readonly onDelete: () => void;
+  readonly showCreate?: boolean;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -66,15 +69,17 @@ function RecordReadView(props: {
         subtitle={props.data.type}
         actions={
           <>
-            <button
-              type="button"
-              onClick={() => void navigate({ to: "/lore", search: { new: true } })}
-              className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
-              title={t("lore.newRecord")}
-              aria-label={t("lore.newRecord")}
-            >
-              <FilePlus className="size-4" aria-hidden />
-            </button>
+            {props.showCreate && (
+              <button
+                type="button"
+                onClick={() => void navigate({ to: "/lore", search: { new: true } })}
+                className="rounded-md bg-primary p-2 text-background transition-colors duration-200 hover:bg-accent"
+                title={t("lore.newRecord")}
+                aria-label={t("lore.newRecord")}
+              >
+                <FilePlus className="size-4" aria-hidden />
+              </button>
+            )}
             <button
               type="button"
               onClick={props.onEnterEdit}
@@ -377,6 +382,7 @@ function RecordPage(props: {
       error={error}
       onEnterEdit={enterEdit}
       onDelete={() => void onDelete()}
+      showCreate={props.kind === "lore"}
     />
   );
 }

@@ -3,9 +3,11 @@ import { screen } from "@testing-library/react";
 import { CampaignViewPage } from "./CampaignViewPage";
 import { renderWithProviders } from "../testing/render.js";
 
+const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
+
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ id: "uuid-north-realm" }),
-  useNavigate: () => ({ to: vi.fn() }),
+  useNavigate: () => navigate,
   useSearch: () => ({}),
   Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));
@@ -192,6 +194,29 @@ describe("CampaignViewPage scene creation", () => {
       expect(created).toBeDefined();
       expect(attached).toBeDefined();
     });
+  });
+});
+
+describe("CampaignViewPage edit navigation", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "en";
+    navigate.mockClear();
+    mockInstance();
+  });
+
+  it("the edit pencil navigates to the edit URL", async () => {
+    renderWithProviders(<CampaignViewPage />, "/campaigns/uuid-north-realm");
+    await vi.waitFor(() =>
+      expect(screen.getByRole("button", { name: "Edit" })).toBeDefined(),
+    );
+    screen.getByRole("button", { name: "Edit" }).click();
+    await vi.waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({
+        to: "/campaigns/$id",
+        params: { id: "uuid-north-realm" },
+        search: { edit: true },
+      }),
+    );
   });
 });
 
