@@ -120,7 +120,10 @@
       "treasure-types": "Types de trésors",
       "conditions": "États",
       "fauna": "Faune",
-      "flora": "Flore"
+      "flora": "Flore",
+      "campaign": "Campagne",
+      "chapter": "Chapitre",
+      "scene": "Scène"
     },
     "catalogsTitle": "Catalogues"
   },

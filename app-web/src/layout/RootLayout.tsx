@@ -2,13 +2,30 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { BookOpen, CalendarDays, Menu, Search, Shield, Swords, X } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  LogOut,
+  Menu,
+  Search,
+  Shield,
+  Swords,
+  User,
+  X,
+} from "lucide-react";
 import { AppSidebar } from "../components/app-sidebar.js";
 import { CampaignSidebar } from "../components/campaign-sidebar.js";
 import { fetchBootstrapState, fetchMe, logout } from "../api/auth.js";
 
 const navItemClass = (active: boolean) =>
   `flex items-center gap-1.5 font-display text-xl px-3 py-1 rounded-md transition-colors duration-200 ${
+    active
+      ? "bg-accent text-background"
+      : "text-background/75 hover:text-background"
+  }`;
+
+const iconNavClass = (active: boolean) =>
+  `flex items-center rounded-md p-1.5 transition-colors duration-200 ${
     active
       ? "bg-accent text-background"
       : "text-background/75 hover:text-background"
@@ -131,10 +148,6 @@ export function RootLayout() {
                   <CalendarDays className="size-4" aria-hidden />
                   {t("nav.calendar")}
                 </Link>
-                <Link to="/search" className={navItemClass(pathname === "/search")}>
-                  <Search className="size-4" aria-hidden />
-                  {t("nav.search")}
-                </Link>
                 <Link to="/campaigns" className={navItemClass(campaignsActive)}>
                   <Swords className="size-4" aria-hidden />
                   {t("nav.campaigns")}
@@ -147,16 +160,31 @@ export function RootLayout() {
                 )}
               </nav>
               {user && (
-                <div className="ml-auto flex items-center gap-3">
-                  <Link to="/account" className="text-sm text-background/75 hover:text-background">
-                    {user.displayName}
+                <div className="ml-auto flex items-center gap-1.5">
+                  <Link
+                    to="/search"
+                    aria-label={t("nav.search")}
+                    title={t("nav.search")}
+                    className={iconNavClass(pathname === "/search")}
+                  >
+                    <Search className="size-5" aria-hidden />
+                  </Link>
+                  <Link
+                    to="/account"
+                    aria-label={t("account.title")}
+                    title={t("account.title")}
+                    className={iconNavClass(false)}
+                  >
+                    <User className="size-5" aria-hidden />
                   </Link>
                   <button
                     type="button"
                     onClick={() => void onLogout()}
-                    className="text-sm text-background/75 hover:text-background"
+                    aria-label={t("nav.logout")}
+                    title={t("nav.logout")}
+                    className={iconNavClass(false)}
                   >
-                    {t("nav.logout")}
+                    <LogOut className="size-5" aria-hidden />
                   </button>
                 </div>
               )}

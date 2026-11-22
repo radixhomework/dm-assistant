@@ -120,7 +120,10 @@
       "treasure-types": "Treasure types",
       "conditions": "Conditions",
       "fauna": "Fauna",
-      "flora": "Flora"
+      "flora": "Flora",
+      "campaign": "Campaign",
+      "chapter": "Chapter",
+      "scene": "Scene"
     },
     "catalogsTitle": "Catalogs"
   },
