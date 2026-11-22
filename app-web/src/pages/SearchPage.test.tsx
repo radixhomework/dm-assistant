@@ -15,7 +15,7 @@ vi.mock("@tanstack/react-router", () => ({
   Link: (props: { children?: React.ReactNode }) => <a>{props.children}</a>,
 }));
 
-function stubFetch(hits: unknown[]) {
+function stubFetch(hits: unknown[] | Promise<unknown[]>) {
   return vi.fn(async (input: string | RequestInfo) => {
     const path = String(input);
     if (path === "/api/auth/me") {
@@ -57,6 +57,34 @@ describe("SearchPage", () => {
     vi.stubGlobal("fetch", stubFetch([hit]));
   });
 
+  it("focuses the search field after authentication resolves", async () => {
+    renderWithProviders(<SearchPage />);
+    expect(screen.queryByRole("searchbox")).toBeNull();
+    const input = await screen.findByRole("searchbox");
+    expect(document.activeElement).toBe(input);
+  });
+
+  it("focuses the search field immediately with cached authentication", () => {
+    const client = new QueryClient();
+    client.setQueryData(["me"], { id: "1", email: "a@b.c", displayName: "DM", role: "admin" });
+    renderWithProviders(<SearchPage />, { client });
+    expect(document.activeElement).toBe(screen.getByRole("searchbox"));
+  });
+
+  it("updates the same live status from loading to results", async () => {
+    h.search = { q: "ecole" };
+    let resolveHits!: (hits: unknown[]) => void;
+    const response = new Promise<unknown[]>((resolve) => { resolveHits = resolve; });
+    vi.stubGlobal("fetch", stubFetch(response));
+    renderWithProviders(<SearchPage />);
+
+    const status = await screen.findByRole("status");
+    expect(status.textContent).toBe("Loading…");
+    resolveHits([hit]);
+    expect(await screen.findByText("1 result")).toBe(status);
+    expect(status.contains(screen.getByRole("list"))).toBe(false);
+  });
+
   it("renders results with highlighted snippets and category labels", async () => {
     h.search = { q: "ecole" };
     renderWithProviders(<SearchPage />);
@@ -74,7 +102,7 @@ describe("SearchPage", () => {
     vi.stubGlobal("fetch", stubFetch([]));
     renderWithProviders(<SearchPage />);
     await waitFor(() => {
-      expect(screen.getByText(/No record matches/)).toBeDefined();
+      expect(screen.getByRole("status").textContent).toMatch(/No record matches/);
     });
   });
 
@@ -102,7 +130,7 @@ describe("SearchPage", () => {
     });
     renderWithProviders(<SearchPage />, { client });
     await waitFor(() => {
-      expect(screen.getByText("The search failed.")).toBeDefined();
+      expect(screen.getByRole("status").textContent).toBe("The search failed.");
     });
     expect(screen.getByRole("button", { name: "Retry" })).toBeDefined();
   });

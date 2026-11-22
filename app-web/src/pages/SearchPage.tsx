@@ -182,8 +182,8 @@ export function SearchPage() {
   // through a ref — the autoFocus attribute is flagged by S9379.
   const queryInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    queryInputRef.current?.focus();
-  }, []);
+    if (ready) queryInputRef.current?.focus();
+  }, [ready]);
 
   const results = useQuery({
     queryKey: ["search", q, params.type, params.tag],
@@ -205,6 +205,21 @@ export function SearchPage() {
 
   if (!ready) return null;
   const hits = results.data ?? [];
+  const hasQuery = q.trim().length > 0;
+  const showError = hasQuery && results.isError;
+  const showHits = hasQuery && results.isSuccess && hits.length > 0;
+  let status;
+  if (!hasQuery) {
+    status = t("search.hint");
+  } else if (results.isPending) {
+    status = t("common.loading");
+  } else if (showError) {
+    status = t("search.error");
+  } else if (hits.length === 0) {
+    status = t("search.noResults", { query: q });
+  } else {
+    status = t("search.resultsCount", { count: hits.length });
+  }
 
   return (
     <div>
@@ -260,50 +275,28 @@ export function SearchPage() {
         </div>
       </div>
 
-      {(() => {
-        // A flat branch chain: no nested ternaries (Sonar S3358), and
-        // the failed-search state stays distinct from no-results
-        // (CodeRabbit round-1 review).
-        if (q.trim().length === 0) {
-          return <p className="mt-6 text-muted">{t("search.hint")}</p>;
-        }
-        if (results.isPending) {
-          return <p className="mt-6 text-muted">{t("common.loading")}</p>;
-        }
-        if (results.isError) {
-          return (
-            <p className="mt-6 text-muted">
-              {t("search.error")}{" "}
-              <button
-                type="button"
-                onClick={() => void results.refetch()}
-                className="text-accent underline"
-              >
-                {t("common.retry")}
-              </button>
-            </p>
-          );
-        }
-        if (hits.length === 0) {
-          return (
-            <p className="mt-6 text-muted">
-              {t("search.noResults", { query: q })}
-            </p>
-          );
-        }
-        return (
+      <p className={showHits ? "mt-6 text-sm text-muted" : "mt-6 text-muted"}>
+        <span role="status" aria-atomic="true">{status}</span>
+        {showError && (
           <>
-            <p className="mt-6 text-sm text-muted">
-              {t("search.resultsCount", { count: hits.length })}
-            </p>
-            <ul className="mt-2">
-              {hits.map((hit) => (
-                <SearchResultRow key={hit.id} hit={hit} />
-              ))}
-            </ul>
+            {" "}
+            <button
+              type="button"
+              onClick={() => void results.refetch()}
+              className="text-accent underline"
+            >
+              {t("common.retry")}
+            </button>
           </>
-        );
-      })()}
+        )}
+      </p>
+      {showHits && (
+        <ul className="mt-2">
+          {hits.map((hit) => (
+            <SearchResultRow key={hit.id} hit={hit} />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
