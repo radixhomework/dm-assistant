@@ -17,29 +17,33 @@ Catalog records (the 8 catalogs) SHALL carry a provenance source chosen from a s
 
 #### Scenario: Source is immutable
 - **WHEN** any update is attempted on a catalog record's source
-- **THEN** the stored source is unchanged
+- **THEN** the stored source is unchanged — the only exception is the confirmed import overwrite that rebinds provenance (see the import requirement)
 
 #### Scenario: Disabled source keeps its records
 - **WHEN** a source is disabled after records were imported under it
 - **THEN** those records keep their badge and their provenance — only new import selections change
 
-### Requirement: Imported records are non-editable
-Catalog records sourced from an external source SHALL reject field updates, tag updates and deletion through the application — the reference data changes only through a re-import. Their sheet SHALL offer no edit or delete action. Catalog records from the Internal source and all non-catalog records remain editable and deletable as before.
+### Requirement: Imported records keep their source data read-only
+Catalog records sourced from an external source SHALL reject updates to their source-derived fields (everything the dataset provided — the Public description and any structural value) and SHALL reject deletion through the application — the reference data changes only through a re-import. The fields the mapping leaves to the DM (the **Pitch** and the **Private description**) SHALL stay editable on imported records, so the DM authors them without breaking provenance. The sheet SHALL offer the DM-field editing but no edit action on the source-derived fields and no delete action. Catalog records from the Internal source and all non-catalog records remain editable and deletable as before.
 
-#### Scenario: Imported record refuses edits
-- **WHEN** an update or delete is requested on a catalog record sourced from an external source
+#### Scenario: Imported record refuses source-field edits
+- **WHEN** an update touches the source-derived fields of a catalog record sourced from an external source, or requests its deletion
 - **THEN** the request is rejected with a stable error code and the record is unchanged
 
-#### Scenario: Sheet hides the edit actions
+#### Scenario: DM-authored fields stay authorable
+- **WHEN** the DM writes the Pitch or the Private description of an imported catalog record
+- **THEN** the edit is accepted and the source-derived fields and the source badge are unchanged
+
+#### Scenario: Sheet splits the editable from the read-only
 - **WHEN** an imported catalog record's sheet is opened
-- **THEN** no edit or delete action is offered
+- **THEN** the Pitch and Private description offer their editing controls while the source-derived fields carry no edit action and no delete action exists
 
 #### Scenario: Internal record stays editable
 - **WHEN** the DM edits a catalog record whose source is Internal
 - **THEN** the edit is accepted as for any record
 
 ### Requirement: Catalog import in the admin panel
-The admin panel SHALL provide an Import catalogs tab where an administrator runs a catalog import as an explicit human action (never triggered by the AI, never scheduled). The import SHALL accept two origins: a **local JSON file upload** or an **API endpoint URL** fetched server-side (admin-only, HTTPS enforced, internal-address requests refused). The DM SHALL select the target catalog (one of the 8) and the external source before running. The flow SHALL be preview-before-import: the application fetches and parses the payload, validates every element against the catalog template schema, matches them against existing records, and displays a preview — new elements, existing imported elements that will be overwritten (pre-checked), and internal records in conflict (per-item checkboxes, unchecked by default) — before any write. The preview SHALL offer a select-all control covering every selectable element at once. Confirming SHALL execute the import in a single transaction, converting SRD imperial values once into the world's configured units (5 ft = 1.5 m · 1 mile = 1.5 km · 1 lb = 500 g · 1 gal = 4 l), and produce a report of what was created, updated and skipped. An import SHALL NEVER be blocked by same-name existing elements: conflicts surface in the preview, and the DM decides per element.
+The admin panel SHALL provide an Import catalogs tab where an administrator runs a catalog import as an explicit human action (never triggered by the AI, never scheduled). The import SHALL accept two origins: a **local JSON file upload** or an **API endpoint URL** fetched server-side (admin-only, HTTPS enforced, internal-address requests refused). The DM SHALL select the target catalog (one of the 8) and the external source before running. The flow SHALL be preview-before-import: the application fetches and parses the payload, validates every element against the catalog template schema, matches them against existing records, and displays a preview — new elements; existing records already bound to the SAME source that will be overwritten (pre-checked); and records bound to a DIFFERENT provenance (another external source or Internal) offered as per-item checkboxes, unchecked by default — before any write. The preview SHALL offer a select-all control covering every selectable element at once. Confirming SHALL execute the import in a single transaction, converting SRD imperial values once into the world's configured units (5 ft = 1.5 m · 1 mile = 1.5 km · 1 lb = 500 g · 1 gal = 4 l), and produce a report of what was created, updated and skipped. Confirming an over-write of a record bound to a different provenance SHALL rebind that record to the importing source — the badge always names the data's true origin. An import SHALL NEVER be blocked by same-name existing elements: conflicts surface in the preview, and the DM decides per element.
 
 #### Scenario: File import with preview
 - **WHEN** an administrator uploads a valid dataset file for the Conditions catalog under the source "Open5e (SRD 5.2)" and confirms the preview
@@ -51,15 +55,19 @@ The admin panel SHALL provide an Import catalogs tab where an administrator runs
 
 #### Scenario: Existing elements are identified before overwriting
 - **WHEN** the preview lists elements whose slug already exists in the target catalog
-- **THEN** each is shown with its current title, marked as will-be-overwritten when previously imported, or offered as an unchecked choice when it is an internal record
+- **THEN** each is shown with its current title, marked as will-be-overwritten when bound to the same source, or offered as an unchecked choice when bound to a different source (another external source or Internal)
 
 #### Scenario: Internal records are protected by default
 - **WHEN** the import is confirmed with an internal conflict left unchecked
 - **THEN** that internal record is untouched and reported as skipped
 
+#### Scenario: Cross-source overwrite rebinds provenance
+- **WHEN** the DM confirms overwriting a record bound to source A with data from source B
+- **THEN** the record carries source B, its badge names B, and its source-derived fields hold the dataset's values while the DM-authored fields are preserved
+
 #### Scenario: Select all
 - **WHEN** the DM activates the select-all control on the preview
-- **THEN** every selectable element (overwrites and internal conflicts) is checked at once; deactivating it clears every checkbox
+- **THEN** every selectable element (overwrites and conflicts) is checked at once; deactivating it clears every checkbox
 
 #### Scenario: Invalid elements never abort the whole run
 - **WHEN** the payload contains elements failing validation
