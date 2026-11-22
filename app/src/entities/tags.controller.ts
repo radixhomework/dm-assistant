@@ -17,9 +17,14 @@ export class TagsController {
 
   @Get()
   async inventory(): Promise<TagInventoryEntry[]> {
+    // Count RECORDS per tag, not array occurrences: a record whose tags
+    // array repeats a value must count once (CodeRabbit round-1 review).
     const rows = (await this.db.execute(sql`
       SELECT tag, count(*) AS count
-      FROM (SELECT unnest(tags) AS tag FROM entities) AS tag_rows
+      FROM (
+        SELECT DISTINCT e.id, t.tag
+        FROM entities e, unnest(e.tags) AS t(tag)
+      ) AS record_tags
       GROUP BY tag
       ORDER BY tag ASC
     `)) as Array<{ tag: string; count: string | number }>;

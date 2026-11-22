@@ -117,20 +117,32 @@ export class EntitiesService {
   }
 
   async update(slug: string, input: UpdateEntityInput): Promise<EntityRow> {
-    const existing = await this.getBySlug(slug);
-    const fields = input.fields === undefined ? undefined : validateFields(existing.type, input.fields);
-    // The search vector follows title AND field text: recompute when
-    // either is written (a tags-only write leaves it untouched).
-    const searchVector =
-      input.title !== undefined || fields !== undefined
-        ? buildSearchVector(
-            input.title ?? existing.title,
-            extractSearchableText(fields ?? existing.fields),
-          )
-        : undefined;
-    // The field write and the mention rebuild commit together — the
-    // previous mention set restores itself if the rebuild fails.
+    // The row read, its lock and the write share one transaction: a
+    // concurrent partial save (title-only vs fields-only) must never
+    // build the search vector from a stale read (CodeRabbit round-1
+    // review — the vector followed fields the write no longer carries).
     return this.db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(entities)
+        .where(or(eq(entities.slug, slug), sql`${entities.id}::text = ${slug}`))
+        .for("update");
+      if (!existing) {
+        throw new NotFoundException(`Record '${slug}' not found`);
+      }
+      const fields =
+        input.fields === undefined
+          ? undefined
+          : validateFields(existing.type, input.fields);
+      // The search vector follows title AND field text: recompute when
+      // either is written (a tags-only write leaves it untouched).
+      const searchVector =
+        input.title !== undefined || fields !== undefined
+          ? buildSearchVector(
+              input.title ?? existing.title,
+              extractSearchableText(fields ?? existing.fields),
+            )
+          : undefined;
       const [row] = await tx
         .update(entities)
         .set({

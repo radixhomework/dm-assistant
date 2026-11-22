@@ -47,7 +47,8 @@ export class SearchService {
       return [];
     }
 
-    const like = `%${query.replaceAll(/[%_\\]/g, String.raw`\$&`)}%`;
+    const escaped = query.replaceAll(/[%_\\]/g, String.raw`\$&`);
+    const like = `%${escaped}%`;
     // The headline document is the exact text the index is built from:
     // title + the prose/short-text field values (delimiters ⟦ ⟧ —
     // mathematical brackets, absent from lore prose).
@@ -66,7 +67,13 @@ export class SearchService {
     if (types.length === 1) {
       conditions.push(sql`e.type = ${types[0]}`);
     } else if (types.length > 1) {
-      conditions.push(sql`e.type IN (${sql.join(types.map((t) => sql`${t}`), sql`, `)})`);
+      // Hoisted out of the outer template literal: no nested templates
+      // (Sonar S4624).
+      const typeList = sql.join(
+        types.map((t) => sql`${t}`),
+        sql`, `,
+      );
+      conditions.push(sql`e.type IN (${typeList})`);
     }
     if (filters.tag) {
       conditions.push(sql`${filters.tag} = ANY(e.tags)`);
