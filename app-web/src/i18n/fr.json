@@ -231,7 +231,11 @@
     "noBacklinks": "Rien ne pointe vers cette fiche pour l'instant.",
     "referenceSearch": "Rechercher une fiche...",
     "noChildren": "Aucun chapitre ou scène rattaché pour l'instant.",
-    "deleteConfirm": "Supprimer cette fiche ? Cette action est définitive."
+    "deleteConfirm": "Supprimer cette fiche ? Cette action est définitive.",
+    "tags": "Tags",
+    "tagsAdd": "Ajouter un tag",
+    "tagsHelp": "Entrée ou virgule ajoute ; Retour arrière sur le champ vide retire le dernier.",
+    "removeTag": "Retirer le tag {{tag}}"
   },
   "fields": {
     "illustration": "Illustration",
