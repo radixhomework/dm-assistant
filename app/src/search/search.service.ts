@@ -27,11 +27,13 @@ export class SearchService {
    * tsvector match (`search_vector @@ websearch_to_tsquery`, the ONE
    * fixed `simple_unaccent` configuration — accent-insensitive in both
    * languages, PRE-SPEC §2 decision of 2026-11-09) OR a partial title
-   * ILIKE as a recall helper. Vector matches rank first by ts_rank (the
-   * A/B weights put title matches above field matches); ILIKE-only
-   * matches follow. Snippets come from ts_headline over the same
-   * document the index is built from, with explicit delimiters the
-   * frontend splits into React nodes.
+   * ILIKE as a recall helper. The title-first contract is enforced
+   * EXPLICITLY — records whose title matches (vector title match or
+   * ILIKE) rank ahead of records matched only in their fields, then
+   * ts_rank orders within each group (ts_rank alone does not guarantee
+   * the title-first promise across multiword queries). Snippets come
+   * from ts_headline over the same document the index is built from,
+   * with explicit delimiters the frontend splits into React nodes.
    */
   async search(filters: {
     q: string;
@@ -75,12 +77,13 @@ export class SearchService {
     const rows = (await this.db.execute(sql`
       SELECT e.id, e.slug, e.title, e.type, e.perimeter, e.tags,
         (e.search_vector @@ q.q) AS matched,
+        (q.q @@ to_tsvector('simple_unaccent', e.title) OR e.title ILIKE ${like}) AS title_matched,
         ts_rank(e.search_vector, q.q) AS rank,
         ts_headline('simple_unaccent', ${document}, q.q,
           'StartSel=⟦,StopSel=⟧,MaxFragments=2,MaxWords=24,MinWords=8,ShortWord=0,FragmentDelimiter=…') AS snippet
       FROM entities e, websearch_to_tsquery('simple_unaccent', ${query}) AS q(q)
       WHERE ${filterSql} AND (e.search_vector @@ q.q OR e.title ILIKE ${like})
-      ORDER BY matched DESC, rank DESC, e.title ASC
+      ORDER BY title_matched DESC, matched DESC, rank DESC, e.title ASC
       LIMIT ${SEARCH_LIMIT}
     `)) as Array<Record<string, unknown>>;
 

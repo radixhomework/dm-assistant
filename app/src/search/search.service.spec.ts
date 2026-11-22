@@ -156,6 +156,47 @@ describe("SearchService", () => {
     expect(wrongTag).toEqual([]);
   });
 
+  it("ranks a title match first when both records match the full query", async () => {
+    await createRecord({
+      slug: "silver-dragon-mountain",
+      title: "Silver dragon mountain",
+      type: "places",
+    });
+    await createRecord({
+      slug: "quiet-cave",
+      title: "Quiet cave",
+      type: "places",
+      fields: { public_description: "A cave etched with silver dragon motifs." },
+    });
+
+    const hits = await searchService.search({ q: "silver dragon" });
+    // Both match the AND-composed query; the title match ranks first
+    // explicitly, not by trusting ts_rank's multiword arithmetic.
+    expect(hits.map((hit) => hit.slug)).toEqual([
+      "silver-dragon-mountain",
+      "quiet-cave",
+    ]);
+  });
+
+  it("keeps partial-title ILIKE matches in the title-first group", async () => {
+    // "Gardon" matches only through the ILIKE helper; the other record
+    // matches full-text on its prose — the title match ranks first.
+    await createRecord({
+      slug: "gardon",
+      title: "Gardon",
+      type: "places",
+    });
+    await createRecord({
+      slug: "tower-of-gar",
+      title: "Tower",
+      type: "places",
+      fields: { public_description: "The gar lives beneath it." },
+    });
+
+    const hits = await searchService.search({ q: "gar" });
+    expect(hits.map((hit) => hit.slug)).toEqual(["gardon", "tower-of-gar"]);
+  });
+
   it("appends ILIKE-only partial title matches after vector matches", async () => {
     await createRecord({
       slug: "gardons-lac",
