@@ -55,6 +55,17 @@ describe("TagsEditor", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("ignores Enter during an IME composition", async () => {
+    const onChange = makeHarness([]);
+    const input = screen.getByLabelText("Add a tag");
+    fireEvent.change(input, { target: { value: "下書き" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(onChange).not.toHaveBeenCalled();
+    // The composing draft survives in the input: the IME candidate is
+    // not final text.
+    expect((input as HTMLInputElement).value).toBe("下書き");
+  });
+
   it("removes a tag through its chip button", async () => {
     makeHarness(["forêt", "voyage"]);
     fireEvent.click(screen.getByRole("button", { name: "Remove tag forêt" }));

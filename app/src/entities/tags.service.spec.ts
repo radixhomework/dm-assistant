@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { sql } from "drizzle-orm";
 import { resetTables, testDb } from "../testing/test-db.js";
 import {
   EntitiesService,
@@ -26,6 +27,8 @@ describe("normalizeTags (pure)", () => {
 });
 
 describe("TagsService (database)", () => {
+  // Tags are a set: the SQL rewrites do not guarantee stored order.
+  const sorted = (tags: string[]) => [...tags].sort((a, b) => a.localeCompare(b, "fr"));
   const entitiesService = new EntitiesService(
     testDb,
     new RelationshipsService(testDb),
@@ -54,16 +57,16 @@ describe("TagsService (database)", () => {
     const result = await tagsService.rename({ from: "Forêt", to: "Forêt noire" });
     expect(result).toEqual({ renamed: 2 });
 
-    expect((await entitiesService.getBySlug("a")).tags).toEqual(["forêt noire"]);
-    expect((await entitiesService.getBySlug("b")).tags).toEqual(["forêt noire", "voyage"]);
-    expect((await entitiesService.getBySlug("c")).tags).toEqual(["voyage"]);
+    expect(sorted((await entitiesService.getBySlug("a")).tags)).toEqual(sorted(["forêt noire"]));
+    expect(sorted((await entitiesService.getBySlug("b")).tags)).toEqual(sorted(["forêt noire", "voyage"]));
+    expect(sorted((await entitiesService.getBySlug("c")).tags)).toEqual(sorted(["voyage"]));
   });
 
   it("rename deduplicates a record carrying both the old and the new tag", async () => {
     await createRecord("ab", ["forêt", "forêt noire"]);
 
     await tagsService.rename({ from: "forêt", to: "forêt noire" });
-    expect((await entitiesService.getBySlug("ab")).tags).toEqual(["forêt noire"]);
+    expect(sorted((await entitiesService.getBySlug("ab")).tags)).toEqual(sorted(["forêt noire"]));
   });
 
   it("merge absorbs the tag into the target and deduplicates", async () => {
@@ -74,9 +77,9 @@ describe("TagsService (database)", () => {
     const result = await tagsService.merge({ from: "Forêt", into: "Boise" });
     expect(result).toEqual({ merged: 2 });
 
-    expect((await entitiesService.getBySlug("a")).tags).toEqual(["boise"]);
-    expect((await entitiesService.getBySlug("b")).tags).toEqual(["boise"]);
-    expect((await entitiesService.getBySlug("c")).tags).toEqual(["boise"]);
+    expect(sorted((await entitiesService.getBySlug("a")).tags)).toEqual(sorted(["boise"]));
+    expect(sorted((await entitiesService.getBySlug("b")).tags)).toEqual(sorted(["boise"]));
+    expect(sorted((await entitiesService.getBySlug("c")).tags)).toEqual(sorted(["boise"]));
   });
 
   it("leaves records untouched when the tags are identical or unknown", async () => {
@@ -84,7 +87,7 @@ describe("TagsService (database)", () => {
 
     expect(await tagsService.rename({ from: "forêt", to: "forêt" })).toEqual({ renamed: 0 });
     expect(await tagsService.merge({ from: "inconnu", into: "boise" })).toEqual({ merged: 0 });
-    expect((await entitiesService.getBySlug("a")).tags).toEqual(["forêt"]);
+    expect(sorted((await entitiesService.getBySlug("a")).tags)).toEqual(sorted(["forêt"]));
   });
 
   it("absorbs the only tag of a record on merge", async () => {
@@ -94,7 +97,7 @@ describe("TagsService (database)", () => {
     await createRecord("solo", ["forêt"]);
 
     await tagsService.merge({ from: "forêt", into: "boise" });
-    expect((await entitiesService.getBySlug("solo")).tags).toEqual(["boise"]);
+    expect(sorted((await entitiesService.getBySlug("solo")).tags)).toEqual(sorted(["boise"]));
   });
 
   it("normalizes tags at creation and update", async () => {
@@ -111,5 +114,27 @@ describe("TagsService (database)", () => {
 
     await entitiesService.update("tagged", { tags: ["  CARTES  ", "cartes"] });
     expect((await entitiesService.getBySlug("tagged")).tags).toEqual(["cartes"]);
+  });
+
+  it("rename and merge reach legacy rows holding non-normalized values", async () => {
+    // A row written outside the service (a legacy row, a future import
+    // bypass): the raw insert carries un-normalized tags.
+    await testDb.execute(sql`
+      INSERT INTO entities (slug, type, perimeter, title, tags, fields)
+      VALUES ('legacy', 'places', 'world', 'Legacy', ARRAY['Forêt', '  Voyage  '], '{}')
+    `);
+
+    const renamed = await tagsService.rename({ from: "FORÊT", to: "forêt noire" });
+    expect(renamed).toEqual({ renamed: 1 });
+    const afterRename = (await entitiesService.getBySlug("legacy")).tags;
+    // The matched value rewrote; the unrelated neighbor kept verbatim.
+    expect(sorted(afterRename)).toEqual(["  Voyage  ", "forêt noire"]);
+
+    const merged = await tagsService.merge({ from: "  forêt noire  ", into: "boise" });
+    expect(merged).toEqual({ merged: 1 });
+    const afterMerge = (await entitiesService.getBySlug("legacy")).tags;
+    // '  Voyage  ' normalizes to 'voyage' ≠ 'boise': the target is
+    // appended alongside it.
+    expect(sorted(afterMerge)).toEqual(["  Voyage  ", "boise"]);
   });
 });

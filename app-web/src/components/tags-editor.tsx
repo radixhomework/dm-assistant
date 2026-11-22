@@ -40,6 +40,12 @@ export function TagsEditor(props: {
   }
 
   function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    // An IME composition confirms its candidate with Enter (and fires
+    // keydown events during composition): ignore those — the draft is
+    // not final text yet (CodeRabbit round-2 review).
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
     if (event.key === "Enter" || event.key === ",") {
       event.preventDefault();
       addTag(draft);

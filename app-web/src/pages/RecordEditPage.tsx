@@ -351,6 +351,10 @@ function RecordPage(props: {
       });
       setSaved(true);
       await record.refetch();
+      // The save may have introduced new tags: the editor's completion
+      // inventory must not show a stale list next session (staleTime
+      // Infinity keeps it until invalidated).
+      await queryClient.invalidateQueries({ queryKey: ["tags"] });
       await invalidateCampaignTree();
       setMode("read");
     } catch (saveError) {
