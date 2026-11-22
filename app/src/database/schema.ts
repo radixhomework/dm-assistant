@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  customType,
   index,
   jsonb,
   pgTable,
@@ -8,6 +9,14 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+/** Postgres tsvector (full-text search): driver round-trips the raw
+ * vector text, the application never manipulates it beyond SQL. */
+const tsvector = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return "tsvector";
+  },
+});
 
 /**
  * Instance-scoped settings (PRE-SPEC.md §2): ui_locale, content_language,
@@ -65,13 +74,21 @@ export const entities = pgTable("entities", {
   createdBy: uuid("created_by").references(() => users.id, {
     onDelete: "set null",
   }),
+  /**
+   * Full-text search vector (full-text-search capability): maintained by
+   * the application service on every write — title weighted A, the
+   * template-declared text field values weighted B — through the ONE
+   * fixed `simple_unaccent` configuration (PRE-SPEC §2, decision of
+   * 2026-11-09). No DB trigger: the indexed field set is template-driven.
+   */
+  searchVector: tsvector("search_vector"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [index("entities_search_vector_idx").using("gin", t.searchVector)]);
 
 /**
  * Typed relationships. Hierarchy kinds (`campaign`, `chapter`) carry the

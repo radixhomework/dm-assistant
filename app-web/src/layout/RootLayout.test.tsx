@@ -14,8 +14,14 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     ...actual,
     Outlet: () => <p>page content</p>,
     useNavigate: () => vi.fn(),
-    Link: (props: { children?: React.ReactNode; to?: string }) => (
-      <a>{props.children}</a>
+    Link: (props: {
+      children?: React.ReactNode;
+      to?: string;
+      "aria-label"?: string;
+    }) => (
+      // The href keeps the anchor's `link` role: the real TanStack Link
+      // renders one.
+      <a href="#" aria-label={props["aria-label"]}>{props.children}</a>
     ),
     useRouterState: (opts?: { select?: (s: unknown) => unknown }) =>
       opts?.select
@@ -89,8 +95,22 @@ describe("RootLayout navigation", () => {
     expect(screen.getAllByText("Lore").length).toBeGreaterThan(0);
     expect(screen.getByText("Campaigns")).toBeDefined();
     await vi.waitFor(() => expect(screen.getByText("Admin")).toBeDefined());
-    expect(screen.getByText("Log out")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Log out" })).toBeDefined();
     expect(screen.getByText("page content")).toBeDefined();
+  });
+
+  it("reduces the header utilities to icons with their accessible names", async () => {
+    mockSession("admin");
+    routerState.pathname = "/search";
+    renderWithProviders(<RootLayout />);
+    await vi.waitFor(() => {
+      // Search sits in the utility group, icon-only.
+      expect(screen.getByRole("link", { name: "Search" })).toBeDefined();
+      // The account icon keeps its accessible name without the text.
+      expect(screen.getByRole("link", { name: "My account" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "Log out" })).toBeDefined();
+      expect(screen.queryByText("DM")).toBeNull();
+    });
   });
 
   it("hides the Admin section for a dm", () => {
