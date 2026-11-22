@@ -23,24 +23,30 @@ Catalog records (the 8 catalogs) SHALL carry a provenance source chosen from a s
 - **WHEN** a source is disabled after records were imported under it
 - **THEN** those records keep their badge and their provenance — only new import selections change
 
-### Requirement: Imported records keep their source data read-only
-Catalog records sourced from an external source SHALL reject updates to their source-derived fields (everything the dataset provided — the Public description and any structural value) and SHALL reject deletion through the application — the reference data changes only through a re-import. The fields the mapping leaves to the DM (the **Pitch** and the **Private description**) SHALL stay editable on imported records, so the DM authors them without breaking provenance. The sheet SHALL offer the DM-field editing but no edit action on the source-derived fields and no delete action. Catalog records from the Internal source and all non-catalog records remain editable and deletable as before.
+<!-- coderabbit-ai-generated:v1 -->
 
-#### Scenario: Imported record refuses source-field edits
-- **WHEN** an update touches the source-derived fields of a catalog record sourced from an external source, or requests its deletion
+<!-- coderabbit-ai-generated-section:v1:50ede42be92be78003d6044e4bbf91a4484cc0531b0bb5d7a483f09f8b5189b8 -->
+
+### Requirement: Imported records keep their source data read-only
+Catalog records sourced from an external source SHALL reject updates to their source-derived fields (everything the dataset provided — the Public description and any structural value) and to their tags in per-record edits, and SHALL reject deletion through the application — the reference data changes only through a re-import. The fields the mapping leaves to the DM (the **Pitch** and the **Private description**) SHALL stay editable on imported records, so the DM authors them without breaking provenance. The sheet SHALL offer the DM-field editing but no edit action on source-derived fields or tags and no delete action. Catalog records from the Internal source and all non-catalog records remain editable and deletable as before.
+
+#### Scenario: Imported record refuses reference edits, tag edits and deletion
+- **WHEN** an update touches the tags or source-derived fields of a catalog record sourced from an external source, or requests its deletion
 - **THEN** the request is rejected with a stable error code and the record is unchanged
 
 #### Scenario: DM-authored fields stay authorable
 - **WHEN** the DM writes the Pitch or the Private description of an imported catalog record
-- **THEN** the edit is accepted and the source-derived fields and the source badge are unchanged
+- **THEN** the edit is accepted and the source-derived fields, tags and source badge are unchanged
 
 #### Scenario: Sheet splits the editable from the read-only
 - **WHEN** an imported catalog record's sheet is opened
-- **THEN** the Pitch and Private description offer their editing controls while the source-derived fields carry no edit action and no delete action exists
+- **THEN** the Pitch and Private description offer their editing controls while the source-derived fields and tags carry no edit action and no delete action exists
 
 #### Scenario: Internal record stays editable
 - **WHEN** the DM edits a catalog record whose source is Internal
 - **THEN** the edit is accepted as for any record
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ### Requirement: Catalog import in the admin panel
 The admin panel SHALL provide an Import catalogs tab where an administrator runs a catalog import as an explicit human action (never triggered by the AI, never scheduled). The import SHALL accept two origins: a **local JSON file upload** or an **API endpoint URL** fetched server-side (admin-only, HTTPS enforced, internal-address requests refused). The DM SHALL select the target catalog (one of the 8) and the external source before running. The flow SHALL be preview-before-import: the application fetches and parses the payload, validates every element against the catalog template schema, matches them against existing records, and displays a preview — new elements; existing records already bound to the SAME source that will be overwritten (pre-checked); and records bound to a DIFFERENT provenance (another external source or Internal) offered as per-item checkboxes, unchecked by default — before any write. The preview SHALL offer a select-all control covering every selectable element at once. Confirming SHALL execute the import in a single transaction, converting SRD imperial values once into the world's configured units (5 ft = 1.5 m · 1 mile = 1.5 km · 1 lb = 500 g · 1 gal = 4 l), and produce a report of what was created, updated and skipped. Confirming an over-write of a record bound to a different provenance SHALL rebind that record to the importing source — the badge always names the data's true origin. An import SHALL NEVER be blocked by same-name existing elements: conflicts surface in the preview, and the DM decides per element.
@@ -84,9 +90,15 @@ The import SHALL consume datasets following the Open5e object shape — at minim
 - **WHEN** the payload is an Open5e paginated envelope rather than a bare array
 - **THEN** the elements are read from `results` and paginated links are followed
 
-#### Scenario: Mapping leaves DM fields untouched
-- **WHEN** an element is imported with a long description
-- **THEN** the record's Public description carries it as markdown while Pitch and Private description stay empty for the DM
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:bc14ca230bb8c6811c156045b09a0c1ce5fed9827e944a3f047de2df0354cf1f -->
+
+#### Scenario: Mapping leaves DM fields authorable
+- **WHEN** an element is first imported with a long description
+- **THEN** its Public description carries it as markdown, and Pitch and Private description start empty and can be edited by the DM. A later re-import preserves the DM's edits.
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ### Requirement: Attribution credits page
 The application SHALL display an attribution page stating the fixed Wizards of the Coast SRD 5.2 CC-BY-4.0 credit and listing the instance's external sources with their attribution notes, reachable from the settings screen and from the external-source badges. The page labels SHALL come from the i18n catalogs (fr and en).

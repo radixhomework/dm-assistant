@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -7,15 +7,6 @@ import { categoryLabelKey } from "../categories.js";
 import { useRecordRoute } from "../urls.js";
 import { useRequireAuth } from "./useRequireAuth.js";
 import { catalogTemplates, worldTemplates } from "../types.js";
-
-function useDebouncedValue<T>(value: T, delay = 250): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
 
 /**
  * The ts_headline delimiters (⟦ ⟧ — chosen in the search service to be
@@ -155,29 +146,27 @@ export function SearchPage() {
   const params = useSearch({ from: "/search" });
   const q = params.q ?? "";
 
-  // The input drafts locally; the debounced value drives the URL (the
-  // source of truth) and the query key.
-  const [draft, setDraft] = useState(q);
-  const debouncedDraft = useDebouncedValue(draft);
-  // The route is the source of truth: an external q change (a pasted
-  // link, a back-navigation) re-seeds the draft instead of being
-  // overwritten by the stale debounced value (CodeRabbit round-1
-  // review).
-  useEffect(() => {
-    setDraft(q);
-  }, [q]);
-  useEffect(() => {
-    if (debouncedDraft !== q) {
+  // A change to the URL discards any draft tied to the previous query.
+  const [{ routeQuery, draft }, setDraft] = useState({ routeQuery: q, draft: q });
+  if (routeQuery !== q) {
+    setDraft({ routeQuery: q, draft: q });
+  }
+
+  // Cancel the pending write during the navigation commit, before its timer can run.
+  useLayoutEffect(() => {
+    if (draft === q) return;
+    const timer = setTimeout(() => {
       void navigate({
         to: "/search",
         search: (previous: { type?: string; tag?: string }) => ({
           ...previous,
-          q: debouncedDraft,
+          q: draft,
         }),
         replace: true,
       });
-    }
-  }, [debouncedDraft, q, navigate]);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [draft, q, navigate]);
   // The page's whole purpose is search: focus the field on arrival
   // through a ref — the autoFocus attribute is flagged by S9379.
   const queryInputRef = useRef<HTMLInputElement>(null);
@@ -234,7 +223,7 @@ export function SearchPage() {
           type="search"
           ref={queryInputRef}
           value={draft}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => setDraft({ routeQuery: q, draft: event.target.value })}
           placeholder={t("search.placeholder")}
           aria-label={t("search.title")}
           className="w-full rounded-md border border-border bg-surface px-3 py-2 text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"

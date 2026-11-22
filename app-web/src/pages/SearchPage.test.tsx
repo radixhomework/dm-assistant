@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "../testing/render.js";
 import { SearchPage } from "./SearchPage";
 
@@ -95,6 +95,40 @@ describe("SearchPage", () => {
     // The category label renders both as the filter option and on the
     // result row.
     expect(screen.getAllByText("Places").length).toBeGreaterThan(0);
+  });
+
+  it("uses the URL query on arrival and discards pending edits on same-route navigation", async () => {
+    h.search = { q: "ecole" };
+    const { rerender } = renderWithProviders(<SearchPage />);
+    const input = await screen.findByRole<HTMLInputElement>("searchbox", { name: "Search" });
+    expect(input.value).toBe("ecole");
+    expect(h.navigate).not.toHaveBeenCalled();
+
+    vi.useFakeTimers();
+    try {
+      fireEvent.change(input, { target: { value: "pending" } });
+      act(() => vi.advanceTimersByTime(249));
+      expect(h.navigate).not.toHaveBeenCalled();
+
+      h.search = { q: "restored", type: "places" };
+      rerender(<SearchPage />);
+      expect(input.value).toBe("restored");
+      act(() => vi.advanceTimersByTime(250));
+      expect(h.navigate).not.toHaveBeenCalled();
+
+      fireEvent.change(input, { target: { value: "new" } });
+      act(() => vi.advanceTimersByTime(249));
+      fireEvent.change(input, { target: { value: "new query" } });
+      act(() => vi.advanceTimersByTime(249));
+      expect(h.navigate).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+      expect(h.navigate).toHaveBeenCalledTimes(1);
+      const [call] = h.navigate.mock.calls[0]!;
+      expect(call.replace).toBe(true);
+      expect(call.search(h.search)).toEqual({ q: "new query", type: "places" });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("renders the no-results state", async () => {

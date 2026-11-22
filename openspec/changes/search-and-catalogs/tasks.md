@@ -23,7 +23,13 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 - [ ] 4.1 Drizzle migration (round 3): create `catalog_sources` (seeded with the built-in Internal / Interne source) and add `entities.source_id` FK — verify with a migration test on a fresh database
 - [ ] 4.2 Source registry service + endpoints: create/rename/disable external sources (admin only), built-in Internal source immutable and non-disableable, list for import selection and badges — controller tests for admin gating and the Internal invariants
 - [ ] 4.3 `source` binding in the entities service: catalog-type creation always binds the Internal source (client-supplied source refused), source immutable on update, entity responses carry the source (id, name, internal/external) — service tests for the default and the immutability
-- [ ] 4.4 Source-data read-only guard in the service: source-derived field updates and deletion rejected for catalog records bound to an external source, DM-authored fields (Pitch, Private description) stay editable, stable error code, Internal records unaffected — service tests for each case
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:6eb03d62f7cec70b9768ad2d6d066967bfa0f16c1be9ff3b4aedb9a69ee6e438 -->
+
+- [ ] 4.4 Source-data read-only guard in the service: source-derived field updates, per-record tag updates and deletion rejected for catalog records bound to an external source, DM-authored fields (Pitch, Private description) stay editable, stable error code, Internal records unaffected — service tests for each case
+
+<!-- /coderabbit-ai-generated:v1 -->
 - [ ] 4.5 Error codes added to the stable-codes list and translated in both i18n catalogs — verify the fr and en entries exist
 
 ## 5. Open5e import service and admin UI
@@ -67,7 +73,13 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 ## 11. Source badge and attribution UI
 
 - [ ] 11.1 Source badge on catalog sheets (source name; Internal badge for internal records; external badges leading to `/attribution`), none on non-catalog records — component tests for the internal, external and null cases
-- [ ] 11.2 Imported-record sheet: no edit/delete actions offered, read-only state — component test for the imported vs internal sheet
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:76ee533e36a7181743eb2c8e610a47d621007d00a5cabf999b40a3175a7cfe6c -->
+
+- [ ] 11.2 Imported-record sheet: edit Pitch and Private description only; no tag editing or deletion — component test for the imported vs internal sheet
+
+<!-- /coderabbit-ai-generated:v1 -->
 - [ ] 11.3 Attribution page at `/attribution` (fixed WotC SRD 5.2 CC-BY-4.0 statement + the instance's external sources with their attribution notes, fr/en labels) linked from the settings screen — component test for reachability and content
 
 ## 12. External references UI

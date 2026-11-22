@@ -4,8 +4,12 @@ Makes record tags (the `entities.tags` column, so far storage-only) a working su
 
 ## ADDED Requirements
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:24ff24d980c7189bdd1cdb8510f4cb56c0dddb30f9a9083cbd9823a18bfc65ac -->
+
 ### Requirement: Tag editing on records
-The record edit form SHALL offer a tags editor as a system section, outside the template fields (tags are instance-level metadata, not template data). Tags SHALL be free-form, normalized on save (trimmed, lowercased, internal whitespace collapsed, empty entries dropped) and deduplicated; the editor SHALL offer already-used tags as completion suggestions while typing. The edit-session field draft rules of the record editor apply to the tags section.
+Except for external-source catalog records, the record edit form SHALL offer a tags editor as a system section, outside the template fields (tags are instance-level metadata, not template data). Tags SHALL be free-form, normalized on save (trimmed, lowercased, internal whitespace collapsed, empty entries dropped) and deduplicated; the editor SHALL offer already-used tags as completion suggestions while typing. The edit-session field draft rules of the record editor apply to the tags section.
 
 #### Scenario: Tags save with the record
 - **WHEN** the DM adds tags in the edit form and saves
@@ -18,6 +22,8 @@ The record edit form SHALL offer a tags editor as a system section, outside the 
 #### Scenario: Suggestions from existing tags
 - **WHEN** the DM types in the tags editor
 - **THEN** existing tags of the instance matching the input are offered for completion
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ### Requirement: Tags displayed on sheets
 The record reading view SHALL display the record's tags as chips; a record without tags SHALL display no tag section (empty means hidden).
