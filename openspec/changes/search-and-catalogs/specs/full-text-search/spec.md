@@ -24,7 +24,7 @@ The application SHALL maintain a full-text search index over all records (world 
 - **THEN** the search index reflects the change immediately — new text findable, removed text gone
 
 ### Requirement: Search API
-The application SHALL expose an authenticated search endpoint accepting a query and optional filters (template type, tag), returning matching records with their slug, title, type, perimeter, tags and a snippet of the matching content around the matched term. Records whose title matches SHALL rank above records matched only in their fields. Queries matching nothing SHALL return an empty result, not an error.
+The application SHALL expose an authenticated search endpoint accepting a query and optional filters (template type, tag), returning matching records with their id, slug, title, type, perimeter, tags and a snippet of the matching content around the matched term. Records whose title matches SHALL rank above records matched only in their fields. Queries matching nothing SHALL return an empty result, not an error.
 
 #### Scenario: Ranked results with snippet
 - **WHEN** a query matches record A's title and record B's prose fields only

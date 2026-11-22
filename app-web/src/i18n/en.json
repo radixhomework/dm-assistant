@@ -57,7 +57,8 @@
     "admin": "Admin",
     "logout": "Log out",
     "sidebar": "Records",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "search": "Search"
   },
   "common": {
     "loading": "Loading…",
@@ -494,5 +495,18 @@
     "formatMonth": "{{month}} {{year}}",
     "formatYear": "{{year}}",
     "loadError": "Loading the calendar or the events failed."
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search titles and content…",
+    "hint": "Type to search across every record — titles and text fields, accents ignored.",
+    "noResults": "No record matches « {{query}} ».",
+    "noResultsNote": "Check the spelling, or try the category and tag filters.",
+    "filterType": "Category",
+    "filterTag": "Tag",
+    "allTypes": "All categories",
+    "allTags": "All tags",
+    "resultsCount_one": "{{count}} result",
+    "resultsCount_other": "{{count}} results"
   }
 }

@@ -57,7 +57,8 @@
     "admin": "Admin",
     "logout": "Se déconnecter",
     "sidebar": "Fiches",
-    "calendar": "Calendrier"
+    "calendar": "Calendrier",
+    "search": "Recherche"
   },
   "common": {
     "loading": "Chargement…",
@@ -494,5 +495,18 @@
     "formatMonth": "{{month}} {{year}}",
     "formatYear": "{{year}}",
     "loadError": "Échec du chargement du calendrier ou des événements."
+  },
+  "search": {
+    "title": "Recherche",
+    "placeholder": "Rechercher dans les titres et le contenu…",
+    "hint": "Tapez pour chercher dans toutes les fiches — titres et champs texte, accents ignorés.",
+    "noResults": "Aucune fiche ne correspond à « {{query}} ».",
+    "noResultsNote": "Vérifiez l’orthographe, ou essayez les filtres catégorie et tag.",
+    "filterType": "Catégorie",
+    "filterTag": "Tag",
+    "allTypes": "Toutes les catégories",
+    "allTags": "Tous les tags",
+    "resultsCount_one": "{{count}} résultat",
+    "resultsCount_other": "{{count}} résultats"
   }
 }

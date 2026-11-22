@@ -1,5 +1,9 @@
 import { Module } from "@nestjs/common";
+import { SearchController } from "./search.controller.js";
+import { SearchService } from "./search.service.js";
 
-/** Domain module skeleton — behavior lands with its phase (ROADMAP.md). */
-@Module({})
+@Module({
+  controllers: [SearchController],
+  providers: [SearchService],
+})
 export class SearchModule {}

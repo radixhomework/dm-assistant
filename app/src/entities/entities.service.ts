@@ -16,6 +16,7 @@ import {
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { isUniqueViolation } from "../database/unique-violation.js";
+import { buildSearchVector, extractSearchableText } from "../search/search-index.js";
 
 /** The transaction handle a drizzle transaction callback receives. */
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -51,12 +52,18 @@ export class EntitiesService {
   async create(input: CreateEntityInput, createdBy?: string): Promise<EntityRow> {
     const fields = validateFields(input.type, input.fields ?? {});
     try {
-      // The record and its mention set commit together: a failed mention
-      // insert rolls the record back instead of stranding it.
+      // The record, its mention set and its search vector commit
+      // together: a failed mention insert rolls the record back instead
+      // of stranding it.
       return await this.db.transaction(async (tx) => {
         const [row] = await tx
           .insert(entities)
-          .values({ ...input, fields, createdBy: createdBy ?? null })
+          .values({
+            ...input,
+            fields,
+            searchVector: buildSearchVector(input.title, extractSearchableText(fields)),
+            createdBy: createdBy ?? null,
+          })
           .returning();
         await this.replaceMentions(tx, row.id, fields);
         return row;
@@ -112,6 +119,15 @@ export class EntitiesService {
   async update(slug: string, input: UpdateEntityInput): Promise<EntityRow> {
     const existing = await this.getBySlug(slug);
     const fields = input.fields === undefined ? undefined : validateFields(existing.type, input.fields);
+    // The search vector follows title AND field text: recompute when
+    // either is written (a tags-only write leaves it untouched).
+    const searchVector =
+      input.title !== undefined || fields !== undefined
+        ? buildSearchVector(
+            input.title ?? existing.title,
+            extractSearchableText(fields ?? existing.fields),
+          )
+        : undefined;
     // The field write and the mention rebuild commit together — the
     // previous mention set restores itself if the rebuild fails.
     return this.db.transaction(async (tx) => {
@@ -121,6 +137,7 @@ export class EntitiesService {
           ...(input.title !== undefined ? { title: input.title } : {}),
           ...(input.tags !== undefined ? { tags: input.tags } : {}),
           ...(fields !== undefined ? { fields } : {}),
+          ...(searchVector !== undefined ? { searchVector } : {}),
           updatedAt: new Date(),
         })
         .where(eq(entities.id, existing.id))

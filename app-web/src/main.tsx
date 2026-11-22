@@ -18,6 +18,7 @@ import { CampaignViewPage } from "./pages/CampaignViewPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { HomePage } from "./pages/HomePage";
 import { AdminPage } from "./pages/AdminPage";
+import { SearchPage } from "./pages/SearchPage";
 import { AccountPage } from "./pages/AccountPage";
 import {
   ChapterRecordPage,
@@ -100,6 +101,16 @@ const calendarRoute = createRoute({
   path: "/calendar",
   component: CalendarPage,
 });
+const searchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/search",
+  component: SearchPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+    type: typeof search.type === "string" ? search.type : undefined,
+    tag: typeof search.tag === "string" ? search.tag : undefined,
+  }),
+});
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
@@ -134,6 +145,7 @@ const router = createRouter({
     chapterRoute,
     sceneRoute,
     calendarRoute,
+    searchRoute,
     homeRoute,
     adminRoute,
     accountRoute,

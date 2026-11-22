@@ -2,20 +2,20 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 
 ## 1. Database and shared foundation
 
-- [ ] 1.1 Drizzle migration (round 1): `CREATE EXTENSION IF NOT EXISTS unaccent`, create the `simple_unaccent` text-search configuration, add `entities.search_vector tsvector` with GIN index — verify with a migration test on a fresh database
-- [ ] 1.2 Shared text-field extraction helper in `app/src/search/` (prose + short-text string values from `fields`, driven by the `packages/schemas` registry) and `buildSearchVector(record)` (weighted title A / fields B, `simple_unaccent` config) with unit tests — accent folding covered (`ecole` → `École`)
-- [ ] 1.3 Backfill `search_vector` for existing records in the round-1 migration through the shared helper — verify by running the migration on a seeded database and asserting vectors match freshly computed ones
+- [x] 1.1 Drizzle migration (round 1): `CREATE EXTENSION IF NOT EXISTS unaccent`, create the `simple_unaccent` text-search configuration, add `entities.search_vector tsvector` with GIN index — verify with a migration test on a fresh database
+- [x] 1.2 Shared text-field extraction helper in `app/src/search/` (prose + short-text string values from `fields`, driven by the `packages/schemas` registry) and `buildSearchVector(record)` (weighted title A / fields B, `simple_unaccent` config) with unit tests — accent folding covered (`ecole` → `École`)
+- [x] 1.3 Backfill `search_vector` for existing records in the round-1 migration through the shared helper — verify by running the migration on a seeded database and asserting vectors match freshly computed ones
 
 ## 2. Full-text search backend
 
-- [ ] 2.1 Search service: query path (`search_vector @@ websearch_to_tsquery` OR title ILIKE), type and tag filters, `ts_rank` ordering with ILIKE-only matches appended, `ts_headline` snippets with explicit delimiters — unit tests over the acceptance scenarios (accent-insensitive, field-content match, non-text not matched, ranked results, filters, empty result)
-- [ ] 2.2 REST endpoint `GET /api/search?q=&type=&tag=` with auth guard, stable response shape (slug, title, type, perimeter, tags, snippet) — controller tests for auth, filters and empty-query behavior
-- [ ] 2.3 Wire vector maintenance into the entities service create/update paths (same transaction, helper reuse) and verify with service tests: fresh saves are searchable, removed text no longer matches
+- [x] 2.1 Search service: query path (`search_vector @@ websearch_to_tsquery` OR title ILIKE), type and tag filters, `ts_rank` ordering with ILIKE-only matches appended, `ts_headline` snippets with explicit delimiters — unit tests over the acceptance scenarios (accent-insensitive, field-content match, non-text not matched, ranked results, filters, empty result)
+- [x] 2.2 REST endpoint `GET /api/search?q=&type=&tag=` with auth guard, stable response shape (slug, title, type, perimeter, tags, snippet) — controller tests for auth, filters and empty-query behavior
+- [x] 2.3 Wire vector maintenance into the entities service create/update paths (same transaction, helper reuse) and verify with service tests: fresh saves are searchable, removed text no longer matches
 
 ## 3. Tags backend
 
 - [ ] 3.1 Tag normalization in the entities service (trim, lowercase, collapse internal whitespace, drop empties, dedupe) with unit tests covering the `Forêt`/`forêt` dedup case
-- [ ] 3.2 Tag inventory endpoint `GET /api/tags` (distinct tags with record counts, alphabetical, authenticated for all DM accounts — feeds filters, completions and the admin Tags tab) — controller test asserting counts and ordering
+- [x] 3.2 Tag inventory endpoint `GET /api/tags` (distinct tags with record counts, alphabetical, authenticated for all DM accounts — feeds filters, completions and the admin Tags tab) — controller test asserting counts and ordering
 - [ ] 3.3 Admin tag management endpoints: rename (instance-wide rewrite with dedup pass) and merge (absorb into a target tag, dedup, one transaction, touched-record count reported) — service tests for rename propagation, the both-tags-present dedup case and merge; controller tests for admin gating
 
 ## 4. Named sources and non-editability backend
@@ -54,9 +54,9 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 
 ## 9. Search UI
 
-- [ ] 9.1 Header search entry in `RootLayout` (i18n labels fr/en) leading to `/search` with the query field focused — component test for entry visibility and navigation
-- [ ] 9.2 Search results page: results with category label, tags and snippet highlighting via React node splitting (no `dangerouslySetInnerHTML`), type and tag filters wired to the endpoint, navigation to record pages — component tests for rendering, filtering and navigation; empty-query and no-result states
-- [ ] 9.3 E2E acceptance: save a record containing `École` in a prose field, search `ecole`, assert the record appears — automated where the e2e harness allows, manual checklist otherwise
+- [x] 9.1 Header search entry in `RootLayout` (i18n labels fr/en) leading to `/search` with the query field focused — component test for entry visibility and navigation
+- [x] 9.2 Search results page: results with category label, tags and snippet highlighting via React node splitting (no `dangerouslySetInnerHTML`), type and tag filters wired to the endpoint, navigation to record pages — component tests for rendering, filtering and navigation; empty-query and no-result states
+- [x] 9.3 E2E acceptance: save a record containing `École` in a prose field, search `ecole`, assert the record appears — automated where the e2e harness allows, manual checklist otherwise
 
 ## 10. Tags UI
 
