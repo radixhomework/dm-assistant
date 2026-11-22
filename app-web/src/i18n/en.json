@@ -510,6 +510,7 @@
     "allTypes": "All categories",
     "allTags": "All tags",
     "resultsCount_one": "{{count}} result",
-    "resultsCount_other": "{{count}} results"
+    "resultsCount_other": "{{count}} results",
+    "error": "The search failed."
   }
 }

@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchSearch, type SearchHit } from "../api/search.js";
-import { fetchTags } from "../api/search.js";
+import { fetchSearch, fetchTags, type SearchHit } from "../api/search.js";
 import { categoryLabelKey } from "../categories.js";
 import { useRecordRoute } from "../urls.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -20,32 +19,82 @@ function useDebouncedValue<T>(value: T, delay = 250): T {
 
 /**
  * The ts_headline delimiters (⟦ ⟧ — chosen in the search service to be
- * absent from lore prose) split into plain text and highlighted spans:
- * the snippet is never rendered as HTML.
+ * absent from lore prose) split into plain text and highlighted
+ * fragments with stable keys (content + position): the snippet is never
+ * rendered as HTML.
  */
+type SnippetFragment = { id: string; text: string; highlighted: boolean };
+
+function snippetFragments(text: string): SnippetFragment[] {
+  const parts = text.split(/([⟦⟧])/);
+  const fragments: SnippetFragment[] = [];
+  let highlighted = false;
+  let position = 0;
+  for (const part of parts) {
+    if (part === "⟦") {
+      highlighted = true;
+      continue;
+    }
+    if (part === "⟧") {
+      highlighted = false;
+      continue;
+    }
+    if (part.length > 0) {
+      fragments.push({ id: `${position}:${part}`, text: part, highlighted });
+    }
+    position += 1;
+  }
+  return fragments;
+}
+
 function Snippet(props: { readonly text: string }) {
-  const parts = props.text.split(/(⟦|⟧)/);
-  let highlight = false;
   return (
     <>
-      {parts.map((part, index) => {
-        if (part === "⟦") {
-          highlight = true;
-          return null;
-        }
-        if (part === "⟧") {
-          highlight = false;
-          return null;
-        }
-        return highlight ? (
-          <mark key={index} className="rounded-sm bg-accent/30 px-0.5 text-ink">
-            {part}
+      {snippetFragments(props.text).map((fragment) =>
+        fragment.highlighted ? (
+          <mark
+            key={fragment.id}
+            className="rounded-sm bg-accent/30 px-0.5 text-ink"
+          >
+            {fragment.text}
           </mark>
         ) : (
-          <span key={index}>{part}</span>
-        );
-      })}
+          <span key={fragment.id}>{fragment.text}</span>
+        ),
+      )}
     </>
+  );
+}
+
+/** The unresolved-route title states, split out of the row ternary
+ * (Sonar S3358). */
+function UnresolvedTitle(props: {
+  readonly title: string;
+  readonly isError: boolean;
+  readonly isFetching: boolean;
+  readonly refetch: () => Promise<unknown>;
+}) {
+  const { t } = useTranslation();
+  if (props.isError && !props.isFetching) {
+    return (
+      <span className="font-display text-xl font-semibold text-ink">
+        {props.title}{" "}
+        <output>({t("common.error")})</output>{" "}
+        <button
+          type="button"
+          onClick={() => void props.refetch()}
+          aria-label={t("record.retryLink", { title: props.title })}
+          className="text-accent underline"
+        >
+          {t("common.retry")}
+        </button>
+      </span>
+    );
+  }
+  return (
+    <span className="font-display text-xl font-semibold text-ink">
+      {props.title} <output>({t("common.loading")})</output>
+    </span>
   );
 }
 
@@ -69,25 +118,12 @@ function SearchResultRow(props: { readonly hit: SearchHit }) {
             {props.hit.title}
           </Link>
         ) : (
-          <span className="font-display text-xl font-semibold text-ink">
-            {props.hit.title}
-            {isError && !isFetching ? (
-              <>
-                {" "}
-                <span role="status">({t("common.error")})</span>{" "}
-                <button
-                  type="button"
-                  onClick={() => void refetch()}
-                  aria-label={t("record.retryLink", { title: props.hit.title })}
-                  className="text-accent underline"
-                >
-                  {t("common.retry")}
-                </button>
-              </>
-            ) : (
-              <span role="status">({t("common.loading")})</span>
-            )}
-          </span>
+          <UnresolvedTitle
+            title={props.hit.title}
+            isError={isError}
+            isFetching={isFetching}
+            refetch={refetch}
+          />
         )}
         <span className="text-sm text-muted">
           {t(categoryLabelKey(props.hit.type))}
@@ -123,6 +159,13 @@ export function SearchPage() {
   // source of truth) and the query key.
   const [draft, setDraft] = useState(q);
   const debouncedDraft = useDebouncedValue(draft);
+  // The route is the source of truth: an external q change (a pasted
+  // link, a back-navigation) re-seeds the draft instead of being
+  // overwritten by the stale debounced value (CodeRabbit round-1
+  // review).
+  useEffect(() => {
+    setDraft(q);
+  }, [q]);
   useEffect(() => {
     if (debouncedDraft !== q) {
       void navigate({
@@ -135,6 +178,12 @@ export function SearchPage() {
       });
     }
   }, [debouncedDraft, q, navigate]);
+  // The page's whole purpose is search: focus the field on arrival
+  // through a ref — the autoFocus attribute is flagged by S9379.
+  const queryInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    queryInputRef.current?.focus();
+  }, []);
 
   const results = useQuery({
     queryKey: ["search", q, params.type, params.tag],
@@ -168,7 +217,7 @@ export function SearchPage() {
       <div className="mt-6 flex flex-col gap-3">
         <input
           type="search"
-          autoFocus
+          ref={queryInputRef}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t("search.placeholder")}
@@ -184,11 +233,13 @@ export function SearchPage() {
               className="rounded-md border border-border bg-surface px-2 py-1 text-ink"
             >
               <option value="">{t("search.allTypes")}</option>
-              {[...worldTemplates, ...catalogTemplates].map((template) => (
-                <option key={template} value={template}>
-                  {t(categoryLabelKey(template))}
-                </option>
-              ))}
+              {[...worldTemplates, ...catalogTemplates, "campaign", "chapter", "scene"].map(
+                (template) => (
+                  <option key={template} value={template}>
+                    {t(categoryLabelKey(template))}
+                  </option>
+                ),
+              )}
             </select>
           </label>
           <label className="flex items-center gap-2 text-sm text-muted">
@@ -209,24 +260,50 @@ export function SearchPage() {
         </div>
       </div>
 
-      {q.trim().length === 0 ? (
-        <p className="mt-6 text-muted">{t("search.hint")}</p>
-      ) : results.isPending ? (
-        <p className="mt-6 text-muted">{t("common.loading")}</p>
-      ) : hits.length === 0 ? (
-        <p className="mt-6 text-muted">{t("search.noResults", { query: q })}</p>
-      ) : (
-        <>
-          <p className="mt-6 text-sm text-muted">
-            {t("search.resultsCount", { count: hits.length })}
-          </p>
-          <ul className="mt-2">
-            {hits.map((hit) => (
-              <SearchResultRow key={hit.id} hit={hit} />
-            ))}
-          </ul>
-        </>
-      )}
+      {(() => {
+        // A flat branch chain: no nested ternaries (Sonar S3358), and
+        // the failed-search state stays distinct from no-results
+        // (CodeRabbit round-1 review).
+        if (q.trim().length === 0) {
+          return <p className="mt-6 text-muted">{t("search.hint")}</p>;
+        }
+        if (results.isPending) {
+          return <p className="mt-6 text-muted">{t("common.loading")}</p>;
+        }
+        if (results.isError) {
+          return (
+            <p className="mt-6 text-muted">
+              {t("search.error")}{" "}
+              <button
+                type="button"
+                onClick={() => void results.refetch()}
+                className="text-accent underline"
+              >
+                {t("common.retry")}
+              </button>
+            </p>
+          );
+        }
+        if (hits.length === 0) {
+          return (
+            <p className="mt-6 text-muted">
+              {t("search.noResults", { query: q })}
+            </p>
+          );
+        }
+        return (
+          <>
+            <p className="mt-6 text-sm text-muted">
+              {t("search.resultsCount", { count: hits.length })}
+            </p>
+            <ul className="mt-2">
+              {hits.map((hit) => (
+                <SearchResultRow key={hit.id} hit={hit} />
+              ))}
+            </ul>
+          </>
+        );
+      })()}
     </div>
   );
 }

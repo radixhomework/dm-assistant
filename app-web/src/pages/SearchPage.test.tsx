@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "../testing/render.js";
 import { SearchPage } from "./SearchPage";
@@ -75,6 +76,35 @@ describe("SearchPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/No record matches/)).toBeDefined();
     });
+  });
+
+  it("renders the failed-search state with a retry", async () => {
+    h.search = { q: "ecole" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | RequestInfo) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          return {
+            ok: true,
+            json: async () => ({ id: "1", email: "a@b.c", displayName: "DM", role: "admin" }),
+          };
+        }
+        if (path === "/api/tags") {
+          return { ok: true, json: async () => [] };
+        }
+        return { ok: false, status: 500, json: async () => ({ message: "boom" }) };
+      }),
+    );
+    // No retry backoff: the error state must surface immediately.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    renderWithProviders(<SearchPage />, { client });
+    await waitFor(() => {
+      expect(screen.getByText("The search failed.")).toBeDefined();
+    });
+    expect(screen.getByRole("button", { name: "Retry" })).toBeDefined();
   });
 
   it("renders filters and updates the route through them", async () => {
