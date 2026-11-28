@@ -166,7 +166,7 @@
     "passwordChanged": "Password changed.",
     "username": "Username",
     "attribution": "Attribution",
-    "attributionHint": "Game content credits (SRD 5.2, CC-BY-4.0) and the sources used on this instance.",
+    "attributionHint": "Game content credits (SRD 5.2 and 5.1, CC-BY-4.0) and the sources used on this instance.",
     "attributionLink": "Open the attribution page"
   },
   "admin": {
@@ -274,7 +274,8 @@
         "invalid": "Invalid element",
         "no_text_for_document": "No text for the chosen document (another source's row)"
       },
-      "sourceAttributionHint": "A credit line shown under the source name on the attribution page — for example: Imported from api.open5e.com."
+      "sourceAttributionHint": "A credit line shown under the source name on the attribution page — for example: Imported from api.open5e.com.",
+      "documentHint": "srd-2024 reads the SRD 5.2 text (2024 rules); srd-2014 reads the SRD 5.1 text (2014 rules). Both are CC-BY-4.0."
     },
     "externalRefs": {
       "title": "External references",
@@ -606,8 +607,8 @@
   },
   "attribution": {
     "title": "Attribution",
-    "wotcTitle": "Wizards of the Coast — SRD 5.2",
-    "statement": "This instance may reference game content from the System Reference Document 5.2 (“SRD 5.2”) by Wizards of the Coast, available under the Creative Commons Attribution 4.0 International licence (CC-BY-4.0). Wizards of the Coast is not affiliated with this application and does not endorse it. The named external sources below carry the provenance of imported content, with their attribution notes when provided.",
+    "wotcTitle": "Wizards of the Coast — SRD 5.2 and 5.1",
+    "statement": "This instance may reference game content from the System Reference Document 5.2 (“SRD 5.2”) and the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast, both available under the Creative Commons Attribution 4.0 International licence (CC-BY-4.0). Wizards of the Coast is not affiliated with this application and does not endorse it. The named external sources below carry the provenance of imported content, with their attribution notes when provided.",
     "sourcesTitle": "External sources of this instance"
   }
 }

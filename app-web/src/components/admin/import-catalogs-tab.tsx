@@ -249,6 +249,7 @@ export function ImportCatalogsTab() {
               onChange={(event) => setDocument(event.target.value)}
               className={inputClass}
             />
+            <p className="text-xs text-muted">{t("admin.import.documentHint")}</p>
           </Field>
         </fieldset>
 

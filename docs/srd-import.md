@@ -62,6 +62,10 @@ Notes verified against the live API:
   with their reason.
 - A file upload (up to 10 MB) is the offline fallback: export the JSON
   you want and upload it; the flow is identical.
+- The **Document** field selects whose text is read: `srd-2024` for the
+  **SRD 5.2** (2024 rules) or `srd-2014` for the **SRD 5.1** (2014
+  rules) — both published by Wizards of the Coast under CC-BY-4.0, so
+  importing either is credited on the attribution page.
 
 ## 3. The mapping
 
@@ -73,7 +77,8 @@ Notes verified against the live API:
 | — | Pitch and Private description stay empty — DM-authored |
 
 The mapping never splits or rewrites the source prose (charter rule 1).
-The document defaults to `srd-2024` and is selectable in the UI.
+The document defaults to `srd-2024` and is selectable in the UI — set it
+to `srd-2014` to import SRD 5.1 content instead.
 
 ## 4. The flow (preview before import)
 

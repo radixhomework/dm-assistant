@@ -45,7 +45,7 @@ describe("AttributionPage (srd-catalog-import spec)", () => {
   it("credits Wizards of the Coast under the CC-BY-4.0 licence", async () => {
     renderWithProviders(<AttributionPage />);
     await vi.waitFor(() =>
-      expect(screen.getByText("Wizards of the Coast — SRD 5.2")).toBeDefined(),
+      expect(screen.getByText("Wizards of the Coast — SRD 5.2 and 5.1")).toBeDefined(),
     );
     expect(screen.getByText(/CC-BY-4\.0/)).toBeDefined();
   });

@@ -101,7 +101,7 @@ The import SHALL consume datasets following the Open5e object shape — at minim
 <!-- /coderabbit-ai-generated:v1 -->
 
 ### Requirement: Attribution credits page
-The application SHALL display an attribution page stating the fixed Wizards of the Coast SRD 5.2 CC-BY-4.0 credit and listing the instance's external sources with their attribution notes, reachable from the settings screen and from the external-source badges. The page labels SHALL come from the i18n catalogs (fr and en).
+The application SHALL display an attribution page stating the fixed Wizards of the Coast SRD 5.2 and SRD 5.1 CC-BY-4.0 credit and listing the instance's external sources with their attribution notes, reachable from the settings screen and from the external-source badges. The page labels SHALL come from the i18n catalogs (fr and en).
 
 #### Scenario: Attribution reachable from the settings screen
 - **WHEN** the DM opens the settings screen

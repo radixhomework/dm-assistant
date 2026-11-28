@@ -166,7 +166,7 @@
     "passwordChanged": "Mot de passe modifié.",
     "username": "Nom d'utilisateur",
     "attribution": "Attribution",
-    "attributionHint": "Crédits du contenu de jeu (SRD 5.2, CC-BY-4.0) et sources utilisées sur cette instance.",
+    "attributionHint": "Crédits du contenu de jeu (SRD 5.2 et 5.1, CC-BY-4.0) et sources utilisées sur cette instance.",
     "attributionLink": "Ouvrir la page d'attribution"
   },
   "admin": {
@@ -274,7 +274,8 @@
         "invalid": "Élément invalide",
         "no_text_for_document": "Aucun texte pour le document choisi (rangée d'une autre source)"
       },
-      "sourceAttributionHint": "Une ligne de crédit affichée sous le nom de la source sur la page d'attribution — par exemple : Importé depuis api.open5e.com."
+      "sourceAttributionHint": "Une ligne de crédit affichée sous le nom de la source sur la page d'attribution — par exemple : Importé depuis api.open5e.com.",
+      "documentHint": "srd-2024 lit le texte du SRD 5.2 (règles 2024) ; srd-2014 lit celui du SRD 5.1 (règles 2014). Les deux sont sous CC-BY-4.0."
     },
     "externalRefs": {
       "title": "Références externes",
@@ -606,8 +607,8 @@
   },
   "attribution": {
     "title": "Attribution",
-    "wotcTitle": "Wizards of the Coast — SRD 5.2",
-    "statement": "Cette instance peut référencer du contenu de jeu issu du System Reference Document 5.2 (« SRD 5.2 ») de Wizards of the Coast, disponible sous licence Creative Commons Attribution 4.0 International (CC-BY-4.0). Wizards of the Coast n'est affilié ni à cette application, ni ne l'approuve. Les sources externes nommées ci-dessous portent la provenance du contenu importé, avec leurs notes d'attribution lorsqu'elles existent.",
+    "wotcTitle": "Wizards of the Coast — SRD 5.2 et 5.1",
+    "statement": "Cette instance peut référencer du contenu de jeu issu du System Reference Document 5.2 (« SRD 5.2 ») et du System Reference Document 5.1 (« SRD 5.1 ») de Wizards of the Coast, tous deux disponibles sous licence Creative Commons Attribution 4.0 International (CC-BY-4.0). Wizards of the Coast n'est affilié ni à cette application, ni ne l'approuve. Les sources externes nommées ci-dessous portent la provenance du contenu importé, avec leurs notes d'attribution lorsqu'elles existent.",
     "sourcesTitle": "Sources externes de cette instance"
   }
 }
