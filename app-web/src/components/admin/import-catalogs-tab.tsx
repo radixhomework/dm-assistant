@@ -4,13 +4,18 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "../../api/client.js";
 import {
   confirmImport,
+  confirmPurge,
   createSource,
+  fetchPurgePreview,
+  fetchSources,
   previewImport,
   type ImportPreviewItem,
+  type PurgeItem,
+  type SourceView,
 } from "../../api/sources.js";
+import { Dialog } from "../dialog.js";
 import { Field, inputClass } from "../form.js";
 import { catalogTemplates, type CatalogTemplate } from "../../types.js";
-import { fetchSources, type SourceView } from "../../api/sources.js";
 
 /**
  * The Import catalogs tab (srd-catalog-import capability): an explicit
@@ -37,6 +42,14 @@ export function ImportCatalogsTab() {
   const [sourceName, setSourceName] = useState("");
   const [sourceAttribution, setSourceAttribution] = useState("");
   const [creatingSource, setCreatingSource] = useState(false);
+  // The source-scoped purge: a separate selection from the import's —
+  // disabled sources participate (a retired import's data still leaves).
+  const [purgeCatalog, setPurgeCatalog] = useState<CatalogTemplate>("conditions");
+  const [purgeSourceId, setPurgeSourceId] = useState("");
+  const [purgeItems, setPurgeItems] = useState<PurgeItem[] | null>(null);
+  const [purgeAccepted, setPurgeAccepted] = useState<Set<string>>(new Set());
+  const [purgeReport, setPurgeReport] = useState<string | null>(null);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
 
   const sources = useQuery({
     queryKey: ["sources"],
@@ -45,6 +58,9 @@ export function ImportCatalogsTab() {
 
   const selectable = (sources.data ?? []).filter(
     (source: SourceView) => !source.internal && !source.disabled,
+  );
+  const purgeable = (sources.data ?? []).filter(
+    (source: SourceView) => !source.internal,
   );
   const skippedCount = (items ?? []).filter((item) => item.status === "skipped").length;
 
@@ -133,6 +149,63 @@ export function ImportCatalogsTab() {
     }
   }
 
+  async function onPurgeList(): Promise<void> {
+    setPurgeError(null);
+    setPurgeReport(null);
+    try {
+      const items = await fetchPurgePreview(purgeCatalog, purgeSourceId);
+      setPurgeItems(items);
+      setPurgeAccepted(new Set(items.map((item) => item.slug)));
+    } catch (listError) {
+      const code = listError instanceof ApiError ? listError.code : undefined;
+      setPurgeError(translateError(code, listError instanceof Error ? listError.message : String(listError)));
+    }
+  }
+
+  async function onPurgeConfirm(): Promise<void> {
+    if (purgeAccepted.size === 0) return;
+    if (!confirm(t("admin.import.purgeDeleteConfirm", {
+      count: purgeAccepted.size,
+      source: purgeable.find((source) => source.id === purgeSourceId)?.name ?? "",
+    }))) {
+      return;
+    }
+    setPurgeError(null);
+    try {
+      const result = await confirmPurge(purgeCatalog, purgeSourceId, [...purgeAccepted]);
+      const blocked = result.blocked.length > 0
+        ? " " + t("admin.import.purgeBlocked", { count: result.blocked.length })
+        : "";
+      setPurgeReport(t("admin.import.purgeReport", { deleted: result.deleted }) + blocked);
+      setPurgeItems(null);
+      setPurgeAccepted(new Set());
+      await queryClient.invalidateQueries({ queryKey: ["records-all"] });
+    } catch (purgeConfirmError) {
+      const code = purgeConfirmError instanceof ApiError ? purgeConfirmError.code : undefined;
+      setPurgeError(translateError(code, purgeConfirmError instanceof Error ? purgeConfirmError.message : String(purgeConfirmError)));
+    }
+  }
+
+  function purgeToggle(slug: string): void {
+    setPurgeAccepted((current) => {
+      const next = new Set(current);
+      if (next.has(slug)) {
+        next.delete(slug);
+      } else {
+        next.add(slug);
+      }
+      return next;
+    });
+  }
+
+  function purgeSelectAll(): void {
+    setPurgeAccepted((current) => {
+      const all = (purgeItems ?? []).map((item) => item.slug);
+      const everythingSelected = all.every((slug) => current.has(slug));
+      return everythingSelected ? new Set<string>() : new Set(all);
+    });
+  }
+
   function toggle(slug: string): void {
     setAccepted((current) => {
       const next = new Set(current);
@@ -156,7 +229,8 @@ export function ImportCatalogsTab() {
   }
 
   return (
-    <section>
+    <>
+      <section>
       <h2 className="font-display text-2xl font-semibold text-ink">
         {t("admin.import.title")}
       </h2>
@@ -226,13 +300,21 @@ export function ImportCatalogsTab() {
             </label>
           </div>
           {origin === "file" ? (
-            <input
-              type="file"
-              accept="application/json,.json"
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              className="text-sm"
-              aria-label={t("admin.import.originFile")}
-            />
+            <div className="flex items-center gap-3">
+              <label className="inline-flex cursor-pointer items-center rounded-md border border-border px-3 py-1.5 text-sm text-ink transition-colors duration-200 hover:bg-background focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  className="sr-only"
+                  aria-label={t("admin.import.chooseFile")}
+                />
+                {file ? t("admin.import.chooseAnotherFile") : t("admin.import.chooseFile")}
+              </label>
+              <span className="text-sm text-muted">
+                {file?.name ?? t("admin.import.noFile")}
+              </span>
+            </div>
           ) : (
             <input
               type="url"
@@ -243,12 +325,15 @@ export function ImportCatalogsTab() {
               aria-label={t("admin.import.originUrl")}
             />
           )}
-          <Field label={t("admin.import.document")}>
-            <input
+          <Field label={t("admin.import.srdVersion")}>
+            <select
               value={document}
               onChange={(event) => setDocument(event.target.value)}
               className={inputClass}
-            />
+            >
+              <option value="srd-2024">{t("admin.import.srd2024")}</option>
+              <option value="srd-2014">{t("admin.import.srd2014")}</option>
+            </select>
             <p className="text-xs text-muted">{t("admin.import.documentHint")}</p>
           </Field>
         </fieldset>
@@ -273,27 +358,36 @@ export function ImportCatalogsTab() {
       </form>
 
       {creatingSource && (
-        <form onSubmit={onCreateSource} className="mt-4 flex max-w-md flex-col gap-3 rounded-md border border-border bg-surface p-3">
-          <Field label={t("admin.import.sourceName")}>
-            <input
-              value={sourceName}
-              onChange={(event) => setSourceName(event.target.value)}
-              required
-              className={inputClass}
-            />
-          </Field>
-          <Field label={t("admin.import.sourceAttribution")}>
-            <input
-              value={sourceAttribution}
-              onChange={(event) => setSourceAttribution(event.target.value)}
-              className={inputClass}
-            />
-            <p className="text-xs text-muted">{t("admin.import.sourceAttributionHint")}</p>
-          </Field>
-          <button type="submit" className="self-start rounded-md bg-primary px-3 py-1.5 text-sm text-background hover:bg-accent">
-            {t("admin.import.sourceCreate")}
-          </button>
-        </form>
+        <Dialog
+          title={t("admin.import.newSource")}
+          onClose={() => {
+            setCreatingSource(false);
+            setSourceName("");
+            setSourceAttribution("");
+          }}
+        >
+          <form onSubmit={onCreateSource} className="flex flex-col gap-3">
+            <Field label={t("admin.import.sourceName")}>
+              <input
+                value={sourceName}
+                onChange={(event) => setSourceName(event.target.value)}
+                required
+                className={inputClass}
+              />
+            </Field>
+            <Field label={t("admin.import.sourceAttribution")}>
+              <input
+                value={sourceAttribution}
+                onChange={(event) => setSourceAttribution(event.target.value)}
+                className={inputClass}
+              />
+              <p className="text-xs text-muted">{t("admin.import.sourceAttributionHint")}</p>
+            </Field>
+            <button type="submit" className="self-start rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent">
+              {t("admin.import.sourceCreate")}
+            </button>
+          </form>
+        </Dialog>
       )}
 
       {items !== null && (
@@ -368,6 +462,104 @@ export function ImportCatalogsTab() {
           </button>
         </div>
       )}
-    </section>
+      </section>
+
+      <section className="mt-10 border-t border-border pt-6">
+        <h2 className="font-display text-2xl font-semibold text-ink">
+          {t("admin.import.purgeTitle")}
+        </h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted">{t("admin.import.purgeHint")}</p>
+        {purgeError && <p className="mt-3 text-sm text-radish">{purgeError}</p>}
+        {purgeReport && <p className="mt-3 text-sm text-primary">{purgeReport}</p>}
+
+        <div className="mt-4 flex max-w-3xl flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label={t("admin.import.purgeCatalog")}>
+              <select
+                value={purgeCatalog}
+                onChange={(event) => setPurgeCatalog(event.target.value as CatalogTemplate)}
+                className={inputClass}
+              >
+                {catalogTemplates.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`lore.categories.${type}`)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={t("admin.import.purgeSource")}>
+              <select
+                value={purgeSourceId}
+                onChange={(event) => setPurgeSourceId(event.target.value)}
+                className={inputClass}
+              >
+                <option value="">{t("admin.import.chooseSource")}</option>
+                {purgeable.map((source) => (
+                  <option key={source.id} value={source.id}>
+                    {source.name}{source.disabled ? ` (${t("admin.import.purgeDisabled")})` : ""}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <button
+            type="button"
+            disabled={running || purgeSourceId === ""}
+            onClick={() => void onPurgeList()}
+            className="self-start rounded-md border border-border px-4 py-2 text-sm text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t("admin.import.purgeList")}
+          </button>
+
+          {purgeItems !== null && (
+            purgeItems.length === 0 ? (
+              <p className="text-sm text-muted">{t("admin.import.purgeEmpty")}</p>
+            ) : (
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-display text-xl text-ink">{t("admin.import.purgeListTitle")}</h3>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={(purgeItems ?? []).every((item) => purgeAccepted.has(item.slug))}
+                      onChange={purgeSelectAll}
+                      aria-label={t("admin.import.selectAll")}
+                    />
+                    {t("admin.import.selectAll")}
+                  </label>
+                </div>
+                <ul className="mt-3 flex flex-col gap-1">
+                  {purgeItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-2 text-sm"
+                    >
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={purgeAccepted.has(item.slug)}
+                          onChange={() => purgeToggle(item.slug)}
+                          aria-label={t("admin.import.purgeAcceptOf", { title: item.title })}
+                        />
+                        <span className="text-ink">{item.title}</span>
+                        <span className="text-muted">· {item.slug}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  disabled={running || purgeAccepted.size === 0}
+                  onClick={() => void onPurgeConfirm()}
+                  className="mt-3 rounded-md bg-primary px-4 py-2 text-sm text-background hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {t("admin.import.purgeDelete")}
+                </button>
+              </div>
+            )
+          )}
+        </div>
+      </section>
+    </>
   );
 }

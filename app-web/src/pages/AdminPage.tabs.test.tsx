@@ -98,10 +98,11 @@ describe("AdminPage tabs (accounts-and-admin spec)", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Tags" }));
     await vi.waitFor(() => expect(screen.getByText("forêt")).toBeDefined());
     expect(screen.getByText("Greenwood")).toBeDefined();
-    // …and the import tab opens its form.
+    // …and the import tab opens its form (both sections carry the
+    // Target catalog label).
     fireEvent.click(screen.getByRole("tab", { name: "Import catalogs" }));
     await vi.waitFor(() =>
-      expect(screen.getByText("Target catalog")).toBeDefined(),
+      expect(screen.getAllByText("Target catalog").length).toBeGreaterThanOrEqual(2),
     );
   });
 
