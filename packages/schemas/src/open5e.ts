@@ -34,13 +34,38 @@ export const open5eObjectSchema = z
   .refine(
     (object) => object.key !== undefined || object.slug !== undefined,
     "an Open5e object carries a stable slug key (key or slug)",
-  )
-  .refine(
-    (object) =>
-      (object.descriptions !== undefined && object.descriptions.length > 0) ||
-      (object.desc !== undefined && object.desc.trim().length > 0),
-    "an Open5e object carries its text (descriptions[] or desc)",
   );
+
+/**
+ * Whether a row carrying NO text for the chosen document provably
+ * belongs to another document: the row-level document relationship
+ * (classes are document-scoped rows) or document-tagged description
+ * entries. Such rows stay out when their document does not match —
+ * importing them would mislabel third-party content under the
+ * importing source. Rows carrying no text at all (SRD base classes,
+ * documented through their features) pass: they import as
+ * description-less records.
+ */
+export function belongsToOtherDocument(
+  object: z.infer<typeof open5eObjectSchema>,
+  document: string,
+): boolean {
+  const rowDocument: unknown = object.document;
+  const rowKey =
+    typeof rowDocument === "string"
+      ? rowDocument
+      : typeof rowDocument === "object" &&
+          rowDocument !== null &&
+          typeof (rowDocument as { key?: unknown }).key === "string"
+        ? (rowDocument as { key: string }).key
+        : undefined;
+  if (rowKey !== undefined) {
+    return rowKey !== document;
+  }
+  return (object.descriptions ?? []).some(
+    (entry) => entry.document !== undefined,
+  );
+}
 
 /** The Open5e paginated envelope; the import follows `next` server-side
  * with a page cap (the bare-array payload bypasses it). */

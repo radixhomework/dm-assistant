@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import {
+  belongsToOtherDocument,
   convertSrdUnits,
   mapOpen5eObject,
   open5eObjectSchema,
@@ -208,16 +209,16 @@ export class ImportService {
         mapped: null,
       };
     }
-    const mapped = mapOpen5eObject(
-      parsed.data,
-      origin.document ?? "srd-2024",
-    );
-    // The dataset format requires the text: an element carrying no
-    // description for the chosen document (another source's rows in an
-    // unfiltered Open5e list) is skipped with its reason — importing it
-    // would fill the template's only meaningful field with nothing and
-    // mislabel third-party content under the importing source.
-    if (mapped.publicDescription === null) {
+    const chosenDocument = origin.document ?? "srd-2024";
+    const mapped = mapOpen5eObject(parsed.data, chosenDocument);
+    // A row with no text for the chosen document skips only when it
+    // provably belongs to another document (mislabel guard). Rows
+    // carrying no text at all — the SRD base classes, documented
+    // through their features — import as description-less records.
+    if (
+      mapped.publicDescription === null &&
+      belongsToOtherDocument(parsed.data, chosenDocument)
+    ) {
       return {
         item: {
           slug: mapped.slug,

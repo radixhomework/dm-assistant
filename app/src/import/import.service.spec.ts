@@ -49,13 +49,13 @@ describe("ImportService (database)", () => {
   it("flags invalid elements with their reason, never blocking the run", async () => {
     const preview = await importService.preview(origin(), [
       element("blinded", "Blinded", "* You can't see."),
-      { key: "broken", name: "Broken" }, // no text at all
+      { key: "broken" }, // no name at all
       "not-an-object",
     ]);
     expect(preview.items[0].status).toBe("new");
     expect(preview.items[1]).toMatchObject({
       slug: "broken",
-      title: "Broken",
+      title: "",
       status: "skipped",
       reason: "invalid_element",
     });
@@ -114,10 +114,10 @@ describe("ImportService (database)", () => {
     });
   });
 
-  it("skips elements carrying no text for the chosen document", async () => {
-    // An unfiltered Open5e list mixes sources: another document's rows
-    // carry no SRD 2024 text — importing them would mislabel third-party
-    // content under the importing source.
+  it("skips rows that provably belong to another document", async () => {
+    // An unfiltered Open5e list mixes sources: rows carrying text only
+    // for another document skip — importing them would mislabel
+    // third-party content under the importing source.
     const preview = await importService.preview(origin(), [
       { key: "a5e-bloodied", name: "Bloodied", descriptions: [{ desc: "EN Publishing text.", document: "a5e-ag" }] },
     ]);
@@ -125,6 +125,24 @@ describe("ImportService (database)", () => {
       status: "skipped",
       reason: "no_text_for_document",
     });
+  });
+
+  it("imports textless rows of the chosen document as shells", async () => {
+    // SRD base classes carry no prose (documented through their
+    // features): they import as description-less records. A row of
+    // another document stays out.
+    const report = await importService.confirm(origin(), [
+      { key: "srd-2024_fighter", name: "Fighter", desc: "", document: { key: "srd-2024" } },
+      { key: "a5e_gambling-general", name: "Gambling General", desc: "", document: { key: "a5e-ag" } },
+    ], []);
+    expect(report).toMatchObject({ created: 1 });
+    expect(report.skipped).toEqual([
+      { slug: "a5e_gambling-general", title: "Gambling General", reason: "no_text_for_document" },
+    ]);
+    const record = await testDb.execute<{ fields: Record<string, string> }>(
+      sql`SELECT fields FROM entities WHERE slug = 'srd-2024_fighter'`,
+    );
+    expect(record[0].fields).toEqual({});
   });
 
   it("flags duplicate slugs inside one dataset", async () => {

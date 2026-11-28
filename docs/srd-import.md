@@ -57,9 +57,15 @@ Notes verified against the live API:
 - **Conditions, damage types and languages live under the `core`
   document**, with one row per concept and per-document `descriptions[]`
   entries — do not filter them; the application picks the description
-  entry of the chosen document at mapping time. Rows of other sources
-  (e.g. `a5e-ag_*` conditions) carry no SRD 2024 text and are skipped
-  with their reason.
+  entry of the chosen document at mapping time. Rows carrying text only
+  for other documents (e.g. `a5e-ag_*` conditions) are skipped with
+  their reason.
+- **Base classes carry no prose at all** — the SRD documents a class
+  through its features, which Open5e exposes as separate resources the
+  v1 import does not aggregate. Such rows import as **description-less
+  records** (title + slug + provenance badge); rows of *other*
+  documents (the a5e/Kobold Press classes) still skip — the row's
+  document relationship decides.
 - A file upload (up to 10 MB) is the offline fallback: export the JSON
   you want and upload it; the flow is identical.
 - The **Document** field selects whose text is read: `srd-2024` for the

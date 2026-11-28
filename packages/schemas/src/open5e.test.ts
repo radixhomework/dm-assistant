@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  belongsToOtherDocument,
   mapOpen5eObject,
   open5eObjectSchema,
   open5eEnvelopeSchema,
@@ -59,12 +60,16 @@ describe("open5eObjectSchema", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("rejects an object without any text", () => {
+  it("accepts a textless object — SRD base classes carry no prose", () => {
     const parsed = open5eObjectSchema.safeParse({
-      key: "blinded",
-      name: "Blinded",
+      key: "srd-2024_fighter",
+      name: "Fighter",
+      desc: "",
+      document: { key: "srd-2024" },
     });
-    expect(parsed.success).toBe(false);
+    expect(parsed.success).toBe(true);
+    const mapped = mapOpen5eObject(parsed.success ? parsed.data : undefined!);
+    expect(mapped.publicDescription).toBeNull();
   });
 
   it("rejects malformed elements (missing name, non-array descriptions)", () => {
@@ -114,6 +119,37 @@ describe("mapOpen5eObject", () => {
       }),
     );
     expect(mapped.publicDescription).toBeNull();
+  });
+
+  it("detects rows that provably belong to another document", () => {
+    // A row-level document relationship decides for textless rows:
+    // srd-2024_fighter stays in, a5e rows stay out.
+    expect(belongsToOtherDocument(
+      open5eObjectSchema.parse({ key: "x", name: "X", desc: "", document: { key: "srd-2024" } }),
+      "srd-2024",
+    )).toBe(false);
+    expect(belongsToOtherDocument(
+      open5eObjectSchema.parse({ key: "x", name: "X", desc: "", document: { key: "a5e-ag" } }),
+      "srd-2024",
+    )).toBe(true);
+    // A string-shaped relationship and tagged-only descriptions too.
+    expect(belongsToOtherDocument(
+      open5eObjectSchema.parse({ key: "x", name: "X", document: "a5e-ag" }),
+      "srd-2024",
+    )).toBe(true);
+    expect(belongsToOtherDocument(
+      open5eObjectSchema.parse({
+        key: "x",
+        name: "X",
+        descriptions: [{ desc: "t", document: "srd-2014" }],
+      }),
+      "srd-2024",
+    )).toBe(true);
+    // No evidence at all: a hand-made textless row imports.
+    expect(belongsToOtherDocument(
+      open5eObjectSchema.parse({ key: "x", name: "X" }),
+      "srd-2024",
+    )).toBe(false);
   });
 
   it("treats an untagged descriptions array as the dataset's document", () => {
