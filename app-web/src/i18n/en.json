@@ -516,5 +516,15 @@
     "resultsCount_one": "{{count}} result",
     "resultsCount_other": "{{count}} results",
     "error": "The search failed."
+  },
+  "errors": {
+    "fields_invalid": "Some field values are invalid — check the highlighted fields.",
+    "invalid_query": "Invalid query.",
+    "source_immutable": "The built-in Internal source cannot be modified.",
+    "source_name_taken": "A source already carries this name.",
+    "source_not_allowed": "The record provenance cannot be set from the form.",
+    "source_readonly": "This record comes from an import: its source data and tags are read-only, and it cannot be deleted.",
+    "import_invalid_payload": "The payload is not a valid dataset — no element could be validated.",
+    "import_url_refused": "This URL is refused: only public HTTPS endpoints are allowed."
   }
 }

@@ -22,15 +22,15 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 
 - [x] 4.1 Drizzle migration (round 3): create `catalog_sources` (seeded with the built-in Internal / Interne source) and add `entities.source_id` FK — verify with a migration test on a fresh database
 - [x] 4.2 Source registry service + endpoints: create/rename/disable external sources (admin only), built-in Internal source immutable and non-disableable, list for import selection and badges — controller tests for admin gating and the Internal invariants
-- [ ] 4.3 `source` binding in the entities service: catalog-type creation always binds the Internal source (client-supplied source refused), source immutable on update, entity responses carry the source (id, name, internal/external) — service tests for the default and the immutability
+- [x] 4.3 `source` binding in the entities service: catalog-type creation always binds the Internal source (client-supplied source refused), source immutable on update, entity responses carry the source (id, name, internal/external) — service tests for the default and the immutability
 <!-- coderabbit-ai-generated:v1 -->
 
 <!-- coderabbit-ai-generated-section:v1:6eb03d62f7cec70b9768ad2d6d066967bfa0f16c1be9ff3b4aedb9a69ee6e438 -->
 
-- [ ] 4.4 Source-data read-only guard in the service: source-derived field updates, per-record tag updates and deletion rejected for catalog records bound to an external source, DM-authored fields (Pitch, Private description) stay editable, stable error code, Internal records unaffected — service tests for each case
+- [x] 4.4 Source-data read-only guard in the service: source-derived field updates, per-record tag updates and deletion rejected for catalog records bound to an external source, DM-authored fields (Pitch, Private description) stay editable, stable error code, Internal records unaffected — service tests for each case
 
 <!-- /coderabbit-ai-generated:v1 -->
-- [ ] 4.5 Error codes added to the stable-codes list and translated in both i18n catalogs — verify the fr and en entries exist
+- [x] 4.5 Error codes added to the stable-codes list and translated in both i18n catalogs — verify the fr and en entries exist
 
 ## 5. Open5e import service and admin UI
 
