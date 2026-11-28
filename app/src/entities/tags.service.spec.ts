@@ -6,6 +6,7 @@ import {
   normalizeTags,
 } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 import { TagsService } from "./tags.service.js";
 
 describe("normalizeTags (pure)", () => {
@@ -32,6 +33,7 @@ describe("TagsService (database)", () => {
   const entitiesService = new EntitiesService(
     testDb,
     new RelationshipsService(testDb),
+    new CatalogSourcesService(testDb),
   );
   const tagsService = new TagsService(testDb);
 

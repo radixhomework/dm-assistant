@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EntitiesController } from "./entities.controller.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 import type { EntitiesService } from "./entities.service.js";
 
 function makeService(): vi.Mocked<EntitiesService> {
@@ -24,15 +25,23 @@ function makeRelationships(): vi.Mocked<RelationshipsService> {
   } as unknown as vi.Mocked<RelationshipsService>;
 }
 
+function makeSources(): vi.Mocked<CatalogSourcesService> {
+  return {
+    viewOf: vi.fn(async () => null),
+  } as unknown as vi.Mocked<CatalogSourcesService>;
+}
+
 describe("EntitiesController", () => {
   let service: vi.Mocked<EntitiesService>;
   let relationships: vi.Mocked<RelationshipsService>;
+  let sources: vi.Mocked<CatalogSourcesService>;
   let controller: EntitiesController;
 
   beforeEach(() => {
     service = makeService();
     relationships = makeRelationships();
-    controller = new EntitiesController(service, relationships);
+    sources = makeSources();
+    controller = new EntitiesController(service, relationships, sources);
   });
 
   it("lists records with filters", async () => {
@@ -91,6 +100,9 @@ describe("EntitiesController", () => {
     const result = await controller.getBySlug("north-realm");
     expect(result.tracking.status).toBe("played");
     expect(result.campaign).toEqual({ slug: "north-realm", title: "North" });
+    // Provenance rides the detail response (null source on a non-catalog
+    // record) — the sheet splits the badge and the edit surface on it.
+    expect(result.source).toBeNull();
   });
 
   it("attaches a parent (the hierarchy is immutable afterwards)", async () => {

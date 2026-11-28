@@ -7,6 +7,8 @@ import {
 } from "@nestjs/common";
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import {
+  catalogTypes,
+  dmAuthoredCatalogKeys,
   proseFieldKeys,
   templateSchemaOf,
   type CreateEntityInput,
@@ -17,6 +19,7 @@ import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { isUniqueViolation } from "../database/unique-violation.js";
 import { buildSearchVector, extractSearchableText } from "../search/search-index.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 
 /** The transaction handle a drizzle transaction callback receives. */
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -38,6 +41,7 @@ export function normalizeTags(tags: string[] | undefined | null): string[] {
   return normalized;
 }
 import { entities, mentions, relationships } from "../database/schema.js";
+import { catalogSources } from "../database/schema.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
 export type EntityRow = typeof entities.$inferSelect;
@@ -64,6 +68,7 @@ export class EntitiesService {
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly relationships: RelationshipsService,
+    private readonly sources: CatalogSourcesService,
   ) {}
 
   async create(input: CreateEntityInput, createdBy?: string): Promise<EntityRow> {
@@ -73,6 +78,13 @@ export class EntitiesService {
       // together: a failed mention insert rolls the record back instead
       // of stranding it.
       return await this.db.transaction(async (tx) => {
+        // Catalog provenance (srd-catalog-import decision 4): UI
+        // creation always binds the built-in Internal source — the
+        // client cannot declare external provenance, only the import
+        // binds external sources. Non-catalog records carry none.
+        const sourceId = (catalogTypes as readonly string[]).includes(input.type)
+          ? (await this.sources.internal()).id
+          : null;
         const [row] = await tx
           .insert(entities)
           .values({
@@ -81,6 +93,7 @@ export class EntitiesService {
             fields,
             searchVector: buildSearchVector(input.title, extractSearchableText(fields)),
             createdBy: createdBy ?? null,
+            sourceId,
           })
           .returning();
         await this.replaceMentions(tx, row.id, fields);
@@ -148,6 +161,10 @@ export class EntitiesService {
       if (!existing) {
         throw new NotFoundException(`Record '${slug}' not found`);
       }
+      // Source-data read-only guard (srd-catalog-import decision 5): a
+      // record bound to an external source changes only through a
+      // re-import — the DM-authored fields stay editable.
+      await this.assertSourceEditable(existing, input);
       const fields =
         input.fields === undefined
           ? undefined
@@ -177,6 +194,62 @@ export class EntitiesService {
       await this.replaceMentions(tx, row.id, row.fields as Record<string, unknown>);
       return row;
     });
+  }
+
+  /**
+   * Source-data read-only guard (srd-catalog-import spec): a catalog
+   * record bound to an EXTERNAL source changes only through a
+   * re-import — updates touching its source-derived fields (title,
+   * tags, every field value the dataset provided), or requesting its
+   * deletion, are refused with a stable code. The DM-authored fields
+   * (Pitch, Private description) stay editable so the imported sheet is
+   * not a dead end, and a write that changes nothing (a form carrying
+   * the stored values back) is a no-op, not an offense. Internal-source
+   * records stay fully editable.
+   */
+  private async assertSourceEditable(
+    existing: EntityRow,
+    input: UpdateEntityInput,
+  ): Promise<void> {
+    if (existing.sourceId === null || (await this.isInternalSource(existing.sourceId))) {
+      return;
+    }
+    if (input.title !== undefined && input.title !== existing.title) {
+      throwSourceReadonly();
+    }
+    if (
+      input.tags !== undefined &&
+      !jsonEquals(normalizeTags(input.tags), existing.tags)
+    ) {
+      throwSourceReadonly();
+    }
+    if (input.fields !== undefined) {
+      const previous = (existing.fields ?? {}) as Record<string, unknown>;
+      for (const [key, value] of Object.entries(input.fields)) {
+        if ((dmAuthoredCatalogKeys as readonly string[]).includes(key)) continue;
+        if (!jsonEquals(value, previous[key])) {
+          throwSourceReadonly();
+        }
+      }
+    }
+  }
+
+  /** Deletion guard: an imported record is reference data — it leaves
+   * the instance only through its source lifecycle, never per-record. */
+  private async assertDeletable(existing: EntityRow): Promise<void> {
+    if (existing.sourceId !== null && !(await this.isInternalSource(existing.sourceId))) {
+      throwSourceReadonly();
+    }
+  }
+
+  /** The internal flag of a source id (null provenance = no guard). */
+  private async isInternalSource(sourceId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ internal: catalogSources.internal })
+      .from(catalogSources)
+      .where(eq(catalogSources.id, sourceId))
+      .limit(1);
+    return row?.internal ?? false;
   }
 
   /**
@@ -338,6 +411,9 @@ export class EntitiesService {
 
   async delete(slug: string): Promise<void> {
     const existing = await this.getBySlug(slug);
+    // Source-data read-only guard (decision 5): imported reference data
+    // is not deletable per-record.
+    await this.assertDeletable(existing);
     await this.relationships.assertNoChildren(existing.id);
     await this.db.delete(entities).where(eq(entities.id, existing.id));
   }
@@ -470,4 +546,37 @@ function validateFields(
     });
   }
   return parsed.data as Record<string, unknown>;
+}
+
+/**
+ * Structural JSON equality ignoring key order: JSONB round-trips may
+ * reorder object keys, and the guard must not refuse a no-op write
+ * because the draft reordered them.
+ */
+function jsonEquals(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) {
+    return false;
+  }
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const aKeys = Object.keys(a).sort();
+  const bKeys = Object.keys(b).sort();
+  if (aKeys.length !== bKeys.length || aKeys.some((key, i) => key !== bKeys[i])) {
+    return false;
+  }
+  return aKeys.every((key) =>
+    jsonEquals(
+      (a as Record<string, unknown>)[key],
+      (b as Record<string, unknown>)[key],
+    ),
+  );
+}
+
+/** The stable read-only refusal (srd-catalog-import spec): the client
+ * translates the code, the backend never formats a human message. */
+function throwSourceReadonly(): never {
+  throw new BadRequestException({
+    code: "source_readonly",
+    message: "source_readonly",
+  });
 }
