@@ -18,5 +18,6 @@ export const errorCodes = [
   // Catalog import: origin handling (file/URL) and dataset validation.
   "import_invalid_payload",
   "import_url_refused",
+  "import_endpoint_unreachable",
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];

@@ -525,6 +525,7 @@
     "source_not_allowed": "La provenance ne peut pas être définie depuis le formulaire.",
     "source_readonly": "Cette fiche vient d'un import : ses données de source et ses tags sont en lecture seule, et elle ne peut pas être supprimée.",
     "import_invalid_payload": "Le contenu n'est pas un jeu de données valide — aucun élément n'a pu être validé.",
-    "import_url_refused": "Cette URL est refusée : seuls les endpoints HTTPS publics sont autorisés."
+    "import_url_refused": "Cette URL est refusée : seuls les endpoints HTTPS publics sont autorisés.",
+    "import_endpoint_unreachable": "L'endpoint n'a pas répondu avec un jeu de données lisible."
   }
 }

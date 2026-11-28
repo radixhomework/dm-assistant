@@ -525,6 +525,7 @@
     "source_not_allowed": "The record provenance cannot be set from the form.",
     "source_readonly": "This record comes from an import: its source data and tags are read-only, and it cannot be deleted.",
     "import_invalid_payload": "The payload is not a valid dataset — no element could be validated.",
-    "import_url_refused": "This URL is refused: only public HTTPS endpoints are allowed."
+    "import_url_refused": "This URL is refused: only public HTTPS endpoints are allowed.",
+    "import_endpoint_unreachable": "The endpoint did not answer with a readable dataset."
   }
 }
