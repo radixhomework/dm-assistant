@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
 import { TagsEditor } from "../components/tags-editor.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
+import { ProseEditor } from "../editor/prose-editor.js";
 import { RecordSheet } from "../components/record-sheet.js";
 import { bespokeSheetFor } from "../components/record-sheet-registry.js";
 import { templateSchemaOf } from "@dm/schemas";
@@ -25,6 +26,13 @@ import type { Entity } from "../types.js";
  */
 
 export type RecordPageKind = "lore" | "chapter" | "scene";
+
+/** Whether a record came from an external-source import: its source
+ * fields, tags and deletion are locked (source_readonly) — the sheet
+ * offers the DM-authored fields only. */
+function isImportedRecord(data: Entity): boolean {
+  return data.source !== undefined && data.source !== null && !data.source.internal;
+}
 
 /** The sticky page header shared by both modes, with mode-specific
  * actions on the right. */
@@ -90,15 +98,17 @@ function RecordReadView(props: {
             >
               <Pencil className="size-4" aria-hidden />
             </button>
-            <button
-              type="button"
-              onClick={props.onDelete}
-              className="rounded-md border border-border p-2 text-radish transition-colors duration-200 hover:bg-surface"
-              title={t("lore.delete")}
-              aria-label={t("lore.delete")}
-            >
-              <Trash2 className="size-4" aria-hidden />
-            </button>
+            {!isImportedRecord(props.data) && (
+              <button
+                type="button"
+                onClick={props.onDelete}
+                className="rounded-md border border-border p-2 text-radish transition-colors duration-200 hover:bg-surface"
+                title={t("lore.delete")}
+                aria-label={t("lore.delete")}
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </button>
+            )}
           </>
         }
       />
@@ -167,14 +177,30 @@ function RecordEditView(props: {
         inert={props.saving}
         className="mt-6 flex flex-col gap-4"
       >
-        <label className="flex flex-col gap-1 text-sm">
-          {t("common.fields.title")}
-          <input name="title" defaultValue={props.data.title} className="rounded-md border border-border bg-background px-3 py-2" />
-        </label>
-        {/* The tags section: instance-level metadata outside the
-         * template fields (record-tags capability). */}
-        <TagsEditor tags={props.tags} onChange={props.setTags} disabled={props.saving} />
-        {schema ? (
+        {/* An imported record (external source) edits its DM-authored
+         * fields only: title, tags and the source-derived values carry
+         * no edit control (srd-catalog-import spec). */}
+        {!isImportedRecord(props.data) && (
+          <label className="flex flex-col gap-1 text-sm">
+            {t("common.fields.title")}
+            <input name="title" defaultValue={props.data.title} className="rounded-md border border-border bg-background px-3 py-2" />
+          </label>
+        )}
+        {!isImportedRecord(props.data) && (
+          /* The tags section: instance-level metadata outside the
+           * template fields (record-tags capability). */
+          <TagsEditor tags={props.tags} onChange={props.setTags} disabled={props.saving} />
+        )}
+        {isImportedRecord(props.data) && (
+          <p className="text-sm text-muted">{t("record.importedNotice")}</p>
+        )}
+        {isImportedRecord(props.data) ? (
+          <ImportedRecordFields
+            fields={props.fields}
+            onChange={props.setFields}
+            disabled={props.saving}
+          />
+        ) : schema ? (
           <RecordFormFields
             schema={schema}
             fields={props.fields}
@@ -192,6 +218,39 @@ function RecordEditView(props: {
         )}
         {props.error && <p className="text-sm text-radish">{props.error}</p>}
       </form>
+    </div>
+  );
+}
+
+
+/** The DM-authored fields of an imported record: Pitch and Private
+ * description keep their rich-text editors; nothing else renders
+ * (source-derived fields and tags carry no edit action). */
+function ImportedRecordFields(props: {
+  readonly fields: Record<string, unknown>;
+  readonly onChange: (fields: Record<string, unknown>) => void;
+  readonly disabled: boolean;
+}) {
+  const { t } = useTranslation();
+  const dmKeys = ["pitch", "private_description"] as const;
+  return (
+    <div className="flex flex-col gap-4">
+      {dmKeys.map((key) => {
+        const value = props.fields[key];
+        const asString = typeof value === "string" ? value : "";
+        return (
+          <div key={key} className="flex flex-col gap-1 text-sm">
+            <span>{t(`fields.${key}`)}</span>
+            <ProseEditor
+              markdown={asString}
+              readonly={props.disabled}
+              onChange={(markdown) =>
+                props.onChange({ ...props.fields, [key]: markdown === "" ? undefined : markdown })
+              }
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -328,8 +387,17 @@ function RecordPage(props: {
     setSaved(false);
     const form = new FormData(event.currentTarget);
     const schema = templateSchemaOf(data.type);
+    const imported = isImportedRecord(data);
     let payloadFields: unknown;
-    if (schema) {
+    if (imported) {
+      // The read-only guard compares per-key: the PATCH carries the two
+      // DM-authored fields only — the stored values of everything else
+      // stay untouched.
+      payloadFields = {
+        pitch: (fields ?? {})["pitch"],
+        private_description: (fields ?? {})["private_description"],
+      };
+    } else if (schema) {
       payloadFields = fields ?? {};
     } else {
       try {
@@ -343,11 +411,16 @@ function RecordPage(props: {
     try {
       await api(`/api/records/${props.id}`, {
         method: "PATCH",
-        body: {
-          title: formString(form, "title"),
-          tags: tags ?? data.tags,
-          fields: payloadFields,
-        },
+        body: imported
+          ? {
+              tags: data.tags,
+              fields: payloadFields,
+            }
+          : {
+              title: formString(form, "title"),
+              tags: tags ?? data.tags,
+              fields: payloadFields,
+            },
       });
       setSaved(true);
       await record.refetch();
