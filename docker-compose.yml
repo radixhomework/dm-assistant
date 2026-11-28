@@ -6,20 +6,26 @@ services:
         VITE_UI_LOCALE: ${UI_LOCALE:-en}
     environment:
       PORT: 3000
-      DATABASE_URL: postgres://dm:dm@postgres:5432/dm_assistant
+      DATABASE_URL: postgres://${PG_USERNAME}:${PG_PASSWORD}@postgres:5432/${PG_DB}
     ports:
-      - "${PORT:-3000}:3000"
+      - "${APP_PORT}:3000"
     depends_on:
       postgres:
         condition: service_healthy
+
   postgres:
-    image: postgres:17-alpine
+    image: postgres:19-alpine
     environment:
-      POSTGRES_USER: dm
-      POSTGRES_PASSWORD: dm
-      POSTGRES_DB: dm_assistant
+      POSTGRES_USER: ${PG_USERNAME}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dm -d dm_assistant"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+volumes:
+  postgres-data:
