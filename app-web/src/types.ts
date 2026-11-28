@@ -6,6 +6,11 @@ export type Entity = {
   title: string;
   tags: string[];
   fields: Record<string, unknown>;
+  /** Provenance for catalog records only (srd-catalog-import): the
+   * built-in Internal source or the named external source an import
+   * bound; null elsewhere. The sheet splits the badge and the edit
+   * surface on it. */
+  source?: { id: string; name: string; internal: boolean } | null;
   tracking?: { id?: string; slug: string; status: string; children: ChildView[] };
   references?: Record<
     string,

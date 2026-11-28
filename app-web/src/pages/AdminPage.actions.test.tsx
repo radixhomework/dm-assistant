@@ -184,11 +184,15 @@ describe("AdminPage actions", () => {
     const client = new QueryClient();
     client.setQueryData(["bootstrap"], { adminExists: true, worldName: "W" });
     renderWithProviders(<AdminPage />, { client });
-    // Two Save buttons render (unit settings + calendar editor); the
-    // first belongs to the instance settings form.
-    await vi.waitFor(() => expect(screen.getAllByText("Save").length).toBeGreaterThanOrEqual(2));
+    // The instance settings live behind the Instance tab now; the auth
+    // query must settle before the tablist exists.
+    await vi.waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Instance" })).toBeDefined(),
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Instance" }));
+    await vi.waitFor(() => expect(screen.getByText("World name")).toBeDefined());
     fireEvent.change(screen.getByDisplayValue("W"), { target: { value: "New name" } });
-    screen.getAllByText("Save")[0].click();
+    screen.getByRole("button", { name: "Save" }).click();
     await vi.waitFor(() => {
       const patch = captured.find(
         ([path, init]) => path === "/api/admin/settings" && init?.method === "PATCH",
