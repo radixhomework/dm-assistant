@@ -71,6 +71,13 @@
       "when": 1795680000000,
       "tag": "0009_search_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795766400000,
+      "tag": "0010_catalog_sources",
+      "breakpoints": true
     }
   ]
 }

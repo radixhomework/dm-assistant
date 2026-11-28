@@ -20,7 +20,7 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 
 ## 4. Named sources and non-editability backend
 
-- [ ] 4.1 Drizzle migration (round 3): create `catalog_sources` (seeded with the built-in Internal / Interne source) and add `entities.source_id` FK — verify with a migration test on a fresh database
+- [x] 4.1 Drizzle migration (round 3): create `catalog_sources` (seeded with the built-in Internal / Interne source) and add `entities.source_id` FK — verify with a migration test on a fresh database
 - [ ] 4.2 Source registry service + endpoints: create/rename/disable external sources (admin only), built-in Internal source immutable and non-disableable, list for import selection and badges — controller tests for admin gating and the Internal invariants
 - [ ] 4.3 `source` binding in the entities service: catalog-type creation always binds the Internal source (client-supplied source refused), source immutable on update, entity responses carry the source (id, name, internal/external) — service tests for the default and the immutability
 <!-- coderabbit-ai-generated:v1 -->

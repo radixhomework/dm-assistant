@@ -15,7 +15,18 @@ export const testDb = drizzle(testClient);
 
 export async function resetTables(): Promise<void> {
   await testDb.execute(
-    sql`TRUNCATE relationships, entities, sessions, users, settings CASCADE`,
+    sql`TRUNCATE relationships, entities, catalog_sources, sessions, users, settings CASCADE`,
+  );
+}
+
+/**
+ * The migration-seeded built-in Internal source: catalog_sources is
+ * truncated between specs, so a spec exercising catalog provenance
+ * re-seeds it (the service resolves the Internal row by its flag).
+ */
+export async function seedInternalSource(): Promise<void> {
+  await testDb.execute(
+    sql`INSERT INTO catalog_sources (name, internal) VALUES ('Internal', true)`,
   );
 }
 
