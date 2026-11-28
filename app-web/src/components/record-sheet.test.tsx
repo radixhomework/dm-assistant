@@ -115,4 +115,34 @@ describe("RecordSheet scaffold", () => {
     expect(screen.getByText(/An/)).toBeDefined();
     expect(screen.getByText(/842/)).toBeDefined();
   });
+
+  it("renders tag chips on the sheet and hides the section without tags", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input.endsWith("/backlinks")) {
+          return { ok: true, json: async () => ({ fields: {}, mentions: [] }) };
+        }
+        return { ok: true, status: 204, json: async () => ({}) };
+      }),
+    );
+    const record = {
+      id: "1",
+      slug: "tagged",
+      type: "places",
+      perimeter: "world",
+      title: "Tagged",
+      tags: ["foret", "voyage"],
+      fields: {},
+      references: {},
+    } as unknown as Entity;
+    const { rerender } = renderWithProviders(<RecordSheet record={record} />);
+    expect(screen.getByText("foret")).toBeDefined();
+    expect(screen.getByText("voyage")).toBeDefined();
+
+    // Empty means hidden: no tag section for an untagged record.
+    const untagged = { ...record, tags: [] } as unknown as Entity;
+    rerender(<RecordSheet record={untagged} />);
+    expect(screen.queryByText("foret")).toBeNull();
+  });
 });

@@ -188,6 +188,20 @@ export function RecordSheet(props: {
 
   return (
     <div className="mt-6">
+      {/* The tags chips: instance-level metadata, hidden when the record
+       * carries none (empty means hidden). */}
+      {record.tags.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          {record.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-sm border border-border bg-surface px-1.5 py-0.5 text-xs text-muted"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
       {props.slot ?? <GenericFieldRows record={record} shape={shape} />}
       {childrenKey !== null && (
         <section className="mt-8 border-t border-border pt-6">

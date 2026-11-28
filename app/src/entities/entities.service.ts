@@ -20,6 +20,23 @@ import { buildSearchVector, extractSearchableText } from "../search/search-index
 
 /** The transaction handle a drizzle transaction callback receives. */
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/**
+ * Tag normalization on save (record-tags capability): trimmed,
+ * lowercased, internal whitespace collapsed, empty entries dropped,
+ * deduplicated keeping the first occurrence. Pure function — shared by
+ * the write path and the tag management actions.
+ */
+export function normalizeTags(tags: string[] | undefined | null): string[] {
+  const normalized: string[] = [];
+  for (const tag of tags ?? []) {
+    const value = tag.trim().replaceAll(/\s+/g, " ").toLowerCase();
+    if (value.length > 0 && !normalized.includes(value)) {
+      normalized.push(value);
+    }
+  }
+  return normalized;
+}
 import { entities, mentions, relationships } from "../database/schema.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
 
@@ -60,6 +77,7 @@ export class EntitiesService {
           .insert(entities)
           .values({
             ...input,
+            tags: normalizeTags(input.tags),
             fields,
             searchVector: buildSearchVector(input.title, extractSearchableText(fields)),
             createdBy: createdBy ?? null,
@@ -147,7 +165,7 @@ export class EntitiesService {
         .update(entities)
         .set({
           ...(input.title !== undefined ? { title: input.title } : {}),
-          ...(input.tags !== undefined ? { tags: input.tags } : {}),
+          ...(input.tags !== undefined ? { tags: normalizeTags(input.tags) } : {}),
           ...(fields !== undefined ? { fields } : {}),
           ...(searchVector !== undefined ? { searchVector } : {}),
           updatedAt: new Date(),

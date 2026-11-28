@@ -8,6 +8,7 @@ import { FilePlus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { fetchTags } from "../api/search.js";
 import { useSlugAutoFill } from "../slug.js";
 import { catalogIcons, categoryIcons } from "../categories.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -31,6 +32,10 @@ export function LorePage() {
   // Categories start collapsed; the set tracks the expanded ones.
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  // The tag filter narrows every category at once (client-side — the
+  // page already holds the full world-perimeter list).
+  const [tagFilter, setTagFilter] = useState("");
+  const tags = useQuery({ queryKey: ["tags"], queryFn: fetchTags, enabled: ready });
 
   if (!ready) return null;
   if (records.isPending) return <p className="text-muted">{t("common.loading")}</p>;
@@ -126,8 +131,33 @@ export function LorePage() {
 
       {list.length === 0 && <p className="mt-8 text-muted">{t("lore.empty")}</p>}
 
+      {/* The tag filter narrows every category at once (client-side —
+       * the page already holds the full world-perimeter list). */}
+      {(list.length > 0 || tagFilter.length > 0) && (
+        <div className="mt-4">
+          <label className="flex items-center gap-2 text-sm text-muted">
+            {t("search.filterTag")}
+            <select
+              value={tagFilter}
+              onChange={(event) => setTagFilter(event.target.value)}
+              className="cursor-pointer rounded-md border border-border bg-surface px-2 py-1 text-ink"
+            >
+              <option value="">{t("search.allTags")}</option>
+              {(tags.data ?? []).map((entry) => (
+                <option key={entry.tag} value={entry.tag}>
+                  {entry.tag}
+                  {entry.count > 0 ? ` (${entry.count})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
       {worldTemplates.map((type) => {
-        const typeRecords = byType.get(type) ?? [];
+        const typeRecords = (byType.get(type) ?? []).filter(
+          (record) => tagFilter.length === 0 || record.tags.includes(tagFilter),
+        );
         if (typeRecords.length === 0) return null;
         const Icon = categoryIcons[type];
         const isCollapsed = !expanded.has(type);

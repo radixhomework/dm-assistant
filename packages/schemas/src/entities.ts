@@ -22,6 +22,20 @@ export const updateEntitySchema = z.object({
   fields: z.record(z.string(), z.unknown()).optional(),
 });
 
+/** Tag management actions (record-tags capability, admin only): rename
+ * rewrites every record carrying the tag, merge absorbs it into a
+ * target. Both normalize their inputs server-side. */
+export const renameTagSchema = z.object({
+  from: z.string().min(1).max(60),
+  to: z.string().min(1).max(60),
+});
+export const mergeTagSchema = z.object({
+  from: z.string().min(1).max(60),
+  into: z.string().min(1).max(60),
+});
+export type RenameTagInput = z.infer<typeof renameTagSchema>;
+export type MergeTagInput = z.infer<typeof mergeTagSchema>;
+
 export const parentSchema = z.object({
   parentSlug: slugSchema,
   /** The child's reference field pointing at its parent: a chapter's

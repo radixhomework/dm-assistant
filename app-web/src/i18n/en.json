@@ -231,7 +231,11 @@
     "noBacklinks": "Nothing points at this record yet.",
     "referenceSearch": "Search a record...",
     "noChildren": "No chapters or scenes attached yet.",
-    "deleteConfirm": "Delete this record? This action is permanent."
+    "deleteConfirm": "Delete this record? This action is permanent.",
+    "tags": "Tags",
+    "tagsAdd": "Add a tag",
+    "tagsHelp": "Enter or comma adds; Backspace on the empty field removes the last one.",
+    "removeTag": "Remove tag {{tag}}"
   },
   "fields": {
     "illustration": "Illustration",

@@ -14,9 +14,9 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 
 ## 3. Tags backend
 
-- [ ] 3.1 Tag normalization in the entities service (trim, lowercase, collapse internal whitespace, drop empties, dedupe) with unit tests covering the `Forêt`/`forêt` dedup case
+- [x] 3.1 Tag normalization in the entities service (trim, lowercase, collapse internal whitespace, drop empties, dedupe) with unit tests covering the `Forêt`/`forêt` dedup case
 - [x] 3.2 Tag inventory endpoint `GET /api/tags` (distinct tags with record counts, alphabetical, authenticated for all DM accounts — feeds filters, completions and the admin Tags tab) — controller test asserting counts and ordering
-- [ ] 3.3 Admin tag management endpoints: rename (instance-wide rewrite with dedup pass) and merge (absorb into a target tag, dedup, one transaction, touched-record count reported) — service tests for rename propagation, the both-tags-present dedup case and merge; controller tests for admin gating
+- [x] 3.3 Admin tag management endpoints: rename (instance-wide rewrite with dedup pass) and merge (absorb into a target tag, dedup, one transaction, touched-record count reported) — service tests for rename propagation, the both-tags-present dedup case and merge; controller tests for admin gating
 
 ## 4. Named sources and non-editability backend
 
@@ -66,9 +66,9 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 
 ## 10. Tags UI
 
-- [ ] 10.1 Tags section in the record edit form (system section, completion suggestions from the tag inventory, draft rules of the edit session) — component tests for save, normalization display and suggestion behavior
-- [ ] 10.2 Tag chips on record sheets (hidden when no tags) — component test for both states
-- [ ] 10.3 Tag filter on the Lore page (combining with category browsing) and on the search results page — component tests for filtered listings
+- [x] 10.1 Tags section in the record edit form (system section, completion suggestions from the tag inventory, draft rules of the edit session) — component tests for save, normalization display and suggestion behavior
+- [x] 10.2 Tag chips on record sheets (hidden when no tags) — component test for both states
+- [x] 10.3 Tag filter on the Lore page (combining with category browsing) and on the search results page — component tests for filtered listings
 
 ## 11. Source badge and attribution UI
 

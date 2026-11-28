@@ -5,6 +5,7 @@ import { FilePlus, Pencil, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client.js";
+import { TagsEditor } from "../components/tags-editor.js";
 import { RecordFormFields } from "../components/record-form-fields.js";
 import { RecordSheet } from "../components/record-sheet.js";
 import { bespokeSheetFor } from "../components/record-sheet-registry.js";
@@ -117,6 +118,8 @@ function RecordEditView(props: {
   readonly data: Entity;
   readonly fields: Record<string, unknown>;
   readonly setFields: (fields: Record<string, unknown>) => void;
+  readonly tags: readonly string[];
+  readonly setTags: (tags: string[]) => void;
   readonly error: string | null;
   readonly onSave: (event: React.SubmitEvent<HTMLFormElement>) => void;
   readonly onCancel: () => void;
@@ -168,6 +171,9 @@ function RecordEditView(props: {
           {t("common.fields.title")}
           <input name="title" defaultValue={props.data.title} className="rounded-md border border-border bg-background px-3 py-2" />
         </label>
+        {/* The tags section: instance-level metadata outside the
+         * template fields (record-tags capability). */}
+        <TagsEditor tags={props.tags} onChange={props.setTags} disabled={props.saving} />
         {schema ? (
           <RecordFormFields
             schema={schema}
@@ -210,6 +216,10 @@ function RecordPage(props: {
   const [mode, setMode] = useState<"read" | "edit">(props.initialEdit ? "edit" : "read");
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, unknown> | null>(null);
+  // The tags draft follows the fields draft lifecycle: seeded once per
+  // loaded record, re-seeded when an edit session starts or is
+  // cancelled, never clobbered by a reference attach/detach refetch.
+  const [tags, setTags] = useState<string[] | null>(null);
   const [saved, setSaved] = useState(false);
   // While a save is pending the edit session is pinned: Save and Cancel
   // are disabled so a completing save can never close a *newer* edit
@@ -234,6 +244,11 @@ function RecordPage(props: {
       setFields(record.data.fields);
     }
   }, [record.data, fields]);
+  useEffect(() => {
+    if (record.data && tags === null) {
+      setTags(record.data.tags);
+    }
+  }, [record.data, tags]);
 
   // Tab title: DMA - <record title> on a record page, DM Assistant elsewhere.
   useEffect(() => {
@@ -263,6 +278,7 @@ function RecordPage(props: {
     // A fresh session seeds the draft from the saved record: a previous
     // cancelled draft never leaks into the next edit.
     setFields(data.fields);
+    setTags(data.tags);
     setMode("edit");
   }
 
@@ -270,6 +286,7 @@ function RecordPage(props: {
     // Discard the draft: the next edit seeds again from the saved
     // record.
     setFields(data.fields);
+    setTags(data.tags);
     setMode("read");
   }
 
@@ -328,12 +345,16 @@ function RecordPage(props: {
         method: "PATCH",
         body: {
           title: formString(form, "title"),
-          tags: data.tags,
+          tags: tags ?? data.tags,
           fields: payloadFields,
         },
       });
       setSaved(true);
       await record.refetch();
+      // The save may have introduced new tags: the editor's completion
+      // inventory must not show a stale list next session (staleTime
+      // Infinity keeps it until invalidated).
+      await queryClient.invalidateQueries({ queryKey: ["tags"] });
       await invalidateCampaignTree();
       setMode("read");
     } catch (saveError) {
@@ -365,6 +386,8 @@ function RecordPage(props: {
         data={data}
         fields={fields}
         setFields={setFields}
+        tags={tags ?? data.tags}
+        setTags={setTags}
         error={error}
         onSave={onSave}
         onCancel={cancelEdit}
