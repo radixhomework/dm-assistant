@@ -559,8 +559,10 @@ function jsonEquals(a: unknown, b: unknown): boolean {
     return false;
   }
   if (Array.isArray(a) !== Array.isArray(b)) return false;
-  const aKeys = Object.keys(a).sort();
-  const bKeys = Object.keys(b).sort();
+  // localeCompare keeps the sort stable across locales (S2871) — the
+  // comparison itself never surfaces to users.
+  const aKeys = Object.keys(a).sort((x, y) => x.localeCompare(y));
+  const bKeys = Object.keys(b).sort((x, y) => x.localeCompare(y));
   if (aKeys.length !== bKeys.length || aKeys.some((key, i) => key !== bKeys[i])) {
     return false;
   }
