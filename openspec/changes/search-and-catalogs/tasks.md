@@ -39,7 +39,7 @@ Implementation rounds — one branch per round, merged to main at round end (bra
 - [x] 5.3 Import service with dry-run/confirm protocol: parse → validate → map → match by slug → preview classification (new / same-source overwrite pre-checked / different-provenance conflict opt-in with rebind on confirm / slug-collision skipped with reasons); confirm executes one transactional write of the accepted set with unit conversion and a created/updated/skipped report — service tests for each preview class, the never-blocked behavior and transactional execution
 - [x] 5.4 Admin-only import endpoint: file upload (multipart, size cap) and endpoint URL modes (server-side HTTPS fetch, private-address refusal, pagination page cap) — controller tests for admin gating, SSRF refusal and envelope pagination
 - [ ] 5.5 Import catalogs tab in the admin panel: origin picker (file/URL), catalog + source selection, preview list with per-item checkboxes, select-all control and skip reasons, confirm + report display — component tests for the preview classes, the select-all behavior and the confirm flow
-- [ ] 5.6 `docs/srd-import.md` documenting the Open5e format, mapping, endpoint examples (`document=srd-2024`), matching rules and the UI flow (human action, charter rule 6) — verify the documented example passes the shape schemas
+- [x] 5.6 `docs/srd-import.md` documenting the Open5e format, mapping, endpoint examples (`document=srd-2024`), matching rules and the UI flow (human action, charter rule 6) — verify the documented example passes the shape schemas
 
 ## 6. Gap inventory backend
 

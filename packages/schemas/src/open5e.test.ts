@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   mapOpen5eObject,
@@ -130,5 +132,29 @@ describe("mapOpen5eObject", () => {
       open5eObjectSchema.parse({ slug: "a-condition", name: "A condition", desc: "t" }),
     );
     expect(mapped.slug).toBe("a-condition");
+  });
+});
+
+describe("documented example (docs/srd-import.md)", () => {
+  it("validates the documented dataset example against the shape schemas", () => {
+    // The doc is the contract the DM follows: if the documented example
+    // drifts from the shape schemas, this fails.
+    const doc = readFileSync(
+      join(process.cwd(), "..", "..", "docs", "srd-import.md"),
+      "utf8",
+    );
+    const blocks = [...doc.matchAll(/```json\r?\n([\s\S]*?)```/g)].map((m) => m[1]);
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const block of blocks) {
+      const payload = JSON.parse(block);
+      const envelope = open5eEnvelopeSchema.safeParse(payload);
+      if (envelope.success) {
+        for (const element of envelope.data.results) {
+          expect(open5eObjectSchema.safeParse(element).success).toBe(true);
+        }
+      } else {
+        expect(open5eObjectSchema.safeParse(payload).success).toBe(true);
+      }
+    }
   });
 });
