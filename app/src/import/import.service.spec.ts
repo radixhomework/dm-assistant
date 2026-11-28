@@ -114,6 +114,19 @@ describe("ImportService (database)", () => {
     });
   });
 
+  it("skips elements carrying no text for the chosen document", async () => {
+    // An unfiltered Open5e list mixes sources: another document's rows
+    // carry no SRD 2024 text — importing them would mislabel third-party
+    // content under the importing source.
+    const preview = await importService.preview(origin(), [
+      { key: "a5e-bloodied", name: "Bloodied", descriptions: [{ desc: "EN Publishing text.", document: "a5e-ag" }] },
+    ]);
+    expect(preview.items[0]).toMatchObject({
+      status: "skipped",
+      reason: "no_text_for_document",
+    });
+  });
+
   it("flags duplicate slugs inside one dataset", async () => {
     const preview = await importService.preview(origin(), [
       element("blinded", "Blinded", "* First."),

@@ -271,7 +271,8 @@
         "duplicate_in_dataset": "Doublon dans le jeu de données",
         "slug_taken": "Slug déjà porté par une fiche d'un autre type",
         "not_accepted": "Non sélectionné",
-        "invalid": "Élément invalide"
+        "invalid": "Élément invalide",
+        "no_text_for_document": "Aucun texte pour le document choisi (rangée d'une autre source)"
       }
     },
     "externalRefs": {

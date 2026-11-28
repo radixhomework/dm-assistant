@@ -208,7 +208,26 @@ export class ImportService {
         mapped: null,
       };
     }
-    const mapped = mapOpen5eObject(parsed.data, origin.document);
+    const mapped = mapOpen5eObject(
+      parsed.data,
+      origin.document ?? "srd-2024",
+    );
+    // The dataset format requires the text: an element carrying no
+    // description for the chosen document (another source's rows in an
+    // unfiltered Open5e list) is skipped with its reason — importing it
+    // would fill the template's only meaningful field with nothing and
+    // mislabel third-party content under the importing source.
+    if (mapped.publicDescription === null) {
+      return {
+        item: {
+          slug: mapped.slug,
+          title: mapped.title,
+          status: "skipped",
+          reason: "no_text_for_document",
+        },
+        mapped: null,
+      };
+    }
     const template = templateSchemaOf(origin.catalog);
     if (template && !template.fields.safeParse(mappedFields(mapped)).success) {
       return {

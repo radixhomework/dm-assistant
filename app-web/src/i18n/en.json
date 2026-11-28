@@ -271,7 +271,8 @@
         "duplicate_in_dataset": "Duplicate in the dataset",
         "slug_taken": "Slug already used by a record of another type",
         "not_accepted": "Not selected",
-        "invalid": "Invalid element"
+        "invalid": "Invalid element",
+        "no_text_for_document": "No text for the chosen document (another source's row)"
       }
     },
     "externalRefs": {

@@ -269,30 +269,30 @@ export function ImportCatalogsTab() {
             {t("admin.import.newSource")}
           </button>
         </div>
-
-        {creatingSource && (
-          <form onSubmit={onCreateSource} className="flex max-w-md flex-col gap-3 rounded-md border border-border bg-surface p-3">
-            <Field label={t("admin.import.sourceName")}>
-              <input
-                value={sourceName}
-                onChange={(event) => setSourceName(event.target.value)}
-                required
-                className={inputClass}
-              />
-            </Field>
-            <Field label={t("admin.import.sourceAttribution")}>
-              <input
-                value={sourceAttribution}
-                onChange={(event) => setSourceAttribution(event.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <button type="submit" className="self-start rounded-md bg-primary px-3 py-1.5 text-sm text-background hover:bg-accent">
-              {t("admin.import.sourceCreate")}
-            </button>
-          </form>
-        )}
       </form>
+
+      {creatingSource && (
+        <form onSubmit={onCreateSource} className="mt-4 flex max-w-md flex-col gap-3 rounded-md border border-border bg-surface p-3">
+          <Field label={t("admin.import.sourceName")}>
+            <input
+              value={sourceName}
+              onChange={(event) => setSourceName(event.target.value)}
+              required
+              className={inputClass}
+            />
+          </Field>
+          <Field label={t("admin.import.sourceAttribution")}>
+            <input
+              value={sourceAttribution}
+              onChange={(event) => setSourceAttribution(event.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          <button type="submit" className="self-start rounded-md bg-primary px-3 py-1.5 text-sm text-background hover:bg-accent">
+            {t("admin.import.sourceCreate")}
+          </button>
+        </form>
+      )}
 
       {items !== null && (
         <div className="mt-6">
