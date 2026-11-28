@@ -3,6 +3,20 @@ import { AdminGuard } from "../auth/admin.guard.js";
 import { ImportController } from "./import.controller.js";
 import type { ImportService } from "./import.service.js";
 
+// The transport hits the network through node:https: the URL-mode tests
+// mock the module, keeping the real guard for the refusal paths.
+vi.mock("./fetch-dataset.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./fetch-dataset.js")>();
+  return {
+    ...actual,
+    fetchDataset: vi.fn(async (rawUrl: string) => {
+      // Reuses the real guard: a refused URL still refuses.
+      await actual.assertPublicHttpsUrl(rawUrl);
+      return [{ key: "blinded", name: "Blinded", desc: "text" }];
+    }),
+  };
+});
+
 const SOURCE_ID = "00000000-0000-4000-8000-00000000000a";
 
 describe("ImportController", () => {
@@ -48,28 +62,16 @@ describe("ImportController", () => {
   });
 
   it("previews an endpoint URL fetched server-side", async () => {
-    const envelope = {
-      count: 1,
-      next: null,
-      results: [{ key: "blinded", name: "Blinded", desc: "text" }],
-    };
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response(JSON.stringify(envelope), { status: 200 })),
+    const dataset = [{ key: "blinded", name: "Blinded", desc: "text" }];
+    await controller.preview(undefined, {
+      catalog: "conditions",
+      sourceId: SOURCE_ID,
+      url: "https://api.open5e.com/v2/conditions/",
+    });
+    expect(service.preview).toHaveBeenCalledWith(
+      { catalog: "conditions", sourceId: SOURCE_ID },
+      dataset,
     );
-    try {
-      await controller.preview(undefined, {
-        catalog: "conditions",
-        sourceId: SOURCE_ID,
-        url: "https://api.open5e.com/v2/conditions/",
-      });
-      expect(service.preview).toHaveBeenCalledWith(
-        { catalog: "conditions", sourceId: SOURCE_ID },
-        envelope.results,
-      );
-    } finally {
-      vi.unstubAllGlobals();
-    }
   });
 
   it("refuses a non-HTTPS or private endpoint URL", async () => {

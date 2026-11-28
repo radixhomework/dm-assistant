@@ -287,6 +287,7 @@ export function ImportCatalogsTab() {
               onChange={(event) => setSourceAttribution(event.target.value)}
               className={inputClass}
             />
+            <p className="text-xs text-muted">{t("admin.import.sourceAttributionHint")}</p>
           </Field>
           <button type="submit" className="self-start rounded-md bg-primary px-3 py-1.5 text-sm text-background hover:bg-accent">
             {t("admin.import.sourceCreate")}

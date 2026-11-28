@@ -273,7 +273,8 @@
         "not_accepted": "Non sélectionné",
         "invalid": "Élément invalide",
         "no_text_for_document": "Aucun texte pour le document choisi (rangée d'une autre source)"
-      }
+      },
+      "sourceAttributionHint": "Une ligne de crédit affichée sous le nom de la source sur la page d'attribution — par exemple : Importé depuis api.open5e.com."
     },
     "externalRefs": {
       "title": "Références externes",

@@ -273,7 +273,8 @@
         "not_accepted": "Not selected",
         "invalid": "Invalid element",
         "no_text_for_document": "No text for the chosen document (another source's row)"
-      }
+      },
+      "sourceAttributionHint": "A credit line shown under the source name on the attribution page — for example: Imported from api.open5e.com."
     },
     "externalRefs": {
       "title": "External references",

@@ -1,5 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { request as httpsRequest } from "node:https";
+import type { IncomingMessage } from "node:http";
 import { open5eEnvelopeSchema } from "@dm/schemas";
 import { EndpointUnreachableError, UrlRefusedError } from "./import-errors.js";
 
@@ -46,7 +48,9 @@ export function isPrivateAddress(address: string): boolean {
  * hygiene for an admin-only endpoint. The host must resolve to public
  * addresses only (a literal private IP host is refused directly).
  */
-export async function assertPublicHttpsUrl(raw: string): Promise<URL> {
+export async function assertPublicHttpsUrl(
+  raw: string,
+): Promise<{ url: URL; address: string; family: 4 | 6 }> {
   let url: URL;
   try {
     url = new URL(raw);
@@ -70,7 +74,45 @@ export async function assertPublicHttpsUrl(raw: string): Promise<URL> {
       throw new UrlRefusedError("private addresses are refused");
     }
   }
-  return url;
+  const resolved = addresses[0];
+  return { url, address: resolved.address, family: resolved.family as 4 | 6 };
+}
+
+export type DatasetResponse = { status: number | undefined; text: string };
+
+/** One HTTPS GET through the address the guard validated: the custom
+ * lookup pins that address, closing the rebinding window — the second
+ * DNS resolution a plain fetch would perform cannot reroute the
+ * connection to a private address. */
+function pinnedGet(url: URL, address: string, family: 4 | 6): Promise<DatasetResponse> {
+  return new Promise((resolve, reject) => {
+    const request = httpsRequest(
+      url,
+      {
+        lookup: (_hostname, options, callback) => {
+          if (options.all) {
+            callback(null, [{ address, family }]);
+          } else {
+            callback(null, address, family);
+          }
+        },
+        headers: { accept: "application/json" },
+      },
+      (response: IncomingMessage) => {
+        const chunks: Buffer[] = [];
+        response.on("data", (chunk: Buffer) => chunks.push(chunk));
+        response.on("end", () =>
+          resolve({
+            status: response.statusCode,
+            text: Buffer.concat(chunks).toString("utf8"),
+          }),
+        );
+      },
+    );
+    request.setTimeout(30000, () => request.destroy(new Error("timeout")));
+    request.on("error", reject);
+    request.end();
+  });
 }
 
 /**
@@ -78,24 +120,43 @@ export async function assertPublicHttpsUrl(raw: string): Promise<URL> {
  * array) and follows its `next` links — re-validated through the same
  * HTTPS/public guard — under the page cap.
  */
-export async function fetchDataset(rawUrl: string): Promise<unknown[]> {
+export type DatasetTransport = (
+  url: URL,
+  address: string,
+  family: 4 | 6,
+) => Promise<DatasetResponse>;
+
+/** Fetches a dataset endpoint: every page runs through the HTTPS/public
+ * guard and the pinned-address transport (the followed `next` links are
+ * re-validated the same way) under the page cap. */
+export async function fetchDataset(
+  rawUrl: string,
+  transport: DatasetTransport = pinnedGet,
+): Promise<unknown[]> {
   const elements: unknown[] = [];
-  let url: URL | null = await assertPublicHttpsUrl(rawUrl);
-  for (let page = 0; url !== null && page < MAX_DATASET_PAGES; page += 1) {
-    const response = await fetch(url).catch(() => null);
-    if (response === null || !response.ok) {
+  let target: { url: URL; address: string; family: 4 | 6 } | null =
+    await assertPublicHttpsUrl(rawUrl);
+  for (let page = 0; target !== null && page < MAX_DATASET_PAGES; page += 1) {
+    const { url, address, family } = target;
+    const response = await transport(url, address, family).catch(() => null);
+    if (response === null || !response.status || response.status >= 400) {
       throw new EndpointUnreachableError(
         `the endpoint '${url}' did not answer correctly`,
       );
     }
-    const payload = (await response.json().catch(() => null)) as unknown;
+    let payload: unknown;
+    try {
+      payload = JSON.parse(response.text) as unknown;
+    } catch {
+      payload = null;
+    }
     if (payload === null) {
       throw new EndpointUnreachableError("the endpoint sent an unreadable body");
     }
     elements.push(...extractElements(payload));
     const envelope = open5eEnvelopeSchema.safeParse(payload);
     const next = envelope.success ? envelope.data.next : undefined;
-    url = next ? await assertPublicHttpsUrl(next) : null;
+    target = next ? await assertPublicHttpsUrl(next) : null;
   }
   return elements;
 }
