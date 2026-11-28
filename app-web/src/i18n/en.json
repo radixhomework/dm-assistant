@@ -164,7 +164,10 @@
     "changePassword": "Change password",
     "saved": "Saved.",
     "passwordChanged": "Password changed.",
-    "username": "Username"
+    "username": "Username",
+    "attribution": "Attribution",
+    "attributionHint": "Game content credits (SRD 5.2 and 5.1, CC-BY-4.0) and the sources used on this instance.",
+    "attributionLink": "Open the attribution page"
   },
   "admin": {
     "title": "Admin",
@@ -209,7 +212,95 @@
     },
     "password": "Password",
     "emailOptional": "(optional)",
-    "worldName": "World name"
+    "worldName": "World name",
+    "tabs": {
+      "users": "Users",
+      "instance": "Instance",
+      "calendar": "Calendar",
+      "import": "Import catalogs",
+      "externalRefs": "External references",
+      "tags": "Tags"
+    },
+    "unitBareme": "Conversion barème: 5 ft = 1.5 m · 1 mile = 1.5 km · 1 lb = 500 g · 1 gal = 4 l. Changing a unit never recalculates stored values.",
+    "tags": {
+      "title": "Tags",
+      "empty": "No tag in use yet — tags are edited on the records.",
+      "count_one": "{{count}} record",
+      "count_other": "{{count}} records",
+      "rename": "Rename",
+      "merge": "Merge",
+      "newName": "New name",
+      "renameConfirm": "Rename",
+      "mergeInto": "Merge into",
+      "mergeConfirm": "Every record carrying « {{from}} » gains « {{into}} » — continue?",
+      "mergeConfirmAction": "Merge",
+      "touchedReport": "{{count}} record(s) updated."
+    },
+    "import": {
+      "title": "Import catalogs",
+      "hint": "Import a dataset following the Open5e format into one catalog, under a named source. The preview lists what will be created, overwritten and skipped — nothing is written before you confirm.",
+      "catalog": "Target catalog",
+      "source": "Source",
+      "chooseSource": "Choose a source…",
+      "origin": "Origin",
+      "originFile": "JSON file",
+      "originUrl": "API endpoint URL",
+      "preview": "Preview",
+      "newSource": "New source",
+      "sourceName": "Source name",
+      "sourceAttribution": "Attribution note (optional)",
+      "sourceCreate": "Create source",
+      "previewTitle": "Preview",
+      "selectAll": "Select all",
+      "confirm": "Confirm import",
+      "report": "{{created}} created, {{updated}} updated.",
+      "reportSkipped": "{{count}} skipped.",
+      "skippedCount_one": "{{count}} element skipped — see the flagged rows.",
+      "skippedCount_other": "{{count}} elements skipped — see the flagged rows.",
+      "acceptOf": "Import over {{title}}",
+      "invalidElement": "(invalid element)",
+      "status": {
+        "new": "New",
+        "overwrite": "Will be overwritten",
+        "conflict": "Different provenance",
+        "skipped": "Skipped"
+      },
+      "reason": {
+        "invalid_element": "Invalid element for the dataset format",
+        "duplicate_in_dataset": "Duplicate in the dataset",
+        "slug_taken": "Slug already used by a record of another type",
+        "not_accepted": "Not selected",
+        "invalid": "Invalid element",
+        "no_text_for_document": "No text for the chosen document (another source's row)"
+      },
+      "sourceAttributionHint": "A credit line shown under the source name on the attribution page — for example: Imported from api.open5e.com.",
+      "documentHint": "srd-2024 reads the SRD 5.2 text (2024 rules); srd-2014 reads the SRD 5.1 text (2014 rules). Both are CC-BY-4.0.",
+      "chooseFile": "Choose a JSON file",
+      "chooseAnotherFile": "Choose another file",
+      "noFile": "No file selected",
+      "srdVersion": "SRD version",
+      "srd2024": "SRD 5.2 — 2024 rules",
+      "srd2014": "SRD 5.1 — 2014 rules",
+      "purgeTitle": "Remove imported data",
+      "purgeHint": "Select a catalog and a source to list the records it created; the deletion runs in one transaction and reports what was removed and what was blocked. Disabled sources participate — a retired import's data still leaves through the purge.",
+      "purgeCatalog": "Target catalog",
+      "purgeSource": "Source",
+      "purgeDisabled": "disabled",
+      "purgeList": "List records",
+      "purgeListTitle": "Records bound to this source",
+      "purgeEmpty": "No record of this catalog carries this source.",
+      "purgeDelete": "Delete selected",
+      "purgeDeleteConfirm": "Delete {{count}} record(s) of « {{source}} » in the selected catalog? This cannot be undone.",
+      "purgeReport": "{{deleted}} deleted.",
+      "purgeBlocked": "{{count}} blocked.",
+      "purgeReasonChildren": "Chapters or scenes still attach to it",
+      "purgeAcceptOf": "Delete {{title}}"
+    },
+    "externalRefs": {
+      "title": "External references",
+      "later": "The deep-link catalogue arrives with the next round of the change.",
+      "hint": "Sources of public game references (aidedd.org, 5e.tools…), managed here; record sheets display badges for matching titles."
+    }
   },
   "health": {
     "title": "API status",
@@ -235,7 +326,12 @@
     "tags": "Tags",
     "tagsAdd": "Add a tag",
     "tagsHelp": "Enter or comma adds; Backspace on the empty field removes the last one.",
-    "removeTag": "Remove tag {{tag}}"
+    "removeTag": "Remove tag {{tag}}",
+    "source": {
+      "internal": "Internal",
+      "attributionTitle": "Attribution — {{name}}"
+    },
+    "importedNotice": "Imported record: only the Pitch and the Private description are editable; the source data changes through a re-import."
   },
   "fields": {
     "illustration": "Illustration",
@@ -516,5 +612,22 @@
     "resultsCount_one": "{{count}} result",
     "resultsCount_other": "{{count}} results",
     "error": "The search failed."
+  },
+  "errors": {
+    "fields_invalid": "Some field values are invalid — check the highlighted fields.",
+    "invalid_query": "Invalid query.",
+    "source_immutable": "The built-in Internal source cannot be modified.",
+    "source_name_taken": "A source already carries this name.",
+    "source_not_allowed": "The record provenance cannot be set from the form.",
+    "source_readonly": "This record comes from an import: its source data and tags are read-only, and it cannot be deleted.",
+    "import_invalid_payload": "The payload is not a valid dataset — no element could be validated.",
+    "import_url_refused": "This URL is refused: only public HTTPS endpoints are allowed.",
+    "import_endpoint_unreachable": "The endpoint did not answer with a readable dataset."
+  },
+  "attribution": {
+    "title": "Attribution",
+    "wotcTitle": "Wizards of the Coast — SRD 5.2 and 5.1",
+    "statement": "This instance may reference game content from the System Reference Document 5.2 (“SRD 5.2”) and the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast, both available under the Creative Commons Attribution 4.0 International licence (CC-BY-4.0). Wizards of the Coast is not affiliated with this application and does not endorse it. The named external sources below carry the provenance of imported content, with their attribution notes when provided.",
+    "sourcesTitle": "External sources of this instance"
   }
 }

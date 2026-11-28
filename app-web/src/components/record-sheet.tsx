@@ -8,6 +8,7 @@ import { classifyField } from "./field-classify.js";
 import { ProseEditor } from "../editor/prose-editor.js";
 import { templateSchemaOf } from "@dm/schemas";
 import { useRecordRoute } from "../urls.js";
+import { catalogTemplates } from "../types.js";
 import type { CalendarDate } from "@dm/schemas";
 import type { Entity } from "../types.js";
 
@@ -185,9 +186,33 @@ export function RecordSheet(props: {
 
   const childrenKey = childrenTitleKey(record.type);
   const children = record.tracking?.children ?? [];
+  const catalogTypes = catalogTemplates as readonly string[];
+  const showSourceBadge = record.source !== undefined && record.source !== null && catalogTypes.includes(record.type);
 
   return (
     <div className="mt-6">
+      {/* Provenance badge (srd-catalog-import spec): the built-in
+       * Internal source renders its i18n label; an external badge names
+       * its source and leads to the attribution page. Non-catalog
+       * records carry no badge, and a disabled source keeps showing
+       * its records' badges. */}
+      {showSourceBadge && record.source && (
+        <div className="mb-3">
+          {record.source.internal ? (
+            <span className="inline-block rounded-sm border border-border bg-surface px-1.5 py-0.5 text-xs text-muted">
+              {t("record.source.internal")}
+            </span>
+          ) : (
+            <Link
+              to="/attribution"
+              className="inline-block rounded-sm border border-border bg-surface px-1.5 py-0.5 text-xs text-muted transition-colors duration-200 hover:text-accent"
+              title={t("record.source.attributionTitle")}
+            >
+              {record.source.name}
+            </Link>
+          )}
+        </div>
+      )}
       {/* The tags chips: instance-level metadata, hidden when the record
        * carries none (empty means hidden). */}
       {record.tags.length > 0 && (

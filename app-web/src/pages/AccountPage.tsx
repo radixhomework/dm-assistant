@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { formString } from "../forms.js";
 import { useRequireAuth } from "./useRequireAuth.js";
@@ -108,6 +109,19 @@ export function AccountPage() {
           {profileSaved && <p className="text-sm text-primary">{t("account.saved")}</p>}
           {profileError && <p className="text-sm text-radish">{profileError}</p>}
         </form>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="font-display text-2xl font-semibold text-ink">
+          {t("account.attribution")}
+        </h2>
+        <p className="mt-2 text-sm text-muted">{t("account.attributionHint")}</p>
+        <Link
+          to="/attribution"
+          className="mt-2 inline-block text-sm text-accent hover:underline"
+        >
+          {t("account.attributionLink")}
+        </Link>
       </section>
 
       <section className="mt-10">

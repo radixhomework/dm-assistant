@@ -87,3 +87,14 @@ export const proseFieldKeys = new Set([
   "characteristics",
   "commerce",
 ]);
+
+/**
+ * The catalog fields the import mapping leaves to the DM: Pitch and
+ * Private description stay editable on imported records
+ * (srd-catalog-import spec) — everything else the dataset provided
+ * (title, tags, the other field values) is read-only between imports.
+ */
+export const dmAuthoredCatalogKeys = [
+  "pitch",
+  "private_description",
+] as const;

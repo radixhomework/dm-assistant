@@ -3,6 +3,15 @@ import { fireEvent, screen } from "@testing-library/react";
 import { AccountPage } from "./AccountPage";
 import { renderWithProviders } from "../testing/render.js";
 
+vi.mock("@tanstack/react-router", () => ({
+  // The attribution link renders an anchor in tests — the router
+  // context is not part of what this file exercises.
+  Link: (props: { children?: React.ReactNode; to?: string }) => (
+    <a href={props.to}>{props.children}</a>
+  ),
+  useNavigate: () => ({ to: vi.fn() }),
+}));
+
 let profilePayload: Record<string, unknown> | null = null;
 
 function mockApi() {

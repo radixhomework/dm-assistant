@@ -19,6 +19,7 @@ import { CalendarPage } from "./pages/CalendarPage";
 import { HomePage } from "./pages/HomePage";
 import { AdminPage } from "./pages/AdminPage";
 import { SearchPage } from "./pages/SearchPage";
+import { AttributionPage } from "./pages/AttributionPage";
 import { AccountPage } from "./pages/AccountPage";
 import {
   ChapterRecordPage,
@@ -121,6 +122,11 @@ const adminRoute = createRoute({
   path: "/admin",
   component: AdminPage,
 });
+const attributionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/attribution",
+  component: AttributionPage,
+});
 const accountRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/account",
@@ -148,6 +154,7 @@ const router = createRouter({
     searchRoute,
     homeRoute,
     adminRoute,
+    attributionRoute,
     accountRoute,
     loginRoute,
     setupRoute,

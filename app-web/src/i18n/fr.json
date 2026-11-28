@@ -164,7 +164,10 @@
     "changePassword": "Changer le mot de passe",
     "saved": "Enregistré.",
     "passwordChanged": "Mot de passe modifié.",
-    "username": "Nom d'utilisateur"
+    "username": "Nom d'utilisateur",
+    "attribution": "Attribution",
+    "attributionHint": "Crédits du contenu de jeu (SRD 5.2 et 5.1, CC-BY-4.0) et sources utilisées sur cette instance.",
+    "attributionLink": "Ouvrir la page d'attribution"
   },
   "admin": {
     "title": "Admin",
@@ -209,7 +212,95 @@
     },
     "password": "Mot de passe",
     "emailOptional": "(facultatif)",
-    "worldName": "Nom du monde"
+    "worldName": "Nom du monde",
+    "tabs": {
+      "users": "Utilisateurs",
+      "instance": "Instance",
+      "calendar": "Calendrier",
+      "import": "Importer des catalogues",
+      "externalRefs": "Références externes",
+      "tags": "Tags"
+    },
+    "unitBareme": "Barème de conversion : 5 ft = 1,5 m · 1 mile = 1,5 km · 1 lb = 500 g · 1 gal = 4 l. Changer d'unité ne recalcule jamais les valeurs stockées.",
+    "tags": {
+      "title": "Tags",
+      "empty": "Aucun tag en usage — les tags s'éditent sur les fiches.",
+      "count_one": "{{count}} fiche",
+      "count_other": "{{count}} fiches",
+      "rename": "Renommer",
+      "merge": "Fusionner",
+      "newName": "Nouveau nom",
+      "renameConfirm": "Renommer",
+      "mergeInto": "Fusionner dans",
+      "mergeConfirm": "Chaque fiche portant « {{from}} » reçoit « {{into}} » — continuer ?",
+      "mergeConfirmAction": "Fusionner",
+      "touchedReport": "{{count}} fiche(s) mise(s) à jour."
+    },
+    "import": {
+      "title": "Importer des catalogues",
+      "hint": "Importez un jeu de données au format Open5e dans un catalogue, sous une source nommée. L'aperçu liste ce qui sera créé, écrasé et ignoré — rien n'est écrit avant confirmation.",
+      "catalog": "Catalogue cible",
+      "source": "Source",
+      "chooseSource": "Choisir une source…",
+      "origin": "Origine",
+      "originFile": "Fichier JSON",
+      "originUrl": "URL d'endpoint d'API",
+      "preview": "Aperçu",
+      "newSource": "Nouvelle source",
+      "sourceName": "Nom de la source",
+      "sourceAttribution": "Note d'attribution (optionnelle)",
+      "sourceCreate": "Créer la source",
+      "previewTitle": "Aperçu",
+      "selectAll": "Tout sélectionner",
+      "confirm": "Confirmer l'import",
+      "report": "{{created}} créé(s), {{updated}} mis à jour.",
+      "reportSkipped": "{{count}} ignoré(s).",
+      "skippedCount_one": "{{count}} élément ignoré — voir les lignes signalées.",
+      "skippedCount_other": "{{count}} éléments ignorés — voir les lignes signalées.",
+      "acceptOf": "Importer par-dessus {{title}}",
+      "invalidElement": "(élément invalide)",
+      "status": {
+        "new": "Nouveau",
+        "overwrite": "Sera écrasé",
+        "conflict": "Provenance différente",
+        "skipped": "Ignoré"
+      },
+      "reason": {
+        "invalid_element": "Élément invalide pour le format du jeu de données",
+        "duplicate_in_dataset": "Doublon dans le jeu de données",
+        "slug_taken": "Slug déjà porté par une fiche d'un autre type",
+        "not_accepted": "Non sélectionné",
+        "invalid": "Élément invalide",
+        "no_text_for_document": "Aucun texte pour le document choisi (rangée d'une autre source)"
+      },
+      "sourceAttributionHint": "Une ligne de crédit affichée sous le nom de la source sur la page d'attribution — par exemple : Importé depuis api.open5e.com.",
+      "documentHint": "srd-2024 lit le texte du SRD 5.2 (règles 2024) ; srd-2014 lit celui du SRD 5.1 (règles 2014). Les deux sont sous CC-BY-4.0.",
+      "chooseFile": "Choisir un fichier JSON",
+      "chooseAnotherFile": "Choisir un autre fichier",
+      "noFile": "Aucun fichier sélectionné",
+      "srdVersion": "Version du SRD",
+      "srd2024": "SRD 5.2 — règles 2024",
+      "srd2014": "SRD 5.1 — règles 2014",
+      "purgeTitle": "Supprimer des données importées",
+      "purgeHint": "Choisissez un catalogue et une source pour lister les fiches qu'elle a créées ; la suppression s'exécute en une transaction et rapporte ce qui a été supprimé et bloqué. Les sources désactivées participent — les données d'un import retiré sortent aussi par la purge.",
+      "purgeCatalog": "Catalogue cible",
+      "purgeSource": "Source",
+      "purgeDisabled": "désactivée",
+      "purgeList": "Lister les fiches",
+      "purgeListTitle": "Fiches portées par cette source",
+      "purgeEmpty": "Aucune fiche de ce catalogue ne porte cette source.",
+      "purgeDelete": "Supprimer la sélection",
+      "purgeDeleteConfirm": "Supprimer {{count}} fiche(s) de « {{source}} » dans le catalogue sélectionné ? Cette action est irréversible.",
+      "purgeReport": "{{deleted}} supprimée(s).",
+      "purgeBlocked": "{{count}} bloquée(s).",
+      "purgeReasonChildren": "Des chapitres ou scènes s'y rattachent encore",
+      "purgeAcceptOf": "Supprimer {{title}}"
+    },
+    "externalRefs": {
+      "title": "Références externes",
+      "later": "Le catalogue de liens arrive avec le prochain round du changement.",
+      "hint": "Sources de références publiques (aidedd.org, 5e.tools…), gérées ici ; les fiches affichent des badges pour les titres correspondants."
+    }
   },
   "health": {
     "title": "État de l'API",
@@ -235,7 +326,12 @@
     "tags": "Tags",
     "tagsAdd": "Ajouter un tag",
     "tagsHelp": "Entrée ou virgule ajoute ; Retour arrière sur le champ vide retire le dernier.",
-    "removeTag": "Retirer le tag {{tag}}"
+    "removeTag": "Retirer le tag {{tag}}",
+    "source": {
+      "internal": "Interne",
+      "attributionTitle": "Attribution — {{name}}"
+    },
+    "importedNotice": "Fiche importée : seuls le Pitch et la Description privée restent éditables ; les données de source changent par réimport."
   },
   "fields": {
     "illustration": "Illustration",
@@ -516,5 +612,22 @@
     "resultsCount_one": "{{count}} résultat",
     "resultsCount_other": "{{count}} résultats",
     "error": "La recherche a échoué."
+  },
+  "errors": {
+    "fields_invalid": "Certaines valeurs de champs sont invalides — vérifiez les champs signalés.",
+    "invalid_query": "Requête invalide.",
+    "source_immutable": "La source interne intégrée ne peut pas être modifiée.",
+    "source_name_taken": "Une source porte déjà ce nom.",
+    "source_not_allowed": "La provenance ne peut pas être définie depuis le formulaire.",
+    "source_readonly": "Cette fiche vient d'un import : ses données de source et ses tags sont en lecture seule, et elle ne peut pas être supprimée.",
+    "import_invalid_payload": "Le contenu n'est pas un jeu de données valide — aucun élément n'a pu être validé.",
+    "import_url_refused": "Cette URL est refusée : seuls les endpoints HTTPS publics sont autorisés.",
+    "import_endpoint_unreachable": "L'endpoint n'a pas répondu avec un jeu de données lisible."
+  },
+  "attribution": {
+    "title": "Attribution",
+    "wotcTitle": "Wizards of the Coast — SRD 5.2 et 5.1",
+    "statement": "Cette instance peut référencer du contenu de jeu issu du System Reference Document 5.2 (« SRD 5.2 ») et du System Reference Document 5.1 (« SRD 5.1 ») de Wizards of the Coast, tous deux disponibles sous licence Creative Commons Attribution 4.0 International (CC-BY-4.0). Wizards of the Coast n'est affilié ni à cette application, ni ne l'approuve. Les sources externes nommées ci-dessous portent la provenance du contenu importé, avec leurs notes d'attribution lorsqu'elles existent.",
+    "sourcesTitle": "Sources externes de cette instance"
   }
 }

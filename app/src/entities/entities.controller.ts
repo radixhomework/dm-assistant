@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   HttpCode,
   Req,
   Controller,
@@ -18,14 +19,30 @@ import {
   updateEntitySchema,
 } from "@dm/schemas";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 import type { AuthedRequest } from "../auth/auth.guard.js";
 import { EntitiesService } from "./entities.service.js";
+
+/**
+ * Provenance is never client-declared (srd-catalog-import decision 4):
+ * the source rides neither creation nor update — the UI path binds the
+ * Internal source in the service, the import binds external sources.
+ */
+function refuseProvenance(body: unknown): void {
+  if (typeof body === "object" && body !== null && "sourceId" in body) {
+    throw new BadRequestException({
+      code: "source_not_allowed",
+      message: "source_not_allowed",
+    });
+  }
+}
 
 @Controller("api/records")
 export class EntitiesController {
   constructor(
     private readonly entitiesService: EntitiesService,
     private readonly relationshipsService: RelationshipsService,
+    private readonly sourcesService: CatalogSourcesService,
   ) {}
 
   @Get()
@@ -52,7 +69,8 @@ export class EntitiesController {
     const tracking = await this.entitiesService.tracking(slug);
     const references = await this.entitiesService.referencesOf(slug);
     const campaign = await this.entitiesService.campaignOf(record);
-    return { ...record, tracking, references, campaign };
+    const source = await this.sourcesService.viewOf(record.sourceId);
+    return { ...record, tracking, references, campaign, source };
   }
 
   /** Reverse references grouped by field + incoming mentions. */
@@ -94,12 +112,14 @@ export class EntitiesController {
 
   @Post()
   create(@Req() req: AuthedRequest, @Body() body: unknown) {
+    refuseProvenance(body);
     const input = createEntitySchema.parse(body);
     return this.entitiesService.create(input, req.user!.id);
   }
 
   @Patch(":slug")
   update(@Param("slug") slug: string, @Body() body: unknown) {
+    refuseProvenance(body);
     const input = updateEntitySchema.parse(body);
     return this.entitiesService.update(slug, input);
   }

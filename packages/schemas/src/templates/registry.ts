@@ -61,6 +61,21 @@ export const templateSchemas = {
 export type TemplateType = keyof typeof templateSchemas;
 export const templateTypes = Object.keys(templateSchemas) as TemplateType[];
 
+/** The 8 reference catalogs (srd-catalog-import capability): the only
+ * record types carrying a provenance source and accepting the SRD
+ * import. Order matters — the migration backfill mirrors this list. */
+export const catalogTypes = [
+  "classes",
+  "species",
+  "conditions",
+  "fauna",
+  "flora",
+  "languages",
+  "damage-types",
+  "treasure-types",
+] as const satisfies readonly TemplateType[];
+export type CatalogType = (typeof catalogTypes)[number];
+
 /**
  * Looks up the schema of a record type. Returns undefined for unregistered
  * types — those keep the P1 structural fields validation.

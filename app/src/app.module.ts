@@ -8,8 +8,10 @@ import { DatabaseModule } from "./database/database.module.js";
 import { McpModule } from "./mcp/mcp.module.js";
 import { UsersModule } from "./users/users.module.js";
 import { SettingsModule } from "./settings/settings.module.js";
+import { CatalogSourcesModule } from "./catalog-sources/catalog-sources.module.js";
 import { EntitiesModule } from "./entities/entities.module.js";
 import { SearchModule } from "./search/search.module.js";
+import { ImportModule } from "./import/import.module.js";
 import { RelationshipsModule } from "./relationships/relationships.module.js";
 import { CalendarModule } from "./calendar/calendar.module.js";
 import { MentionsModule } from "./mentions/mentions.module.js";
@@ -35,8 +37,10 @@ export class AppModule {
         AuthModule,
         UsersModule,
         SettingsModule,
+        CatalogSourcesModule,
         EntitiesModule,
         SearchModule,
+        ImportModule,
         RelationshipsModule,
         McpModule,
         CalendarModule,

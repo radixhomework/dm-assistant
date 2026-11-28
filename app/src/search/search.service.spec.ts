@@ -2,12 +2,14 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { resetTables, testDb } from "../testing/test-db.js";
 import { EntitiesService } from "../entities/entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 import { SearchService } from "./search.service.js";
 
 describe("SearchService", () => {
   const entitiesService = new EntitiesService(
     testDb,
     new RelationshipsService(testDb),
+    new CatalogSourcesService(testDb),
   );
   const searchService = new SearchService(testDb);
 

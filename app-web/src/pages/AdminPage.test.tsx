@@ -55,6 +55,7 @@ describe("AdminPage", () => {
     await vi.waitFor(() =>
       expect(screen.getByText(/a@b.c/)).toBeDefined(),
     );
-    expect(screen.getByText("Users")).toBeDefined();
+    // The Users label appears on the tab bar and the tab heading.
+    expect(screen.getAllByText("Users").length).toBeGreaterThanOrEqual(2);
   });
 });

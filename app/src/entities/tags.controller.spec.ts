@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetTables, testDb } from "../testing/test-db.js";
 import { EntitiesService } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 import { TagsController } from "./tags.controller.js";
 
 describe("TagsController", () => {
@@ -35,6 +36,7 @@ describe("TagsController (database)", () => {
   const entitiesService = new EntitiesService(
     testDb,
     new RelationshipsService(testDb),
+    new CatalogSourcesService(testDb),
   );
   const controller = new TagsController(testDb);
 

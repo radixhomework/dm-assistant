@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   customType,
   index,
   jsonb,
@@ -59,6 +60,24 @@ export const sessions = pgTable("sessions", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
 
+/**
+ * Catalog provenance registry (srd-catalog-import capability): the
+ * seeded built-in **Internal** source — for records created through the
+ * application, immutable name, never disableable — plus as many named
+ * external sources as an administrator creates ("Open5e (SRD 5.2)"…),
+ * each with an optional attribution note rendered on the attribution
+ * page. Disabling only removes a source from import selection; existing
+ * badges keep their provenance. Sources are never deleted (records
+ * reference them); the Internal row is marked by the `internal` flag.
+ */
+export const catalogSources = pgTable("catalog_sources", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull().unique(),
+  attribution: text("attribution"),
+  internal: boolean("internal").notNull().default(false),
+  disabledAt: timestamp("disabled_at", { withTimezone: true }),
+});
+
 export const entities = pgTable("entities", {
   id: uuid("id").defaultRandom().primaryKey(),
   slug: text("slug").notNull().unique(),
@@ -74,6 +93,12 @@ export const entities = pgTable("entities", {
   createdBy: uuid("created_by").references(() => users.id, {
     onDelete: "set null",
   }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   /**
    * Full-text search vector (full-text-search capability): maintained by
    * the application service on every write — title weighted A, the
@@ -82,12 +107,14 @@ export const entities = pgTable("entities", {
    * 2026-11-09). No DB trigger: the indexed field set is template-driven.
    */
   searchVector: tsvector("search_vector"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  /**
+   * Provenance for the 8 catalog types only (null elsewhere): the
+   * built-in Internal source for records created through the
+   * application, a named external source for imports. Set at creation
+   * and immutable — the single rebind is the confirmed cross-source
+   * import overwrite (srd-catalog-import spec).
+   */
+  sourceId: uuid("source_id").references(() => catalogSources.id),
 }, (t) => [index("entities_search_vector_idx").using("gin", t.searchVector)]);
 
 /**
