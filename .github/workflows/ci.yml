@@ -8,6 +8,11 @@ on:
     branches: ["**"]
   pull_request:
 
+# Least privilege (CodeQL actions/missing-workflow-permissions): the
+# pipeline only reads the repository — no token write anywhere.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
