@@ -64,6 +64,24 @@ export class CatalogSourcesService {
     return row;
   }
 
+  /**
+   * The provenance of a record: id, name and the internal flag — the
+   * sheet splits the Internal badge (i18n label) from external badges
+   * (source name) on it, and the edit form reads the flag to offer
+   * DM-field-only editing on imported records.
+   */
+  async viewOf(
+    sourceId: string | null,
+  ): Promise<{ id: string; name: string; internal: boolean } | null> {
+    if (!sourceId) return null;
+    const [row] = await this.db
+      .select()
+      .from(catalogSources)
+      .where(eq(catalogSources.id, sourceId))
+      .limit(1);
+    return row ? { id: row.id, name: row.name, internal: row.internal } : null;
+  }
+
   /** Administrator action: registers a named external source. Creation
    * is always external — the Internal source exists by seed only. */
   async create(input: CreateSourceInput): Promise<SourceView> {

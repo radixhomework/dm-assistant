@@ -4,6 +4,7 @@ import { resetTables, testDb } from "../testing/test-db.js";
 import { entities, mentions, users } from "../database/schema.js";
 import { EntitiesService, foldStatuses, parseMentionSlugs } from "./entities.service.js";
 import { RelationshipsService } from "../relationships/relationships.service.js";
+import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
 
 describe("foldStatuses (pure)", () => {
   it("returns not played for no children", () => {
@@ -30,6 +31,7 @@ describe("EntitiesService", () => {
   const service = new EntitiesService(
     testDb,
     new RelationshipsService(testDb),
+    new CatalogSourcesService(testDb),
   );
 
   beforeAll(resetTables);
@@ -328,6 +330,7 @@ describe("EntitiesService edge cases", () => {
   const service = new EntitiesService(
     testDb,
     new RelationshipsService(testDb),
+    new CatalogSourcesService(testDb),
   );
 
   beforeEach(resetTables);
