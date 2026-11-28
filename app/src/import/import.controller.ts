@@ -1,14 +1,21 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { z } from "zod";
-import { catalogTypes, type CatalogType } from "@dm/schemas";
+import {
+  catalogTypes,
+  purgeConfirmSchema,
+  purgeQuerySchema,
+  type CatalogType,
+} from "@dm/schemas";
 import { AdminGuard } from "../auth/admin.guard.js";
 import { extractElements, fetchDataset } from "./fetch-dataset.js";
 import { ImportInputError } from "./import-errors.js";
@@ -100,6 +107,24 @@ export class ImportController {
     // guard on the first URL and on every followed `next` link.
     const url = urlSchema.parse(raw.url);
     return { origin, elements: await fetchDataset(url) };
+  }
+
+  /** The source-scoped purge preview: the records one catalog carries
+   * under one external source. */
+  @Get("purge")
+  async purgePreview(
+    @Query("catalog") catalog?: string,
+    @Query("sourceId") sourceId?: string,
+  ): Promise<unknown> {
+    const input = purgeQuerySchema.parse({ catalog, sourceId });
+    return this.importService.purgePreview(input.catalog, input.sourceId);
+  }
+
+  /** The purge confirm: the accepted slugs delete in one transaction. */
+  @Post("purge")
+  async purgeConfirm(@Body() body: unknown): Promise<unknown> {
+    const input = purgeConfirmSchema.parse(body);
+    return this.importService.purgeConfirm(input.catalog, input.sourceId, input.slugs);
   }
 
   /** The accepted selection: an array in JSON mode, a JSON-encoded

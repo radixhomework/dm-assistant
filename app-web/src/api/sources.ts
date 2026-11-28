@@ -106,3 +106,32 @@ export function previewImport(args: Parameters<typeof postImport>[1]): Promise<I
 export function confirmImport(args: Parameters<typeof postImport>[1]): Promise<ImportReport> {
   return postImport("confirm", args) as Promise<ImportReport>;
 }
+
+/** The source-scoped purge (srd-catalog-import): the sanctioned removal
+ * channel for imported records. */
+export type PurgeItem = { id: string; slug: string; title: string };
+
+export type PurgeReport = {
+  deleted: number;
+  blocked: Array<{ slug: string; reason: string }>;
+};
+
+export function fetchPurgePreview(
+  catalog: string,
+  sourceId: string,
+): Promise<PurgeItem[]> {
+  return api<PurgeItem[]>(
+    `/api/admin/catalogs/purge?catalog=${encodeURIComponent(catalog)}&sourceId=${encodeURIComponent(sourceId)}`,
+  );
+}
+
+export function confirmPurge(
+  catalog: string,
+  sourceId: string,
+  slugs: string[],
+): Promise<PurgeReport> {
+  return api<PurgeReport>("/api/admin/catalogs/purge", {
+    method: "POST",
+    body: { catalog, sourceId, slugs },
+  });
+}

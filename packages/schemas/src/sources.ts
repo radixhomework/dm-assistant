@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { slugSchema } from "./entities.js";
+import { catalogTypes } from "./templates/index.js";
 
 /** Catalog provenance sources (srd-catalog-import capability): the
  * built-in Internal source is seeded by migration 0010 and carries no
@@ -22,3 +24,18 @@ export const updateSourceSchema = z.object({
 export type UpdateSourceInput = z.infer<typeof updateSourceSchema>;
 
 export const sourceIdSchema = z.uuid();
+
+/** The source-scoped purge (srd-catalog-import): the sanctioned
+ * removal channel for imported records. The preview lists the records
+ * one catalog carries under one source; the confirm deletes the
+ * accepted slugs in one transaction. Disabled sources participate —
+ * a retired import's data still leaves through the purge. */
+export const purgeQuerySchema = z.object({
+  catalog: z.enum(catalogTypes),
+  sourceId: z.uuid(),
+});
+export const purgeConfirmSchema = purgeQuerySchema.extend({
+  slugs: z.array(slugSchema).min(1),
+});
+export type PurgeQueryInput = z.infer<typeof purgeQuerySchema>;
+export type PurgeConfirmInput = z.infer<typeof purgeConfirmSchema>;

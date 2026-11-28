@@ -3,7 +3,7 @@ import {
   Inject,
   Injectable,
 } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   belongsToOtherDocument,
   convertSrdUnits,
@@ -17,7 +17,7 @@ import {
 import type { Db } from "../database/database.module.js";
 import { DB } from "../database/database.module.js";
 import { isUniqueViolation } from "../database/unique-violation.js";
-import { catalogSources, entities, mentions } from "../database/schema.js";
+import { catalogSources, entities, mentions, relationships } from "../database/schema.js";
 import { buildSearchVector, extractSearchableText } from "../search/search-index.js";
 import { parseMentionSlugs } from "../entities/entities.service.js";
 import { CatalogSourcesService } from "../catalog-sources/sources.service.js";
@@ -387,6 +387,71 @@ export class ImportService {
       })
       .where(eq(entities.id, existingId));
     await this.replaceMentions(tx, existingId, fields);
+  }
+
+  /**
+   * The source-scoped purge (the sanctioned removal channel for
+   * imported records): preview lists the records one catalog carries
+   * under one external source — disabled sources participate, a
+   * retired import's data still leaves through the purge. The Internal
+   * source has no purge path: DM-authored records delete per-record.
+   */
+  async purgePreview(
+    catalog: CatalogType,
+    sourceId: string,
+  ): Promise<Array<{ id: string; slug: string; title: string }>> {
+    await this.purgeSource(sourceId);
+    return this.db
+      .select({ id: entities.id, slug: entities.slug, title: entities.title })
+      .from(entities)
+      .where(and(eq(entities.type, catalog), eq(entities.sourceId, sourceId)))
+      .orderBy(entities.title);
+  }
+
+  async purgeConfirm(
+    catalog: CatalogType,
+    sourceId: string,
+    slugs: string[],
+  ): Promise<{ deleted: number; blocked: Array<{ slug: string; reason: string }> }> {
+    await this.purgeSource(sourceId);
+    const wanted = new Set(slugs);
+    return this.db.transaction(async (tx) => {
+      const rows = await tx
+        .select({ id: entities.id, slug: entities.slug })
+        .from(entities)
+        .where(and(eq(entities.type, catalog), eq(entities.sourceId, sourceId)));
+      let deleted = 0;
+      const blocked: Array<{ slug: string; reason: string }> = [];
+      for (const row of rows) {
+        if (!wanted.has(row.slug)) continue;
+        // Mirrors the per-record delete guard: hierarchy children block.
+        const [child] = await tx
+          .select({ fromId: relationships.fromId })
+          .from(relationships)
+          .where(
+            and(
+              eq(relationships.toId, row.id),
+              inArray(relationships.kind, ["campaign", "chapter"]),
+            ),
+          )
+          .limit(1);
+        if (child) {
+          blocked.push({ slug: row.slug, reason: "children" });
+          continue;
+        }
+        await tx.delete(entities).where(eq(entities.id, row.id));
+        deleted += 1;
+      }
+      return { deleted, blocked };
+    });
+  }
+
+  private async purgeSource(sourceId: string): Promise<void> {
+    const listed = await this.sources.list();
+    const source = listed.find((candidate) => candidate.id === sourceId);
+    if (!source || source.internal) {
+      throw new ImportInputError("the purge runs under an external source");
+    }
   }
 
   private async replaceMentions(

@@ -252,6 +252,64 @@ describe("ImportService (database)", () => {
     expect(rows[0].fields["public_description"]).toBe("* SRD text.");
   });
 
+
+  describe("purge (source-scoped removal)", () => {
+    async function bindRecord(slug: string, type: string, sourceId: string): Promise<void> {
+      await testDb.execute(sql`
+        INSERT INTO entities (slug, type, perimeter, title, source_id)
+        VALUES (${slug}, ${type}, 'world', ${slug}, ${sourceId})
+      `);
+    }
+
+    it("previews only the records of one catalog under one source", async () => {
+      await bindRecord("blinded", "conditions", externalId);
+      await bindRecord("dm-condition", "conditions", internalId);
+      await bindRecord("a-place", "places", externalId);
+
+      const items = await importService.purgePreview("conditions", externalId);
+      expect(items.map((item) => item.slug)).toEqual(["blinded"]);
+    });
+
+    it("deletes the accepted slugs in one transaction and blocks hierarchy children", async () => {
+      await bindRecord("blocked-one", "conditions", externalId);
+      await bindRecord("removed-one", "conditions", externalId);
+      // A chapter attaching itself to the first record blocks its purge,
+      // mirroring the per-record delete guard.
+      await testDb.execute(sql`
+        INSERT INTO entities (slug, type, perimeter, title)
+        VALUES ('attaching-chapter', 'chapter', 'campaign', 'Attaching chapter')
+      `);
+      await testDb.execute(sql`
+        INSERT INTO relationships (from_id, to_id, kind)
+        VALUES ((SELECT id FROM entities WHERE slug = 'attaching-chapter'),
+                (SELECT id FROM entities WHERE slug = 'blocked-one'), 'campaign')
+      `);
+
+      const report = await importService.purgeConfirm(
+        "conditions",
+        externalId,
+        ["blocked-one", "removed-one"],
+      );
+      expect(report).toEqual({
+        deleted: 1,
+        blocked: [{ slug: "blocked-one", reason: "children" }],
+      });
+      const rows = await testDb.execute<{ slug: string }>(
+        sql`SELECT slug FROM entities WHERE slug IN ('blocked-one', 'removed-one')`,
+      );
+      expect(rows.map((row) => row.slug)).toEqual(["blocked-one"]);
+    });
+
+    it("refuses to run under the Internal source", async () => {
+      await expect(
+        importService.purgePreview("conditions", internalId),
+      ).rejects.toMatchObject({ response: { code: "import_invalid_payload" } });
+      await expect(
+        importService.purgeConfirm("conditions", internalId, ["blinded"]),
+      ).rejects.toMatchObject({ response: { code: "import_invalid_payload" } });
+    });
+  });
+
   it("keeps the search vector consistent with the imported fields", async () => {
     await importService.confirm(origin(), [
       element("blinded", "Blinded", "* You cannot see anything."),

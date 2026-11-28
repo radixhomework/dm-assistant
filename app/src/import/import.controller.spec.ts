@@ -23,6 +23,8 @@ describe("ImportController", () => {
   let service: {
     preview: ReturnType<typeof vi.fn>;
     confirm: ReturnType<typeof vi.fn>;
+    purgePreview: ReturnType<typeof vi.fn>;
+    purgeConfirm: ReturnType<typeof vi.fn>;
   };
   let controller: ImportController;
 
@@ -30,21 +32,34 @@ describe("ImportController", () => {
     service = {
       preview: vi.fn(async () => ({ items: [] })),
       confirm: vi.fn(async () => ({ created: 0, updated: 0, skipped: [] })),
+      purgePreview: vi.fn(async () => []),
+      purgeConfirm: vi.fn(async () => ({ deleted: 0, blocked: [] })),
     };
     controller = new ImportController(service as unknown as ImportService);
   });
 
-  it("carries the AdminGuard wiring on the class and both routes", () => {
+  it("carries the AdminGuard wiring on the class and every route", () => {
     const guards = Reflect.getMetadata("__guards__", ImportController) as
       | unknown[]
       | undefined;
     expect(guards).toContain(AdminGuard);
-    const paths = ["preview", "confirm"].map((method) => {
+    const paths = ["preview", "confirm", "purgePreview", "purgeConfirm"].map((method) => {
       const handler = ImportController.prototype[method];
       if (typeof handler !== "function") throw new Error(`${method} missing`);
       return Reflect.getMetadata("path", handler) as string;
     });
-    expect(paths.sort()).toEqual(["confirm", "preview"]);
+    expect(paths.sort()).toEqual(["confirm", "preview", "purge", "purge"]);
+  });
+
+  it("previews and confirms a purge through the schema", async () => {
+    await controller.purgePreview("conditions", SOURCE_ID);
+    expect(service.purgePreview).toHaveBeenCalledWith("conditions", SOURCE_ID);
+    await controller.purgeConfirm({
+      catalog: "conditions",
+      sourceId: SOURCE_ID,
+      slugs: ["blinded"],
+    });
+    expect(service.purgeConfirm).toHaveBeenCalledWith("conditions", SOURCE_ID, ["blinded"]);
   });
 
   it("previews a file upload", async () => {
